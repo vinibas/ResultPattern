@@ -6,16 +6,8 @@ using ViniBas.ResultPattern.ResultObjects;
 
 namespace ViniBas.ResultPattern.AspNet;
 
-public static class ResultsExtensions
+public static class ProblemDetailsExtensions
 {
-    public static IActionResult Match(this ResultResponse resultResponse,
-        Func<ResultResponse, IActionResult> onSuccess)
-        => resultResponse.Match(onSuccess, response => response.ToProblemDetailsActionResult());
-
-    public static IActionResult Match(this ResultResponse resultResponse,
-        Func<ResultResponse, IActionResult> onSuccess, Func<ResultResponse, IActionResult> onFailure)
-        => resultResponse.IsSuccess ? onSuccess(resultResponse) : onFailure(resultResponse);
-
     public static ProblemDetails ToProblemDetails(this ResultResponse resultResponse)
     {
         if (resultResponse.IsSuccess || resultResponse is not ResultResponseError resultResponseError)
