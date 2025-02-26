@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using ViniBas.ResultPattern.ResponseResults;
+using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests;
@@ -54,7 +54,6 @@ public class MatchResultsExtensionsTests
     [Fact]
     public void Match_ResultResponseError_ShouldReturnProblemDetailsOnFailure()
     {
-        // TODO: Parei aqui. Lembrar de corrigir o namespace
         var result = _resultResponseError.Match(_ => new NoContentResult());
         var resultData = _resultResponseError.Match(_ => new ObjectResult("Test Data"));
 

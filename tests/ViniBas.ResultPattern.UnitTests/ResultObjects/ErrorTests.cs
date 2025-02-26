@@ -52,6 +52,15 @@ public class ErrorTests
     }
 
     [Fact]
+    public void ImplicitConversion_FromErrorNoneToResult_ShouldReturnSuccessResult()
+    {
+        Result result = Error.None;
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.IsFailure);
+    }
+
+    [Fact]
     public void ImplicitConversion_FromListOfErrorsToError_ShouldCombineDetails()
     {
         Error combinedError = _errors;

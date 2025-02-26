@@ -1,4 +1,4 @@
-namespace ViniBas.ResultPattern.ResponseResults;
+namespace ViniBas.ResultPattern.ResultResponses;
 
 public record ResultResponse
 {

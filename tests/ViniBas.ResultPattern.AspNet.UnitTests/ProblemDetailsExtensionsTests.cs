@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using ViniBas.ResultPattern.ResponseResults;
+using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests;

@@ -22,7 +22,9 @@ public sealed record Error
         Type = type;
     }
 
-    public static implicit operator Result(Error error) => Result.Failure(error);
+    public static implicit operator Result(Error error) 
+        => error == None ? Result.Success() : Result.Failure(error);
+    
     public static implicit operator Error(List<Error> errors)
     {
         if (!errors.Any()) throw new ArgumentException("Errors cannot be empty", nameof(errors));
