@@ -1,0 +1,6 @@
+@ViniBas.ResultPattern.DemoWebApi_HostAddress = http://localhost:5285
+
+GET {{ViniBas.ResultPattern.DemoWebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

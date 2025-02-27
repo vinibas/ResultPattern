@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViniBas.ResultPattern.AspNe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViniBas.ResultPattern.AspNet", "src\ViniBas.ResultPattern.AspNet\ViniBas.ResultPattern.AspNet.csproj", "{FDA841CA-4795-49EB-910D-E6047C7864BB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{233F3E9E-581D-42E7-B19D-2D89C9894BC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViniBas.ResultPattern.DemoWebApi", "samples\ViniBas.ResultPattern.DemoWebApi\ViniBas.ResultPattern.DemoWebApi.csproj", "{18504E28-0E46-4829-8B15-4D473BF676F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +40,12 @@ Global
 		{FDA841CA-4795-49EB-910D-E6047C7864BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDA841CA-4795-49EB-910D-E6047C7864BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDA841CA-4795-49EB-910D-E6047C7864BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18504E28-0E46-4829-8B15-4D473BF676F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18504E28-0E46-4829-8B15-4D473BF676F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18504E28-0E46-4829-8B15-4D473BF676F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18504E28-0E46-4829-8B15-4D473BF676F1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{18504E28-0E46-4829-8B15-4D473BF676F1} = {233F3E9E-581D-42E7-B19D-2D89C9894BC7}
 	EndGlobalSection
 EndGlobal
