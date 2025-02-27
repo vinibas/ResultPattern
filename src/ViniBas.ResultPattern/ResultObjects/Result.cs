@@ -9,6 +9,8 @@ public abstract record ResultBase
     public Error Error { get; }
 
     protected ResultBase(Error error) => Error = error;
+    
+    public abstract ResultResponse ToActionResponse();
 }
 
 public record Result : ResultBase
@@ -20,7 +22,7 @@ public record Result : ResultBase
 
     public static implicit operator Result(List<Error> errors) => Failure(errors);
 
-    public ResultResponse ToActionResponse()
+    public override ResultResponse ToActionResponse()
         => IsSuccess ? new ResultResponseSuccess() : new ResultResponseError(Error.ListDescriptions(), Error.Type);
 }
 
@@ -37,7 +39,7 @@ public record Result<T> : ResultBase
 
     public static implicit operator Result<T>(List<Error> errors) => Failure(errors);
 
-    public ResultResponse ToActionResponse()
+    public override ResultResponse ToActionResponse()
         => IsSuccess ? new ResultResponseSuccess<T>(Data!) : new ResultResponseError(Error.ListDescriptions(), Error.Type);
 
     public static implicit operator Result<T>(T item) => Success(item);

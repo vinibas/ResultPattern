@@ -1,4 +1,4 @@
-using ViniBas.ResultPattern.ResponseResults;
+using ViniBas.ResultPattern.ResultResponses;
 
 namespace ViniBas.ResultPattern.UnitTests.ResponseResults;
 

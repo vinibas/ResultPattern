@@ -16,13 +16,13 @@ public sealed class ActionResultFilter : IActionFilter
         var contextResult = context.Result;
 
         if (contextResult is ObjectResult objectResult &&
-            objectResult.Value is not ProblemDetails and not ResultResponse)
+            objectResult.Value is not ProblemDetails)
         {
             objectResult.Value = objectResult.Value switch
             {
                 Error error => error.ToProblemDetails(),
                 IEnumerable<Error> errors => ((Error)errors.ToList()).ToProblemDetails(),
-                Result result => result.IsSuccess ?
+                ResultBase result => result.IsSuccess ?
                     result.ToActionResponse() :
                     result.ToActionResponse().ToProblemDetails(),
                 ResultResponseError resultResponseError => resultResponseError.ToProblemDetails(),
