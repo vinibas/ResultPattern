@@ -19,9 +19,13 @@ public class MyController(IMyService myService) : ControllerBase
     public IActionResult Post(int value)
         => _myService.Post(value).Match(_ => Created());
 
-    [HttpGet("filter/{success}")]
+    [HttpPut("{value}")]
+    public IActionResult Custom(int value)
+        => _myService.Custom(value).Match(Accepted);
+
+    [HttpDelete("{success}")]
     public Result<string> Filter(bool success)
         => success ?
-            Result<string>.Success("Executed successfully") :
+            Result<string>.Success("Deleted successfully") :
             Result<string>.Failure(Error.Failure("Err1", "Value must be true"));
 }

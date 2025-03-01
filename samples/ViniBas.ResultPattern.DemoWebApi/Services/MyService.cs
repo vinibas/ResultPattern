@@ -6,6 +6,7 @@ public interface IMyService
 {
     Result Post(int value);
     Result<string> Get(int value);
+    Result<object> Custom(int value);
 }
 
 public sealed class MyService : IMyService
@@ -51,5 +52,13 @@ public sealed class MyService : IMyService
         // return Result<string>.Success("Test Data");
         // Or more directly:
         return "Test Data";
+    }
+
+    public Result<object> Custom(int value)
+    {
+        if (value <= 0)
+            return new Error("Err1", "Value must be greater than 0", "NotAcceptable");
+
+        return new { Message = ":P" };
     }
 }

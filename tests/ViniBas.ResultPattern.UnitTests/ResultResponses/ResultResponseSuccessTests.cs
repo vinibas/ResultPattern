@@ -1,6 +1,6 @@
 using ViniBas.ResultPattern.ResultResponses;
 
-namespace ViniBas.ResultPattern.UnitTests.ResponseResults;
+namespace ViniBas.ResultPattern.UnitTests.ResultResponses;
 
 public class ResultResponseSuccessTests
 {
