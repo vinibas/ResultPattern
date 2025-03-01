@@ -6,7 +6,7 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests;
 
 public class MatchResultsExtensionsTests
 {
-    private readonly ResultResponseError _resultResponseError = new ([ "Error 1", "Error 2" ], ErrorType.Validation);
+    private readonly ResultResponseError _resultResponseError = new ([ "Error 1", "Error 2" ], ErrorTypes.Validation);
     private readonly string _problemDetailsDetail = string.Join(Environment.NewLine, [ "Error 1", "Error 2" ]);
 
     [Fact]

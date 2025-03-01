@@ -4,7 +4,7 @@ namespace ViniBas.ResultPattern.ResultResponses;
 
 public record ResultResponseError : ResultResponse
 {
-    public ResultResponseError(IEnumerable<string> errors, ErrorType type)
+    public ResultResponseError(IEnumerable<string> errors, string type)
     {
         IsSuccess = false;
         Errors = errors;
@@ -12,5 +12,5 @@ public record ResultResponseError : ResultResponse
     }
 
     public IEnumerable<string> Errors { get; private set; }
-    public ErrorType Type { get; private set; }
+    public string Type { get; private set; }
 }

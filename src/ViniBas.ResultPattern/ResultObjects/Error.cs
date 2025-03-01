@@ -3,21 +3,27 @@ namespace ViniBas.ResultPattern.ResultObjects;
 public sealed record Error
 {
     public ICollection<ErrorDetails> Details { get; private set; }
-    public ErrorType Type { get; private set; }
+    public static ErrorTypes ErrorTypes { get; } = new ErrorTypes();
+    public string Type { get; private set; }
 
-    public static readonly Error None = new(string.Empty, string.Empty, ErrorType.Failure);
-    // public static readonly Error NullValue = new("Error.NullValue", "Null value was provided", ErrorType.Failure);
+    public static readonly Error None = new(string.Empty, string.Empty, ErrorTypes.Failure);
 
-    public Error(string code, string description, ErrorType type)
+    public Error(string code, string description, string type)
     {
+        if (!ErrorTypes.Types.Contains(type))
+            throw new ArgumentException("Type not defined in ErrorTypes.", nameof(type));
+        
         Details = [new (code, description)];
         Type = type;
     }
 
-    public Error(ICollection<ErrorDetails> details, ErrorType type)
+    public Error(ICollection<ErrorDetails> details, string type)
     {
         if (!details.Any()) throw new ArgumentException("Details cannot be empty", nameof(details));
 
+        if (!ErrorTypes.Types.Contains(type))
+            throw new ArgumentException("Type not defined in ErrorTypes.", nameof(type));
+        
         Details = details;
         Type = type;
     }
@@ -35,13 +41,13 @@ public sealed record Error
     }
 
     public static Error Failure(string code, string description)
-        => new(code, description, ErrorType.Failure);
+        => new(code, description, ErrorTypes.Failure);
     public static Error Validation(string code, string description)
-        => new(code, description, ErrorType.Validation);
+        => new(code, description, ErrorTypes.Validation);
     public static Error NotFound(string code, string description)
-        => new(code, description, ErrorType.NotFound);
+        => new(code, description, ErrorTypes.NotFound);
     public static Error Conflict(string code, string description)
-        => new(code, description, ErrorType.Conflict);
+        => new(code, description, ErrorTypes.Conflict);
 
     public IEnumerable<string> ListDescriptions()
         => Details.Select(d => d.Description).ToList();
@@ -49,10 +55,26 @@ public sealed record Error
     public sealed record ErrorDetails(string Code, string Description);
 }
 
-public enum ErrorType
+public sealed class ErrorTypes
 {
-    Failure = 0,
-    Validation = 1,
-    NotFound = 2,
-    Conflict = 3,
+    public const string Failure = "Failure";
+    public const string Validation = "Validation";
+    public const string NotFound = "NotFound";
+    public const string Conflict = "Conflict";
+    
+    public HashSet<string> _types = [
+        Failure,
+        Validation,
+        NotFound,
+        Conflict,
+    ];
+    public IReadOnlySet<string> Types { get => _types; }
+
+    internal ErrorTypes() { }
+
+    public void AddTypes(params string[] newTypes)
+    {
+        foreach (var newType in newTypes)
+            _types.Add(newType);
+    }
 }

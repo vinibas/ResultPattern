@@ -9,7 +9,7 @@ public class ResultResponseErrorTests
     public void Constructor_ShouldInitializeCorrectly()
     {
         var errors = new List<string> { "Error 1", "Error 2" };
-        var errorType = ErrorType.Validation;
+        var errorType = ErrorTypes.Validation;
 
         var resultResponseError = new ResultResponseError(errors, errorType);
 

@@ -7,7 +7,7 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests;
 
 public class ProblemDetailsExtensionsTests
 {
-    private readonly ResultResponseError _resultResponse = new ([ "Error 1", "Error 2" ], ErrorType.Validation);
+    private readonly ResultResponseError _resultResponse = new ([ "Error 1", "Error 2" ], ErrorTypes.Validation);
     private readonly string _problemDetailsDetail = string.Join(Environment.NewLine, [ "Error 1", "Error 2" ]);
 
     [Fact]
@@ -17,6 +17,34 @@ public class ProblemDetailsExtensionsTests
 
         var probDet = Assert.IsType<ProblemDetails>(result);
         Assert.Equal(_problemDetailsDetail, probDet.Detail);
+        Assert.Equal(400, probDet.Status);
+    }
+
+    [Fact]
+    public void ToProblemDetails_WithNewTypeMapped_ShouldReturnWithAssociatedStatusCode()
+    {
+        Error.ErrorTypes.AddTypes("NewType");
+        ErrorTypeMaps.Maps.Add("NewType", (304, "New Type"));
+        
+        var resultResponse = new ResultResponseError([ "Error 1", "Error 2" ], "NewType");
+        var result = resultResponse.ToProblemDetails();
+
+        var probDet = Assert.IsType<ProblemDetails>(result);
+        Assert.Equal("New Type", result.Title);
+        Assert.Equal(304, probDet.Status);
+    }
+
+    [Fact]
+    public void ToProblemDetails_WithNewTypeNotMapped_ShouldReturnWithDefaultStatusCode()
+    {
+        Error.ErrorTypes.AddTypes("NewType");
+        
+        var resultResponse = new ResultResponseError([ "Error 1", "Error 2" ], "NewType");
+        var result = resultResponse.ToProblemDetails();
+
+        var probDet = Assert.IsType<ProblemDetails>(result);
+        Assert.Equal("Server Failure", result.Title);
+        Assert.Equal(500, probDet.Status);
     }
 
     [Fact]
@@ -45,7 +73,7 @@ public class ProblemDetailsExtensionsTests
     [Fact]
     public void ToProblemDetails_Error_ShouldReturnProblemDetails()
     {
-        var error = new Error("code", "description", ErrorType.Validation);
+        var error = new Error("code", "description", ErrorTypes.Validation);
 
         var result = error.ToProblemDetails();
 
@@ -56,7 +84,7 @@ public class ProblemDetailsExtensionsTests
     [Fact]
     public void ToProblemDetailsActionResult_Error_ShouldReturnProblemDetails()
     {
-        var error = new Error("code", "description", ErrorType.Validation);
+        var error = new Error("code", "description", ErrorTypes.Validation);
 
         var result = error.ToProblemDetailsActionResult();
 

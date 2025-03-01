@@ -25,23 +25,13 @@ public static class ProblemDetailsExtensions
             },
         };
 
-        static int GetStatusCode(ErrorType errorType)
-            => errorType switch
-            {
-                ErrorType.Validation => StatusCodes.Status400BadRequest,
-                ErrorType.NotFound => StatusCodes.Status404NotFound,
-                ErrorType.Conflict => StatusCodes.Status409Conflict,
-                _ => StatusCodes.Status500InternalServerError,
-            };
+        static int GetStatusCode(string errorType)
+            => ErrorTypeMaps.Maps.TryGetValue(errorType, out var map) ?
+                map.StatusCode : StatusCodes.Status500InternalServerError;
 
-        static string GetTitle(ErrorType errorType)
-            => errorType switch
-            {
-                ErrorType.Validation => "Bad Request",
-                ErrorType.NotFound => "Not Found",
-                ErrorType.Conflict => "Conflict",
-                _ => "Server Failure",
-            };
+        static string GetTitle(string errorType)
+            => ErrorTypeMaps.Maps.TryGetValue(errorType, out var map) ?
+                map.Title : "Server Failure";
     }
 
     public static IActionResult ToProblemDetailsActionResult(this ResultResponse resultResponse)
@@ -75,6 +65,18 @@ public static class ProblemDetailsExtensions
 
         }).ToList();
         
-        return new Error(modelStateErrors, ErrorType.Validation);
+        return new Error(modelStateErrors, ErrorTypes.Validation);
     }
+}
+
+public static class ErrorTypeMaps
+{
+    public static IDictionary<string, (int StatusCode, string Title)> Maps { get; } =
+        new Dictionary<string, (int StatusCode, string Title)>()
+        {
+            [ErrorTypes.Failure] = (StatusCodes.Status500InternalServerError, "Server Failure"),
+            [ErrorTypes.Validation] = (StatusCodes.Status400BadRequest, "Bad Request"),
+            [ErrorTypes.NotFound] = (StatusCodes.Status404NotFound, "Not Found"),
+            [ErrorTypes.Conflict] = (StatusCodes.Status409Conflict, "Conflict"),
+        };
 }

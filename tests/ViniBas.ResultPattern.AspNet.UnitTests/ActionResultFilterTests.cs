@@ -23,14 +23,14 @@ public class ActionResultFilterTests
 
     public ActionResultFilterTests()
     {
-        var error = new Error("code", "description", ErrorType.Validation);
+        var error = new Error("code", "description", ErrorTypes.Validation);
 
         _errorOR = new ObjectResult(error);
         _errorsOR = new ObjectResult(new List<Error> { error });
         _resultSuccessOR = new ObjectResult(Result.Success());
         _resultSuccessTOR = new ObjectResult(Result<Object>.Success(new ()));
         _resultFailureOR = new ObjectResult(Result.Failure(error));
-        _resultResponseErrorOR = new ObjectResult(new ResultResponseError([ "error" ], ErrorType.Failure));
+        _resultResponseErrorOR = new ObjectResult(new ResultResponseError([ "error" ], ErrorTypes.Failure));
         _problemDetailsOR = new ObjectResult(new ProblemDetails());
 
         _filter = new ActionResultFilter();
@@ -54,9 +54,9 @@ public class ActionResultFilterTests
     {
         var failures = new List<ObjectResult>
         {
-            // _errorOR,
-            // _errorsOR,
-            // _resultFailureOR,
+            _errorOR,
+            _errorsOR,
+            _resultFailureOR,
             _resultResponseErrorOR,
         };
             

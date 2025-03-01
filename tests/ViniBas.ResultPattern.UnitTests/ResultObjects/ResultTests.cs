@@ -8,8 +8,8 @@ public abstract class ResultTestsBase
     protected Error _error => _errors.First();
     protected readonly List<Error> _errors = new()
     {
-        new("Code1", "Description1", ErrorType.Failure),
-        new("Code2", "Description2", ErrorType.Failure),
+        new("Code1", "Description1", ErrorTypes.Failure),
+        new("Code2", "Description2", ErrorTypes.Failure),
     };
 }
 
