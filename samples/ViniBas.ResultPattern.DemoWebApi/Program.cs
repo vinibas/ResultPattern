@@ -1,6 +1,8 @@
 using ViniBas.ResultPattern.AspNet;
 using ViniBas.ResultPattern.DemoWebApi.Services;
 using ViniBas.ResultPattern.ResultObjects;
+using ViniBas.ResultPattern.DemoWebApi.Endpoints;
+using ViniBas.ResultPattern.AspNet.ActionResultMvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +14,7 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+app.RegisterUserEndpoints();
 
 app.MapControllers();
 
