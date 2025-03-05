@@ -51,7 +51,7 @@ public class ProblemDetailsExtensionsTests
     [Fact]
     public void ToProblemDetails_WithResultResponseSuccess_ThrowException()
     {
-        var resultResponse = new ResultResponseSuccess();
+        var resultResponse = ResultResponseSuccess.Create();
 
         var ex = Assert.Throws<InvalidOperationException>(() => resultResponse.ToProblemDetails());
         Assert.Equal("Unable to convert a valid ResultResponse to a ProblemDetails.", ex.Message);

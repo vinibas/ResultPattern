@@ -23,7 +23,7 @@ public record Result : ResultBase
     public static implicit operator Result(List<Error> errors) => Failure(errors);
 
     public override ResultResponse ToActionResponse()
-        => IsSuccess ? new ResultResponseSuccess() : new ResultResponseError(Error.ListDescriptions(), Error.Type);
+        => IsSuccess ? ResultResponseSuccess.Create() : new ResultResponseError(Error.ListDescriptions(), Error.Type);
 }
 
 public record Result<T> : ResultBase
@@ -40,7 +40,7 @@ public record Result<T> : ResultBase
     public static implicit operator Result<T>(List<Error> errors) => Failure(errors);
 
     public override ResultResponse ToActionResponse()
-        => IsSuccess ? new ResultResponseSuccess<T>(Data!) : new ResultResponseError(Error.ListDescriptions(), Error.Type);
+        => IsSuccess ? ResultResponseSuccess.Create(Data!) : new ResultResponseError(Error.ListDescriptions(), Error.Type);
 
     public static implicit operator Result<T>(T item) => Success(item);
     public static implicit operator Result<T>(Error error) => Failure(error);

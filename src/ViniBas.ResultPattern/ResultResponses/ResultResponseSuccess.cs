@@ -2,18 +2,19 @@ namespace ViniBas.ResultPattern.ResultResponses;
 
 public record ResultResponseSuccess : ResultResponse
 {
-    public ResultResponseSuccess()
+    protected ResultResponseSuccess()
         => IsSuccess = true;
 
     public static ResultResponseSuccess Create() => new();
-    public static ResultResponseSuccess<T> Create<T>(T data) => new(data);
-
+    public static ResultResponseSuccess<T> Create<T>(T data) => ResultResponseSuccess<T>.Create(data);
 }
 
 public record ResultResponseSuccess<T> : ResultResponseSuccess
 {
-    public ResultResponseSuccess(T data) : base()
+    private ResultResponseSuccess(T data) : base()
         => Data = data;
 
     public T Data { get; set; }
+
+    public static ResultResponseSuccess<T> Create(T data) => new(data);
 }

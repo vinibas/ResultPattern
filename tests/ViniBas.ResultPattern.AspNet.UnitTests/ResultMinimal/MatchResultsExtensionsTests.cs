@@ -18,8 +18,8 @@ public class MatchResultsExtensionsTests
     [InlineData(false)]
     public void Match_ResultSuccess_ShouldReturnOnSuccess(bool isAResponseType)
     {
-        var resultResponse = new ResultResponseSuccess();
-        var resultResponseT = new ResultResponseSuccess<string>("Test Data");
+        var resultResponse = ResultResponseSuccess.Create();
+        var resultResponseT = ResultResponseSuccess.Create("Test Data");
         var result = Result.Success();
         var resultT = Result<string>.Success("Test Data");
         

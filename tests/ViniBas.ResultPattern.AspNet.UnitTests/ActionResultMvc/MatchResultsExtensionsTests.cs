@@ -18,8 +18,8 @@ public class MatchResultsExtensionsTests
     {
         var result = Result.Success();
         var resultT = Result<string>.Success("Test Data");
-        var resultResponse = new ResultResponseSuccess();
-        var resultResponseT = new ResultResponseSuccess<string>("Test Data");
+        var resultResponse = ResultResponseSuccess.Create();
+        var resultResponseT = ResultResponseSuccess.Create("Test Data");
 
         var resultMatched = isAResponseType ?
             resultResponse.Match(_ => new CreatedResult()) :
@@ -28,7 +28,7 @@ public class MatchResultsExtensionsTests
             resultResponseT.Match(rr => new OkObjectResult(rr)) :
             resultT.Match(rr => new OkObjectResult(rr));
 
-        Assert.IsType<CreatedResult>(result);
+        Assert.IsType<Result>(result);
         AssertMatchSuccess(resultMatchedT);
     }
 

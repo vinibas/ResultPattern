@@ -7,7 +7,7 @@ public class ResultResponseSuccessTests
     [Fact]
     public void Constructor_ShouldInitializeCorrectly()
     {
-        var resultResponseSuccess = new ResultResponseSuccess();
+        var resultResponseSuccess = ResultResponseSuccess.Create();
 
         Assert.True(resultResponseSuccess.IsSuccess);
     }
@@ -18,8 +18,8 @@ public class ResultResponseSuccessTests
         var @string = "Test Data";
         var date = DateTime.Now;
 
-        var resultResponseSuccessStr = new ResultResponseSuccess<string>(@string);
-        var resultResponseSuccessDt = new ResultResponseSuccess<DateTime>(date);
+        var resultResponseSuccessStr = ResultResponseSuccess.Create(@string);
+        var resultResponseSuccessDt = ResultResponseSuccess.Create(date);
 
         Assert.True(resultResponseSuccessStr.IsSuccess);
         Assert.Equal(@string, resultResponseSuccessStr.Data);
