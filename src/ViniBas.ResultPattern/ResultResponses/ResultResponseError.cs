@@ -1,5 +1,3 @@
-using ViniBas.ResultPattern.ResultObjects;
-
 namespace ViniBas.ResultPattern.ResultResponses;
 
 public record ResultResponseError : ResultResponse

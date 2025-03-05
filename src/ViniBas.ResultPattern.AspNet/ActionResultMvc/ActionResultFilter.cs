@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
 
-namespace ViniBas.ResultPattern.AspNet;
+namespace ViniBas.ResultPattern.AspNet.ActionResultMvc;
 
 public sealed class ActionResultFilter : IActionFilter
 {

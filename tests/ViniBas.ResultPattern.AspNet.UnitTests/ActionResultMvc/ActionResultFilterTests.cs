@@ -6,8 +6,9 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
+using ViniBas.ResultPattern.AspNet.ActionResultMvc;
 
-namespace ViniBas.ResultPattern.AspNet.UnitTests;
+namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
 
 public class ActionResultFilterTests
 {

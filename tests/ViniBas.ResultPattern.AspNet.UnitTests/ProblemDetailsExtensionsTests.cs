@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
 
@@ -11,13 +10,15 @@ public class ProblemDetailsExtensionsTests
     private readonly string _problemDetailsDetail = string.Join(Environment.NewLine, [ "Error 1", "Error 2" ]);
 
     [Fact]
-    public void ToProblemDetails_ShouldReturnProblemDetails()
+    public void ToProblemDetails_WithResultResponseError_ShouldReturnProblemDetails()
     {
-        var result = _resultResponse.ToProblemDetails();
+        var problemDetails = _resultResponse.ToProblemDetails();
 
-        var probDet = Assert.IsType<ProblemDetails>(result);
-        Assert.Equal(_problemDetailsDetail, probDet.Detail);
-        Assert.Equal(400, probDet.Status);
+        Assert.IsType<ProblemDetails>(problemDetails);
+        Assert.Equal(_problemDetailsDetail, problemDetails.Detail);
+        Assert.Equal(400, problemDetails.Status);
+        Assert.Equal(false, problemDetails.Extensions["isSuccess"]);
+        Assert.Equal(_resultResponse.Errors, problemDetails.Extensions["errors"]);
     }
 
     [Fact]
@@ -27,11 +28,11 @@ public class ProblemDetailsExtensionsTests
         ErrorTypeMaps.Maps.Add("NewType", (304, "New Type"));
         
         var resultResponse = new ResultResponseError([ "Error 1", "Error 2" ], "NewType");
-        var result = resultResponse.ToProblemDetails();
+        var problemDetails = resultResponse.ToProblemDetails();
 
-        var probDet = Assert.IsType<ProblemDetails>(result);
-        Assert.Equal("New Type", result.Title);
-        Assert.Equal(304, probDet.Status);
+        Assert.IsType<ProblemDetails>(problemDetails);
+        Assert.Equal("New Type", problemDetails.Title);
+        Assert.Equal(304, problemDetails.Status);
     }
 
     [Fact]
@@ -40,56 +41,20 @@ public class ProblemDetailsExtensionsTests
         Error.ErrorTypes.AddTypes("NewType");
         
         var resultResponse = new ResultResponseError([ "Error 1", "Error 2" ], "NewType");
-        var result = resultResponse.ToProblemDetails();
+        var problemDetails = resultResponse.ToProblemDetails();
 
-        var probDet = Assert.IsType<ProblemDetails>(result);
-        Assert.Equal("Server Failure", result.Title);
-        Assert.Equal(500, probDet.Status);
+        Assert.IsType<ProblemDetails>(problemDetails);
+        Assert.Equal("Server Failure", problemDetails.Title);
+        Assert.Equal(500, problemDetails.Status);
     }
 
     [Fact]
-    public void ToProblemDetailsActionResult_ShouldReturnProblemDetails()
+    public void ToProblemDetails_WithResultResponseSuccess_ThrowException()
     {
-        var result = _resultResponse.ToProblemDetailsActionResult();
+        var resultResponse = new ResultResponseSuccess();
 
-        var objectResult = Assert.IsType<ObjectResult>(result);
-        var probDet = Assert.IsType<ProblemDetails>(objectResult.Value);
-        Assert.Equal(_problemDetailsDetail, probDet.Detail);
+        var ex = Assert.Throws<InvalidOperationException>(() => resultResponse.ToProblemDetails());
+        Assert.Equal("Unable to convert a valid ResultResponse to a ProblemDetails.", ex.Message);
     }
 
-    [Fact]
-    public void ToProblemDetails_ModelState_ShouldReturnProblemDetails()
-    {
-        var modelState = new ModelStateDictionary();
-        modelState.AddModelError("key", "error");
-
-        var result = modelState.ToProblemDetailsActionResult();
-
-        var objectResult = Assert.IsType<ObjectResult>(result);
-        var probDet = Assert.IsType<ProblemDetails>(objectResult.Value);
-        Assert.Equal("error", probDet.Detail);
-    }
-
-    [Fact]
-    public void ToProblemDetails_Error_ShouldReturnProblemDetails()
-    {
-        var error = new Error("code", "description", ErrorTypes.Validation);
-
-        var result = error.ToProblemDetails();
-
-        var probDet = Assert.IsType<ProblemDetails>(result);
-        Assert.Equal("description", probDet.Detail);
-    }
-
-    [Fact]
-    public void ToProblemDetailsActionResult_Error_ShouldReturnProblemDetails()
-    {
-        var error = new Error("code", "description", ErrorTypes.Validation);
-
-        var result = error.ToProblemDetailsActionResult();
-
-        var objectResult =Assert.IsType<ObjectResult>(result);
-        var probDet = Assert.IsType<ProblemDetails>(objectResult.Value);
-        Assert.Equal("description", probDet.Detail);
-    }
 }
