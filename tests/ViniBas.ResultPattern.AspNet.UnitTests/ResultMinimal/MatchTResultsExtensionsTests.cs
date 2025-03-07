@@ -107,19 +107,22 @@ public class MatchTResultsExtensionsTests
     public void MatchT_ResultResponseError_ShouldReturnProblemDetailsOnFailure(bool isAResponseType)
     {
         var result = isAResponseType ?
-            _resultResponseError.Match(_ => Results.NoContent()) :
-            _resultError.Match(_ => Results.NoContent());
+            _resultResponseError.Match<IResult, IResult>(_ => Results.NoContent()) :
+            _resultError.Match<IResult, IResult>(_ => Results.NoContent());
         var resultT = isAResponseType ?
-            _resultResponseError.Match(_ => TypedResults.NoContent()) :
-            _resultError.Match(_ => TypedResults.NoContent());
+            _resultResponseError.Match<Results<NoContent, ProblemHttpResult>, NoContent>(_ => TypedResults.NoContent()) :
+            _resultError.Match<Results<NoContent, ProblemHttpResult>, NoContent>(_ => TypedResults.NoContent());
         var resultData = isAResponseType ?
-            _resultResponseError.Match(_ => Results.Content("Test Data")) :
-            _resultError.Match(_ => Results.Content("Test Data"));
+            _resultResponseError.Match<IResult, IResult>(_ => Results.Content("Test Data")) :
+            _resultError.Match<IResult, IResult>(_ => Results.Content("Test Data"));
         var resultDataT = isAResponseType ?
-            _resultResponseError.Match(_ => TypedResults.Content("Test Data")) :
-            _resultError.Match(_ => TypedResults.Content("Test Data"));
+            _resultResponseError.Match<Results<ContentHttpResult, ProblemHttpResult>, ContentHttpResult>
+                (_ => TypedResults.Content("Test Data")) :
+            _resultError.Match<Results<ContentHttpResult, ProblemHttpResult>, ContentHttpResult>
+                (_ => TypedResults.Content("Test Data"));
 
-        foreach (var resultItem in new [] { result, resultT, resultData, resultDataT })
+
+        foreach (var resultItem in new [] { result, resultT.Result, resultData, resultDataT.Result })
         {
             var objRes = Assert.IsType<ProblemHttpResult>(resultItem);
             var probDet = Assert.IsType<ProblemDetails>(objRes.ProblemDetails);
