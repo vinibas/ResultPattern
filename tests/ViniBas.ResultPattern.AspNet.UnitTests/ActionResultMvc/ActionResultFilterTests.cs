@@ -45,10 +45,10 @@ public class ActionResultFilterTests
 
         var modelState = new ModelStateDictionary();
         modelState.AddModelError("", "error");
-        var httpContext = new DefaultHttpContext();
+        
         _context = new ActionExecutedContext(
             new ActionContext(
-                httpContext: httpContext,
+                httpContext: new DefaultHttpContext(),
                 routeData: new RouteData(),
                 actionDescriptor: new ActionDescriptor(),
                 modelState: modelState

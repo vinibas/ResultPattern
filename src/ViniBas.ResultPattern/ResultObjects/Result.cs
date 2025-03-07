@@ -25,6 +25,8 @@ public record Result : ResultBase
     private Result(Error error) : base(error) { }
 
     public static Result Success() => new(Error.None);
+    public static Result<T> Success<T>(T item) => Result<T>.Success(item);
+
     public static Result Failure(Error error) => new(error);
 
     public static implicit operator Result(List<Error> errors) => Failure(errors);
