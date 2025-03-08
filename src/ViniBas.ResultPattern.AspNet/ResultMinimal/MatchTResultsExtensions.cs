@@ -102,7 +102,7 @@ public static class MatchTResultsExtensions
         
         var implicitOperator = getImplicitOperatorFromCacheOrReflection<T_Result>(iresult.GetType());
         if (implicitOperator != null)
-            return (T_Result)implicitOperator.Invoke(null, [ iresult ])!;
+            return (T_Result)implicitOperator.Invoke(null, new object[] { iresult })!;
         
         try
         {

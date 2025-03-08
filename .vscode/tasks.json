@@ -1,0 +1,114 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-local",
+            "type": "shell",
+            "command": "dotnet",
+            "args": ["build", "-p:UseLocalReference=true"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-nuget-local",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
+                "-p:UseLocalReference=false",
+                "--source",
+                "${workspaceFolder}/nupkgs",
+                "&&",
+                "dotnet",
+                "pack",
+                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
+                "-o",
+                "${workspaceFolder}/nupkgs"
+            ],
+            "dependsOn": ["pack-local-ResultPattern"],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack-local-ResultPattern",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "pack",
+                "${workspaceFolder}/src/ViniBas.ResultPattern/ViniBas.ResultPattern.csproj",
+                "-o",
+                "${workspaceFolder}/nupkgs"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-nuget-release",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
+                "-c",
+                "Release",
+                "-p:UseLocalReference=false",
+                "--source",
+                "${workspaceFolder}/nupkgs",
+                "&&",
+                "dotnet",
+                "pack",
+                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
+                "-c",
+                "Release",
+                "-o",
+                "${workspaceFolder}/nupkgs"
+            ],
+            "dependsOn": ["pack-release-ResultPattern"],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack-release-ResultPattern",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "pack",
+                "${workspaceFolder}/src/ViniBas.ResultPattern/ViniBas.ResultPattern.csproj",
+                "-c",
+                "Release",
+                "-o",
+                "${workspaceFolder}/nupkgs"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack-local-ResultPattern.AspNet",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "pack",
+                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
+                "-o",
+                "${workspaceFolder}/nupkgs"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack-release-ResultPattern.AspNet",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "pack",
+                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
+                "-c",
+                "Release",
+                "-o",
+                "${workspaceFolder}/nupkgs"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

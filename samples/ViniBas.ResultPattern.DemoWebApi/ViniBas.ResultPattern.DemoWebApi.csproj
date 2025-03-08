@@ -3,8 +3,11 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RestoreSources>$(MSBuildProjectDirectory)/../../nupkgs</RestoreSources>
   </PropertyGroup>
+  
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ViniBas.ResultPattern.AspNet\ViniBas.ResultPattern.AspNet.csproj" />
+    <PackageReference Include="ViniBas.ResultPattern.AspNet" Version="1.0.0-beta" />
   </ItemGroup>
+  
 </Project>

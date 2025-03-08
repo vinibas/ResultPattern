@@ -24,7 +24,7 @@ public static class ModelStateExtensions
         var modelStateErrors = modelState.SelectMany(kv =>
         {
             if (kv.Value is null)
-                return [ new Error.ErrorDetails(kv.Key, string.Empty) ];
+                return new List<Error.ErrorDetails> { new (kv.Key, string.Empty) };
 
             return kv.Value.Errors.Select(e => new Error.ErrorDetails(kv.Key, e.ErrorMessage));
 

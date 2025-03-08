@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks>net9.0;net8.0;net7.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   
   <ItemGroup>
-    <None Include="LICENSE.txt" Pack="true" PackagePath="" />
+    <None Include="../../LICENSE.txt" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -24,4 +24,10 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\ViniBas.ResultPattern\ViniBas.ResultPattern.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ViniBas.ResultPattern\ViniBas.ResultPattern.csproj" Condition="'$(UseLocalReference)' == 'true'" />
+    <PackageReference Include="ViniBas.ResultPattern" Version="1.0.0-beta" Condition="'$(UseLocalReference)' != 'true'" />
+  </ItemGroup>
+
 </Project>

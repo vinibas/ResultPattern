@@ -405,5 +405,6 @@ FodyWeavers.xsd
 # Local History for Visual Studio Code
 .history/
 
+nupkgs/
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#DotnetCore,VisualStudio,VisualStudioCode,c#

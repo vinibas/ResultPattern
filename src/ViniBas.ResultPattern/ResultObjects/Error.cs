@@ -20,7 +20,7 @@ public sealed record Error
         if (!ErrorTypes.Types.Contains(type))
             throw new ArgumentException("Type not defined in ErrorTypes.", nameof(type));
         
-        Details = [new (code, description)];
+        Details = new ErrorDetails[] { new (code, description) };
         Type = type;
     }
 
@@ -74,12 +74,13 @@ public sealed class ErrorTypes
     public const string NotFound = "NotFound";
     public const string Conflict = "Conflict";
     
-    public HashSet<string> _types = [
+    public HashSet<string> _types = new ()
+    {
         Failure,
         Validation,
         NotFound,
         Conflict,
-    ];
+    };
     public IReadOnlySet<string> Types { get => _types; }
 
     internal ErrorTypes() { }
