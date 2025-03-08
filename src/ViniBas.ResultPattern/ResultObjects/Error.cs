@@ -59,7 +59,12 @@ public sealed record Error
     public IEnumerable<string> ListDescriptions()
         => Details.Select(d => d.Description).ToList();
 
-    public sealed record ErrorDetails(string Code, string Description);
+    public override string ToString() => string.Join(Environment.NewLine, Details.Select(d => d.ToString()));
+
+    public sealed record ErrorDetails(string Code, string Description)
+    {
+        public override string ToString() => $"({Code}): {Description}";
+    };
 }
 
 public sealed class ErrorTypes

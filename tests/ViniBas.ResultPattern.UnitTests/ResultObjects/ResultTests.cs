@@ -72,6 +72,18 @@ public class ResultTests : ResultTestsBase
         Assert.Equal(_error.ListDescriptions(), errorResponse.Errors);
         Assert.Equal(_error.Type, errorResponse.Type);
     }
+
+    [Fact]
+    public void ImplicitOperatorResult_FromListOfErrors_ShouldCreateFailureResult()
+    {
+        List<Error> errors = [ Error.NotFound("Code1", "Description1"), Error.NotFound("Code2", "Description2") ];
+        
+        Result result = errors;
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(ErrorTypes.NotFound, result.Error.Type);
+        Assert.Equal("(Code1): Description1" + Environment.NewLine + "(Code2): Description2", result.Error.ToString());
+    }
 }
 
 public class ResultTTests : ResultTestsBase
@@ -175,5 +187,42 @@ public class ResultTTests : ResultTestsBase
         var errorResponse = (ResultResponseError)response;
         Assert.Equal(_error.ListDescriptions(), errorResponse.Errors);
         Assert.Equal(_error.Type, errorResponse.Type);
+    }
+
+    [Fact]
+    public void ImplicitOperatorResultT_FromT_ShouldCreateSuccessResult()
+    {
+        Result<string> result = "Success";
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.IsFailure);
+        Assert.Equal(Error.None, result.Error);
+        Assert.Equal("Success", result.Data);
+    }
+
+    [Fact]
+    public void ImplicitOperatorResultT_FromError_ShouldCreateFailureResult()
+    {
+        Error error = Error.NotFound("Code1", "Description1");
+        
+        Result<object> result = error;
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorTypes.NotFound, result.Error.Type);
+        Assert.Equal("(Code1): Description1", result.Error.ToString());
+    }
+
+    [Fact]
+    public void ImplicitOperatorResultT_FromListOfErrors_ShouldCreateFailureResult()
+    {
+        List<Error> errors = [ Error.NotFound("Code1", "Description1"), Error.NotFound("Code2", "Description2") ];
+        
+        Result<object> result = errors;
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorTypes.NotFound, result.Error.Type);
+        Assert.Equal("(Code1): Description1" + Environment.NewLine + "(Code2): Description2", result.Error.ToString());
     }
 }

@@ -49,6 +49,13 @@ public class ErrorTests
     }
 
     [Fact]
+    public void CreateError_WithMultipleDetailsEmpty_ShouldThrowException()
+    {   
+        var ex = Assert.Throws<ArgumentException>(() => new Error([], ErrorTypes.Validation));
+        Assert.Equal("Details cannot be empty (Parameter 'details')", ex.Message);
+    }
+
+    [Fact]
     public void CreateError_WithNewType_ShouldInitializeCorrectly()
     {
         Error.ErrorTypes.AddTypes("NewType");
@@ -77,7 +84,7 @@ public class ErrorTests
     }
 
     [Fact]
-    public void ImplicitConversion_FromErrorToResult_ShouldReturnFailureResult()
+    public void ImplicitOperator_FromErrorToResult_ShouldReturnFailureResult()
     {
         Result result = _error;
 
@@ -87,7 +94,7 @@ public class ErrorTests
     }
 
     [Fact]
-    public void ImplicitConversion_FromErrorNoneToResult_ShouldReturnSuccessResult()
+    public void ImplicitOperator_FromErrorNoneToResult_ShouldReturnSuccessResult()
     {
         Result result = Error.None;
 
@@ -96,7 +103,7 @@ public class ErrorTests
     }
 
     [Fact]
-    public void ImplicitConversion_FromListOfErrorsToError_ShouldCombineDetails()
+    public void ImplicitOperator_FromListOfErrorsToError_ShouldCombineDetails()
     {
         Error combinedError = _errors;
         var errorDetails = combinedError.Details.ToList();
@@ -111,9 +118,8 @@ public class ErrorTests
         Assert.Equal("Description2", errorDetails[1].Description);
     }
 
-
     [Fact]
-    public void ImplicitConversion_FromListOfDistinctErrorTypesToError_ShouldThrowArgumentException()
+    public void ImplicitOperator_FromListOfDistinctErrorTypesToError_ShouldThrowArgumentException()
     {
         var errors = new List<Error>
         {
@@ -123,6 +129,13 @@ public class ErrorTests
 
         var ex = Assert.Throws<ArgumentException>(() => { Error combinedError = errors; });
         Assert.Equal("All errors must be of the same type (Parameter 'errors')", ex.Message);
+    }
+
+    [Fact]
+    public void ImplicitOperator_FromEmptyListOfErrorsToError_ShouldThrowArgumentException()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => { Error combinedError = new List<Error>(); });
+        Assert.Equal("Errors cannot be empty (Parameter 'errors')", ex.Message);
     }
 
     [Theory]
