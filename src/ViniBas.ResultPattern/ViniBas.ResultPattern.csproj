@@ -7,6 +7,7 @@
   
   <ItemGroup>
     <None Include="../../LICENSE.txt" Pack="true" PackagePath="" />
+    <None Include="../../README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -16,7 +17,11 @@
     <Authors>Vinícius Bastos da Silva</Authors>
     <Description>Library that implements the Result Pattern in .NET in a clean and flexible way.</Description>
     <Copyright>Copyright (c) Vinícius Bastos da Silva 2025</Copyright>
+    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/vinibas/ResultPattern</PackageProjectUrl>
     <RepositoryUrl>https://github.com/vinibas/ResultPattern</RepositoryUrl>
+    <PackageTags>ResultPattern;Result Pattern;Result;Notification;Notification Pattern;ViniBas</PackageTags>
   </PropertyGroup>
 </Project>
