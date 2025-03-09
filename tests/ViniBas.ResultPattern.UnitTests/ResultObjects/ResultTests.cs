@@ -259,4 +259,17 @@ public class ResultTests : ResultTestsBase
         Assert.Equal(date, resultDt.Data);
         Assert.Equal(Error.None, resultDt.Error);
     }
+
+    [Fact]
+    public void ToResponse_WhenFailureHasData_ShouldReturnResultResponseError()
+    {
+        var result = Result.Success("testData");
+        result.AddError(Error.Failure("code1", "description1"));
+
+        var response = result.ToResponse();
+
+        var resultError = Assert.IsType<ResultResponseError>(response);
+        Assert.False(resultError.IsSuccess);
+        Assert.Equal(new [] { "description1" }, resultError.Errors);
+    }
 }
