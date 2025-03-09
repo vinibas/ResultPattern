@@ -70,7 +70,7 @@ public static class MatchTResultsExtensions
         Func<ResultResponse, T_Success> onSuccess)
         where T_Result : IResult
         where T_Success : IResult
-        => result.ToActionResponse().Match<T_Result, T_Success>(onSuccess);
+        => result.ToResponse().Match<T_Result, T_Success>(onSuccess);
 
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
@@ -91,7 +91,7 @@ public static class MatchTResultsExtensions
         where T_Result : IResult
         where T_Success : IResult
         where T_Failure : IResult
-        => result.ToActionResponse().Match<T_Result, T_Success, T_Failure>(onSuccess, onFailure);
+        => result.ToResponse().Match<T_Result, T_Success, T_Failure>(onSuccess, onFailure);
 
     private static T_Result TreatCast<T_Result>(IResult iresult)
         where T_Result : IResult

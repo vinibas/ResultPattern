@@ -39,7 +39,7 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the onSuccess function on success, or a ProblemDetails on failure.</returns>
     public static IActionResult Match(this ResultBase result,
         Func<ResultResponse, IActionResult> onSuccess)
-        => result.ToActionResponse().Match(onSuccess);
+        => result.ToResponse().Match(onSuccess);
 
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
@@ -49,5 +49,5 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the onSuccess function in case of success, or of onFailure in case of failure.</returns>
     public static IActionResult Match(this ResultBase result,
         Func<ResultResponse, IActionResult> onSuccess, Func<ResultResponse, IActionResult> onFailure)
-        => result.ToActionResponse().Match(onSuccess, onFailure);
+        => result.ToResponse().Match(onSuccess, onFailure);
 }

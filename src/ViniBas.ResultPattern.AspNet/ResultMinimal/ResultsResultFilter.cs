@@ -23,8 +23,8 @@ public sealed class ResultsResultFilter : IEndpointFilter
             Error error => error.ToProblemDetails(),
             IEnumerable<Error> errors => ((Error)errors.ToList()).ToProblemDetails(),
             ResultBase result => result.IsSuccess ?
-                result.ToActionResponse() :
-                result.ToActionResponse().ToProblemDetails(),
+                result.ToResponse() :
+                result.ToResponse().ToProblemDetails(),
             ResultResponseError resultResponseError => resultResponseError.ToProblemDetails(),
             _ => endpointResult,
         };

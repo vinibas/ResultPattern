@@ -53,19 +53,19 @@ public class ResultTests : ResultTestsBase
     }
 
     [Fact]
-    public void ToActionResponse_ShouldReturnSuccessResponse()
+    public void ToResponse_ShouldReturnSuccessResponse()
     {
         var result = Result.Success();
-        var response = result.ToActionResponse();
+        var response = result.ToResponse();
 
         Assert.IsType<ResultResponseSuccess>(response);
     }
 
     [Fact]
-    public void ToActionResponse_ShouldReturnErrorResponse()
+    public void ToResponse_ShouldReturnErrorResponse()
     {
         var result = Result.Failure(_error);
-        var response = result.ToActionResponse();
+        var response = result.ToResponse();
 
         Assert.IsType<ResultResponseError>(response);
         var errorResponse = (ResultResponseError)response;
@@ -166,11 +166,11 @@ public class ResultTTests : ResultTestsBase
     }
 
     [Fact]
-    public void ToActionResponse_ShouldReturnSuccessResponse()
+    public void ToResponse_ShouldReturnSuccessResponse()
     {
         var data = "TestData";
         var result = Result<string>.Success(data);
-        var response = result.ToActionResponse();
+        var response = result.ToResponse();
 
         Assert.IsType<ResultResponseSuccess<string>>(response);
         var successResponse = (ResultResponseSuccess<string>)response;
@@ -178,10 +178,10 @@ public class ResultTTests : ResultTestsBase
     }
 
     [Fact]
-    public void ToActionResponse_ShouldReturnErrorResponse()
+    public void ToResponse_ShouldReturnErrorResponse()
     {
         var result = Result<string>.Failure(_error);
-        var response = result.ToActionResponse();
+        var response = result.ToResponse();
 
         Assert.IsType<ResultResponseError>(response);
         var errorResponse = (ResultResponseError)response;

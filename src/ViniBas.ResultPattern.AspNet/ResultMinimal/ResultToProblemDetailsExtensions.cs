@@ -19,7 +19,7 @@ public static class ResultToProblemDetailsExtensions
         => ProblemDetailsToResult(resultResponse.ToProblemDetails());
 
     public static ProblemDetails ToProblemDetails(this Error error)
-        => ((Result) error).ToActionResponse().ToProblemDetails();
+        => ((Result) error).ToResponse().ToProblemDetails();
 
     public static ProblemHttpResult ToProblemDetailsResult(this Error error)
         => ProblemDetailsToResult(error.ToProblemDetails());
