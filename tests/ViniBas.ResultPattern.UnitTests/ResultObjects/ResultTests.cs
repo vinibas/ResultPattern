@@ -25,31 +25,90 @@ public class ResultTests : ResultTestsBase
     [Fact]
     public void StaticConstructor_Success_ShouldBeSuccess()
     {
-        var result = Result.Success();
+        var date = DateTime.Now;
 
-        Assert.True(result.IsSuccess);
-        Assert.False(result.IsFailure);
-        Assert.Equal(Error.None, result.Error);
+        var result = Result.Success();
+        var resultStr = Result<string>.Success("TestData");
+        var resultDt = Result<DateTime>.Success(date);
+
+        foreach (var resultItem in new ResultBase[]
+        {
+            result,
+            resultStr,
+            resultDt,
+        })
+        {
+            Assert.True(resultItem.IsSuccess);
+            Assert.False(resultItem.IsFailure);
+            Assert.Equal(Error.None, resultItem.Error);
+        }
+
+        Assert.Equal("TestData", resultStr.Data);
+        Assert.Equal(date, resultDt.Data);
     }
 
     [Fact]
     public void StaticConstructor_Failure_ShouldBeFailure()
     {
         var result = Result.Failure(_error);
+        var resultStr = Result<string>.Failure(_error);
+        var resultDt = Result<DateTime>.Failure(_error);
 
-        Assert.False(result.IsSuccess);
-        Assert.True(result.IsFailure);
-        Assert.Equal(_error, result.Error);
+        foreach (var resultItem in new ResultBase[]
+        {
+            result,
+            resultStr,
+            resultDt,
+        })
+        {
+            Assert.False(resultItem.IsSuccess);
+            Assert.True(resultItem.IsFailure);
+            Assert.Equal(_error, resultItem.Error);
+        }
+
+        Assert.Null(resultStr.Data);
+        Assert.Equal(resultDt.Data, default);
+    }
+
+    [Fact]
+    public void ImplicitConversion_FromError_ShouldBeFailure()
+    {
+        Result result = _error;
+        Result<string> resultT = _error;
+
+        foreach (var resultItem in new ResultBase[]
+        {
+            result,
+            resultT,
+        })
+        {
+            Assert.False(resultItem.IsSuccess);
+            Assert.True(resultItem.IsFailure);
+            Assert.Equal(_error, resultItem.Error);
+        }
+        Assert.Null(resultT.Data);
     }
 
     [Fact]
     public void ImplicitConversion_FromListOfErrors_ShouldBeFailure()
     {
         Result result = _errors;
+        Result<object> resultT = _errors;
 
-        Assert.False(result.IsSuccess);
-        Assert.True(result.IsFailure);
-        Assert.Equal(_errors.SelectMany(e => e.Details).ToList(), result.Error.Details);
+        foreach (var resultItem in new ResultBase[]
+        {
+            result,
+            resultT,
+        })
+        {
+            var expectedErrorDetails = _errors.SelectMany(e => e.Details).ToList();
+            
+            Assert.False(resultItem.IsSuccess);
+            Assert.True(resultItem.IsFailure);
+            Assert.Equal(expectedErrorDetails, resultItem.Error.Details);
+        }
+
+        Assert.Null(resultT.Data);
     }
 
     [Fact]
@@ -58,7 +117,15 @@ public class ResultTests : ResultTestsBase
         var result = Result.Success();
         var response = result.ToResponse();
 
+        var data = "TestData";
+        var resultT = Result<string>.Success(data);
+        var responseT = resultT.ToResponse();
+
         Assert.IsType<ResultResponseSuccess>(response);
+
+        Assert.IsType<ResultResponseSuccess<string>>(responseT);
+        var successResponseT = (ResultResponseSuccess<string>)responseT;
+        Assert.Equal(data, successResponseT.Data);
     }
 
     [Fact]
@@ -67,10 +134,37 @@ public class ResultTests : ResultTestsBase
         var result = Result.Failure(_error);
         var response = result.ToResponse();
 
-        Assert.IsType<ResultResponseError>(response);
-        var errorResponse = (ResultResponseError)response;
-        Assert.Equal(_error.ListDescriptions(), errorResponse.Errors);
-        Assert.Equal(_error.Type, errorResponse.Type);
+        var resultT = Result<string>.Failure(_error);
+        var responseT = resultT.ToResponse();
+
+        foreach (var responseItem in new [] { response, responseT })
+        {
+            Assert.IsType<ResultResponseError>(responseItem);
+            var errorResponse = (ResultResponseError)responseItem;
+            Assert.Equal(_error.ListDescriptions(), errorResponse.Errors);
+            Assert.Equal(_error.Type, errorResponse.Type);
+        }
+    }
+
+    [Fact]
+    public void ImplicitOperatorResultT_FromError_ShouldCreateFailureResult()
+    {
+        Error error = Error.NotFound("Code1", "Description1");
+        
+        Result result = error;
+        Result<object> resultT = error;
+
+        foreach (var resultItem in new ResultBase[]
+        {
+            result,
+            resultT,
+        })
+        {
+            Assert.False(resultItem.IsSuccess);
+            Assert.True(resultItem.IsFailure);
+            Assert.Equal(ErrorTypes.NotFound, resultItem.Error.Type);
+            Assert.Equal("(Code1): Description1", resultItem.Error.ToString());
+        }
     }
 
     [Fact]
@@ -79,63 +173,75 @@ public class ResultTests : ResultTestsBase
         List<Error> errors = [ Error.NotFound("Code1", "Description1"), Error.NotFound("Code2", "Description2") ];
         
         Result result = errors;
+        Result<object> resultT = errors;
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorTypes.NotFound, result.Error.Type);
-        Assert.Equal("(Code1): Description1" + Environment.NewLine + "(Code2): Description2", result.Error.ToString());
-    }
-}
-
-public class ResultTTests : ResultTestsBase
-{
-    [Fact]
-    public void Success_ShouldBeSuccess()
-    {
-        var @string = "TestData";
-        var resultStr = Result<string>.Success(@string);
-        
-        var date = DateTime.Now;
-        var resultDt = Result<DateTime>.Success(date);
-
-        Assert.True(resultStr.IsSuccess);
-        Assert.False(resultStr.IsFailure);
-        Assert.Equal(@string, resultStr.Data);
-
-        Assert.True(resultDt.IsSuccess);
-        Assert.False(resultDt.IsFailure);
-        Assert.Equal(Error.None, resultDt.Error);
+        foreach (var resultItem in new ResultBase[]
+        {
+            result,
+            resultT,
+        })
+        {
+            var expectedErrorStr = "(Code1): Description1" + Environment.NewLine + "(Code2): Description2";
+            
+            Assert.False(resultItem.IsSuccess);
+            Assert.True(resultItem.IsFailure);
+            Assert.Equal(ErrorTypes.NotFound, resultItem.Error.Type);
+            Assert.Equal(expectedErrorStr, resultItem.Error.ToString());
+        }
     }
 
     [Fact]
-    public void Failure_ShouldBeFailure()
+    public void AddError_SameTypeToResultFailure_ShouldAddToPreExistingErrors()
     {
-        var resultStr = Result<string>.Failure(_error);
-        var resultDt = Result<DateTime>.Failure(_error);
-        
-        Assert.False(resultStr.IsSuccess);
-        Assert.True(resultStr.IsFailure);
-        Assert.Equal(_error, resultStr.Error);
-        Assert.Null(resultStr.Data);
+        var preExistingErrors = new List<Error> { Error.Conflict("code1", "description1"), Error.Conflict("code2", "description2") };
+        var result = Result.Failure(preExistingErrors);
+        var newError = Error.Conflict("code3", "description3");
 
-        Assert.False(resultDt.IsSuccess);
-        Assert.True(resultDt.IsFailure);
-        Assert.Equal(_error, resultDt.Error);
-        Assert.Equal(resultDt.Data, default);
-    }
-
-    [Fact]
-    public void ImplicitConversion_FromListOfErrors_ShouldBeFailure()
-    {
-        Result<object> result = _errors;
+        result.AddError(newError);
 
         Assert.False(result.IsSuccess);
         Assert.True(result.IsFailure);
-        Assert.Equal(_errors.SelectMany(e => e.Details).ToList(), result.Error.Details);
-        Assert.Null(result.Data);
+        Assert.Equal(ErrorTypes.Conflict, result.Error.Type);
+        var errorExpected = string.Join(Environment.NewLine, new[]
+        {
+            "(code1): description1",
+            "(code2): description2",
+            "(code3): description3",
+        });
+        Assert.Equal(errorExpected, result.Error.ToString());
     }
 
     [Fact]
-    public void ImplicitConversion_FromItem_ShouldBeSuccess()
+    public void AddError_DifferentTypeToResultFailure_ThrowInvalidOperationException()
+    {
+        var result = Result.Failure(Error.NotFound("code1", "description1"));
+        var newError = Error.Validation("code2", "description2");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => result.AddError(newError));
+        Assert.Equal("The new error must be of the same type as the existing one.", ex.Message);
+    }
+
+    [Fact]
+    public void AddError_ToResultSuccess_ShouldConvertSuccessIntoFailure()
+    {
+        var result = Result.Success();
+        var resultT = Result<object>.Success(new object());
+        var newError = Error.Validation("code1", "description1");
+
+        result.AddError(newError);
+        resultT.AddError(newError);
+
+        foreach (var resultItem in new ResultBase[] { result, resultT })
+        {
+            Assert.False(resultItem.IsSuccess);
+            Assert.True(resultItem.IsFailure);
+            Assert.Equal(ErrorTypes.Validation, resultItem.Error.Type);
+            Assert.Equal("(code1): description1", resultItem.Error.ToString());
+        }
+    }
+
+    [Fact]
+    public void ImplicitOperatorResultT_FromT_ShouldCreateSuccessResult()
     {
         var @string = "TestData";
         Result<string> resultStr = @string;
@@ -152,77 +258,5 @@ public class ResultTTests : ResultTestsBase
         Assert.False(resultDt.IsFailure);
         Assert.Equal(date, resultDt.Data);
         Assert.Equal(Error.None, resultDt.Error);
-    }
-
-    [Fact]
-    public void ImplicitConversion_FromError_ShouldBeFailure()
-    {
-        Result<string> result = _error;
-
-        Assert.False(result.IsSuccess);
-        Assert.True(result.IsFailure);
-        Assert.Equal(_error, result.Error);
-        Assert.Null(result.Data);
-    }
-
-    [Fact]
-    public void ToResponse_ShouldReturnSuccessResponse()
-    {
-        var data = "TestData";
-        var result = Result<string>.Success(data);
-        var response = result.ToResponse();
-
-        Assert.IsType<ResultResponseSuccess<string>>(response);
-        var successResponse = (ResultResponseSuccess<string>)response;
-        Assert.Equal(data, successResponse.Data);
-    }
-
-    [Fact]
-    public void ToResponse_ShouldReturnErrorResponse()
-    {
-        var result = Result<string>.Failure(_error);
-        var response = result.ToResponse();
-
-        Assert.IsType<ResultResponseError>(response);
-        var errorResponse = (ResultResponseError)response;
-        Assert.Equal(_error.ListDescriptions(), errorResponse.Errors);
-        Assert.Equal(_error.Type, errorResponse.Type);
-    }
-
-    [Fact]
-    public void ImplicitOperatorResultT_FromT_ShouldCreateSuccessResult()
-    {
-        Result<string> result = "Success";
-
-        Assert.True(result.IsSuccess);
-        Assert.False(result.IsFailure);
-        Assert.Equal(Error.None, result.Error);
-        Assert.Equal("Success", result.Data);
-    }
-
-    [Fact]
-    public void ImplicitOperatorResultT_FromError_ShouldCreateFailureResult()
-    {
-        Error error = Error.NotFound("Code1", "Description1");
-        
-        Result<object> result = error;
-
-        Assert.False(result.IsSuccess);
-        Assert.True(result.IsFailure);
-        Assert.Equal(ErrorTypes.NotFound, result.Error.Type);
-        Assert.Equal("(Code1): Description1", result.Error.ToString());
-    }
-
-    [Fact]
-    public void ImplicitOperatorResultT_FromListOfErrors_ShouldCreateFailureResult()
-    {
-        List<Error> errors = [ Error.NotFound("Code1", "Description1"), Error.NotFound("Code2", "Description2") ];
-        
-        Result<object> result = errors;
-
-        Assert.False(result.IsSuccess);
-        Assert.True(result.IsFailure);
-        Assert.Equal(ErrorTypes.NotFound, result.Error.Type);
-        Assert.Equal("(Code1): Description1" + Environment.NewLine + "(Code2): Description2", result.Error.ToString());
     }
 }

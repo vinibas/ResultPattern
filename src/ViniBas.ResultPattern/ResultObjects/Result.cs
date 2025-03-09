@@ -13,11 +13,23 @@ public abstract record ResultBase
 {
     public bool IsSuccess { get => Error == Error.None; }
     public bool IsFailure => !IsSuccess;
-    public Error Error { get; }
+    public Error Error { get; private set; }
 
     protected ResultBase(Error error) => Error = error;
     
     public abstract ResultResponse ToResponse();
+
+    public void AddError(Error newError)
+    {
+        try
+        {
+            Error = Error == Error.None ? newError : new List<Error>() { Error, newError };
+        }
+        catch (ArgumentException ex) when (ex.Message == "All errors must be of the same type (Parameter 'errors')")
+        {
+            throw new InvalidOperationException("The new error must be of the same type as the existing one.", ex);
+        }
+    }
 }
 
 public record Result : ResultBase
