@@ -3,6 +3,8 @@
     <TargetFrameworks>net9.0;net8.0;net7.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   
   <ItemGroup>
@@ -17,7 +19,6 @@
     <Authors>Vinícius Bastos da Silva</Authors>
     <Description>Library that implements the Result Pattern in .NET in a clean and flexible way.</Description>
     <Copyright>Copyright (c) Vinícius Bastos da Silva 2025</Copyright>
-    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/vinibas/ResultPattern</PackageProjectUrl>
