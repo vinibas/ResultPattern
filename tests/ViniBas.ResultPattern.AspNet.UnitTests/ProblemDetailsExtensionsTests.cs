@@ -32,7 +32,7 @@ public class ProblemDetailsExtensionsTests
     public void ToProblemDetails_WithNewTypeMapped_ShouldReturnWithAssociatedStatusCode()
     {
         Error.ErrorTypes.AddTypes("NewType");
-        ErrorTypeMaps.Maps.Add("NewType", (304, "New Type"));
+        GlobalConfiguration.ErrorTypeMaps.Add("NewType", (304, "New Type"));
         
         var resultResponse = new ResultResponseError([ "Error 1", "Error 2" ], "NewType");
         var problemDetails = resultResponse.ToProblemDetails();

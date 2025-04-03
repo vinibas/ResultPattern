@@ -19,8 +19,8 @@ public static class MatchResultsExtensions
     /// <param name="onSuccess">Function to be executed in case of success.</param>
     /// <returns>Returns the result of the onSuccess function on success, or a ProblemDetails on failure.</returns>
     public static IResult Match(this ResultResponse resultResponse,
-        Func<ResultResponse, IResult> onSuccess)
-        => resultResponse.Match(onSuccess, response => response.ToProblemDetailsResult());
+        Func<ResultResponse, IResult> onSuccess, bool? useProblemDetails = null)
+        => resultResponse.Match(onSuccess, response => MatchHelper.OnErrorDefault(response, useProblemDetails));
 
     /// <summary>
     /// Checks whether a ResultResponse is a success or failure, and returns the result of the corresponding function
@@ -38,8 +38,8 @@ public static class MatchResultsExtensions
     /// <param name="onSuccess">Function to be executed in case of success.</param>
     /// <returns>Returns the result of the onSuccess function on success, or a ProblemDetails on failure.</returns>
     public static IResult Match(this ResultBase result,
-        Func<ResultResponse, IResult> onSuccess)
-        => result.ToResponse().Match(onSuccess);
+        Func<ResultResponse, IResult> onSuccess, bool? useProblemDetails = null)
+        => result.ToResponse().Match(onSuccess, useProblemDetails);
 
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the corresponding function

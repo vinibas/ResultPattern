@@ -12,34 +12,55 @@ using ViniBas.ResultPattern.AspNet.ActionResultMvc;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
 
+[Collection("No parallelism because of GlobalConfiguration.UseProblemDetails")]
 public class MatchResultsExtensionsTests
 {
-    private readonly Result _resultError = Result.Failure(new Error([ new ("err1", "Error 1"), new ("err2", "Error 2") ], ErrorTypes.Validation));
-    private readonly ResultResponseError _resultResponseError = new ([ "Error 1", "Error 2" ], ErrorTypes.Validation);
-    private readonly string _problemDetailsDetail = string.Join(Environment.NewLine, [ "Error 1", "Error 2" ]);
+    public MatchResultsExtensionsTests()
+    {
+        GlobalConfiguration.UseProblemDetails = true;
+    }
+
+    public static TheoryData<bool, bool, bool?> AllScenariosTestData => MatchTestsHelper.AllScenariosTestData;
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void Match_ResultResponseSuccess_ShouldReturnOnSuccess(bool isAResponseType)
+    [MemberData(nameof(AllScenariosTestData))]
+    public void MatchOmitOnFailure_ResultSuccess_ShouldReturnOnSuccess(
+        bool isAResponseType, bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
     {
-        var result = Result.Success();
-        var resultT = Result<string>.Success("Test Data");
-        var resultResponse = ResultResponseSuccess.Create();
-        var resultResponseT = ResultResponseSuccess.Create("Test Data");
+        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
+        var resultArranges = MatchTestsHelper.CreateResultSuccessArranges();
+
+        var (resultMatched, resultMatchedT) = CreateResultMatchedAct(resultArranges, isAResponseType, useProblemDetailsParam);
+
+        AssertMatchSuccess(resultMatched);
+        AssertMatchTSuccess(resultMatchedT);
+    }
+
+    private (IActionResult ResultMatched, IActionResult ResultMatchedT) CreateResultMatchedAct(
+        MatchTestsHelper.ResultArranges resultArranges, bool isAResponseType, bool? useProblemDetailsParam)
+    {
 
         var resultMatched = isAResponseType ?
-            resultResponse.Match(_ => new CreatedResult()) :
-            result.Match(_ => new CreatedResult());
+            resultArranges.ResultResponse
+                .Match(rr => new CreatedResult((string?)null, rr), useProblemDetailsParam) :
+            resultArranges.Result
+                .Match(rr => new CreatedResult((string?)null, rr), useProblemDetailsParam);
         var resultMatchedT = isAResponseType ?
-            resultResponseT.Match(rr => new OkObjectResult(rr)) :
-            resultT.Match(rr => new OkObjectResult(rr));
+            resultArranges.ResultResponseT
+                .Match(rr => new OkObjectResult(rr), useProblemDetailsParam) :
+            resultArranges.ResultT
+                .Match(rr => new OkObjectResult(rr), useProblemDetailsParam);
 
-        Assert.IsType<Result>(result);
-        AssertMatchSuccess(resultMatchedT);
+        return (resultMatched, resultMatchedT);
     }
 
     private void AssertMatchSuccess(IActionResult result)
+    {
+        var createdResult = Assert.IsType<CreatedResult>(result);
+        var resultTyped = Assert.IsType<ResultResponseSuccess>(createdResult.Value);
+        Assert.True(resultTyped.IsSuccess);
+    }
+    private void AssertMatchTSuccess(IActionResult result)
     {
         var okResult = Assert.IsType<OkObjectResult>(result);
         var resultResponseValue = Assert.IsType<ResultResponseSuccess<string>>(okResult.Value);
@@ -48,46 +69,64 @@ public class MatchResultsExtensionsTests
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void Match_ResultResponseError_ShouldReturnOnFailure(bool isAResponseType)
+    [MemberData(nameof(AllScenariosTestData))]
+    public void MatchOmitOnFailure_ResultFailure_ShouldReturnOnFailure(
+        bool isAResponseType, bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
     {
-        var result = Result.Failure(Error.Failure("1", "Error"));
-        var resultT = Result<string>.Failure(Error.Failure("1", "Error"));
+        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
+        var resultArranges = MatchTestsHelper.CreateResultFailureArranges();
+        
+        var (resultMatched, resultMatchedT) = CreateResultMatchedAct(resultArranges, isAResponseType, useProblemDetailsParam);
 
-        Func<ResultResponse, IActionResult> onSuccess = response => new NoContentResult();
-        Func<ResultResponse, IActionResult> onSuccessData = response => new ObjectResult("Test Data");
-        Func<ResultResponse, IActionResult> onFailure = response => new BadRequestResult();
+        AssertMatchFailure(resultMatched, useProblemDetailsParam ?? useProblemDetailsGlobal);
+        AssertMatchFailure(resultMatchedT, useProblemDetailsParam ?? useProblemDetailsGlobal);
+    }
 
-        var resultMatched = isAResponseType ?
-            _resultResponseError.Match(onSuccess, onFailure) :
-            result.Match(onSuccess, onFailure);
-        var resultMatchedT = isAResponseType ?
-            _resultResponseError.Match(onSuccessData, onFailure) :
-            resultT.Match(onSuccessData, onFailure);
-
-        Assert.IsType<BadRequestResult>(resultMatched);
-        Assert.IsType<BadRequestResult>(resultMatchedT);
+    private void AssertMatchFailure(IActionResult result, bool useProblemDetails)
+    {
+        var objRes = Assert.IsType<ObjectResult>(result);
+        if (useProblemDetails)
+        {
+            var problemDetails = Assert.IsType<ProblemDetails>(objRes.Value);
+            Assert.False(problemDetails.Extensions["isSuccess"] as bool?);
+            Assert.Equal("Error", problemDetails.Detail);
+        }
+        else
+        {
+            var resultResponseValue = Assert.IsType<ResultResponseError>(objRes.Value);
+            Assert.False(resultResponseValue.IsSuccess);
+            Assert.Equal(["Error"], resultResponseValue.Errors);
+        }
     }
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void Match_ResultResponseError_ShouldReturnProblemDetailsOnFailure(bool isAResponseType)
+    public void MatchPassingOnFailure_ResultFailure_ShouldReturnOnFailure(bool isAResponseType)
     {
-        var result = isAResponseType ?
-            _resultResponseError.Match(_ => new NoContentResult()) :
-            _resultError.Match(_ => new NoContentResult());
-        var resultT = isAResponseType ?
-            _resultResponseError.Match(_ => new ObjectResult("Test Data")) :
-            _resultError.Match(_ => new ObjectResult("Test Data"));
-
-        var objRes = Assert.IsType<ObjectResult>(result);
-        var probDet = Assert.IsType<ProblemDetails>(objRes.Value);
-        Assert.Equal(_problemDetailsDetail, probDet.Detail);
+        var resultArranges = MatchTestsHelper.CreateResultFailureArranges();
+        var result = resultArranges.Result;
+        var resultT = resultArranges.ResultT;
+        var resultResponseError = resultArranges.ResultResponse;
         
-        objRes = Assert.IsType<ObjectResult>(resultT);
-        probDet = Assert.IsType<ProblemDetails>(objRes.Value);
-        Assert.Equal(_problemDetailsDetail, probDet.Detail);
+        Func<ResultResponse, IActionResult> onSuccess = response => new NoContentResult();
+        Func<ResultResponse, IActionResult> onSuccessData = response => new ObjectResult(response);
+        Func<ResultResponse, IActionResult> onFailure = response => new BadRequestObjectResult(response);
+
+        var resultMatched = isAResponseType ?
+            resultResponseError.Match(onSuccess, onFailure) :
+            result.Match(onSuccess, onFailure);
+        var resultMatchedT = isAResponseType ?
+            resultResponseError.Match(onSuccessData, onFailure) :
+            resultT.Match(onSuccessData, onFailure);
+
+        foreach (var resultMatch in new IActionResult[] { resultMatched, resultMatchedT })
+        {
+            var badRequestResultCast = Assert.IsType<BadRequestObjectResult>(resultMatch);
+            var resultResponseErrorCast = Assert.IsType<ResultResponseError>(badRequestResultCast.Value);
+            Assert.False(resultResponseErrorCast.IsSuccess);
+            Assert.Equal(["Error"], resultResponseErrorCast.Errors);
+        }
     }
+
 }

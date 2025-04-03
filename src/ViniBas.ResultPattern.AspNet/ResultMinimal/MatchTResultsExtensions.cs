@@ -14,7 +14,7 @@ namespace ViniBas.ResultPattern.AspNet.ResultMinimal;
 
 public static class MatchTResultsExtensions
 {
-    private static readonly Dictionary<Type, MethodInfo?> _implicitOperatorCache = new();
+    private static readonly Dictionary<TypesForImplicitOperatorCacheKey, MethodInfo?> _implicitOperatorCache = new();
 
     /// <summary>
     /// Checks whether a ResultResponse is a success or failure, and returns the result of the function if successful.
@@ -27,11 +27,11 @@ public static class MatchTResultsExtensions
     /// <param name="onSuccess">Function to be executed in case of success.</param>
     /// <returns>Returns the result of the onSuccess function on success, or a ProblemDetails on failure.</returns>
     public static T_Result Match<T_Result, T_Success>(this ResultResponse resultResponse,
-        Func<ResultResponse, T_Success> onSuccess)
+        Func<ResultResponse, T_Success> onSuccess, bool? useProblemDetails = null)
         where T_Result : IResult
         where T_Success : IResult
         => resultResponse.Match<T_Result, T_Success, IResult>(
-            onSuccess, response => TreatCast<T_Result>(response.ToProblemDetailsResult()));
+            onSuccess, response => TreatCast<T_Result>(MatchHelper.OnErrorDefault(response, useProblemDetails)));
 
     /// <summary>
     /// Checks whether a ResultResponse is a success or failure, and returns the result of the corresponding function
@@ -67,10 +67,10 @@ public static class MatchTResultsExtensions
     /// <param name="onSuccess">Function to be executed in case of success.</param>
     /// <returns>Returns the result of the onSuccess function on success, or a ProblemDetails on failure.</returns>
     public static T_Result Match<T_Result, T_Success>(this ResultBase result,
-        Func<ResultResponse, T_Success> onSuccess)
+        Func<ResultResponse, T_Success> onSuccess, bool? useProblemDetails = null)
         where T_Result : IResult
         where T_Success : IResult
-        => result.ToResponse().Match<T_Result, T_Success>(onSuccess);
+        => result.ToResponse().Match<T_Result, T_Success>(onSuccess, useProblemDetails);
 
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
@@ -121,8 +121,9 @@ public static class MatchTResultsExtensions
     private static MethodInfo? getImplicitOperatorFromCacheOrReflection<T_Result>(Type tparam) where T_Result : IResult
     {
         Type typeOfT_Result = typeof(T_Result);
+        var key = new TypesForImplicitOperatorCacheKey(typeOfT_Result, tparam);
         
-        if (!_implicitOperatorCache.TryGetValue(typeOfT_Result, out MethodInfo? implicitOperator))
+        if (!_implicitOperatorCache.TryGetValue(key, out MethodInfo? implicitOperator))
         {
             implicitOperator = typeOfT_Result
                 .GetMethods(BindingFlags.Public | BindingFlags.Static)
@@ -132,9 +133,11 @@ public static class MatchTResultsExtensions
                     m.GetParameters().Length == 1 &&
                     m.GetParameters()[0].ParameterType == tparam);
             
-            _implicitOperatorCache[typeOfT_Result] = implicitOperator;
+            _implicitOperatorCache[key] = implicitOperator;
         }
 
         return implicitOperator;
     }
+    
+    private record TypesForImplicitOperatorCacheKey(Type typeOfT_Result, Type param);
 }

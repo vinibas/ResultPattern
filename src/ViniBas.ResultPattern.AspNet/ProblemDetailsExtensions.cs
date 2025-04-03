@@ -20,8 +20,8 @@ public static class ProblemDetailsExtensions
 
         return new ProblemDetails()
         {
-            Title = GetTitle(resultResponseError.Type),
-            Status = GetStatusCode(resultResponseError.Type),
+            Title = GlobalConfiguration.GetTitle(resultResponseError.Type),
+            Status = GlobalConfiguration.GetStatusCode(resultResponseError.Type),
             Detail = string.Join(Environment.NewLine, resultResponseError.Errors),
             Extensions =
             {
@@ -30,12 +30,4 @@ public static class ProblemDetailsExtensions
             },
         };
     }
-
-    private static int GetStatusCode(string errorType)
-        => ErrorTypeMaps.Maps.TryGetValue(errorType, out var map) ?
-            map.StatusCode : StatusCodes.Status500InternalServerError;
-
-    private static string GetTitle(string errorType)
-        => ErrorTypeMaps.Maps.TryGetValue(errorType, out var map) ?
-            map.Title : "Server Failure";
 }

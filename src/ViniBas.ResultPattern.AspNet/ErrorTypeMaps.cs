@@ -10,14 +10,23 @@ using ViniBas.ResultPattern.ResultObjects;
 
 namespace ViniBas.ResultPattern.AspNet;
 
-public static class ErrorTypeMaps
+public static class GlobalConfiguration
 {
-    public static IDictionary<string, (int StatusCode, string Title)> Maps { get; } =
-        new Dictionary<string, (int StatusCode, string Title)>()
+    public static Dictionary<string, (int StatusCode, string Title)> ErrorTypeMaps { get; } = new ()
         {
             [ErrorTypes.Failure] = (StatusCodes.Status500InternalServerError, "Server Failure"),
             [ErrorTypes.Validation] = (StatusCodes.Status400BadRequest, "Bad Request"),
             [ErrorTypes.NotFound] = (StatusCodes.Status404NotFound, "Not Found"),
             [ErrorTypes.Conflict] = (StatusCodes.Status409Conflict, "Conflict"),
         };
+
+    public static bool UseProblemDetails { get; set; } = true;
+
+    internal static int GetStatusCode(string errorType)
+        => ErrorTypeMaps.TryGetValue(errorType, out var map) ?
+            map.StatusCode : StatusCodes.Status500InternalServerError;
+
+    internal static string GetTitle(string errorType)
+        => ErrorTypeMaps.TryGetValue(errorType, out var map) ?
+            map.Title : "Server Failure";
 }
