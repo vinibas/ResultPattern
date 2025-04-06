@@ -17,15 +17,19 @@ public static class MatchTResultsExtensions
     private static readonly Dictionary<TypesForImplicitOperatorCacheKey, MethodInfo?> _implicitOperatorCache = new();
 
     /// <summary>
-    /// Checks whether a ResultResponse is a success or failure, and returns the result of the function if successful.
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the function if successful.
     /// </summary>
-    /// <typeparam name="T_Result">The type of the expected result. Typically a Results<>, 
-    /// but can be any type that implements IResult.</typeparam>
+    /// <typeparam name="T_Result">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>, 
+    /// but can be any type that implements <see cref="IResult"/>.</typeparam>
     /// <typeparam name="T_Success">The type of the expected result on success. 
-    /// Typically something like TypedResults.Ok() or TypedResults.Created(), 
-    /// but can be anything that implements IResult and is compatible with T_Result.</typeparam>
+    /// Typically something like <see cref="TypedResults.Ok()"/> or <see cref="TypedResults.Created()"/>, 
+    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
     /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <returns>Returns the result of the onSuccess function on success, or a ProblemDetails on failure.</returns>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; 
+    /// if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by 
+    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
     public static T_Result Match<T_Result, T_Success>(this ResultResponse resultResponse,
         Func<ResultResponse, T_Success> onSuccess, bool? useProblemDetails = null)
         where T_Result : IResult
@@ -34,19 +38,20 @@ public static class MatchTResultsExtensions
             onSuccess, response => TreatCast<T_Result>(MatchHelper.OnErrorDefault(response, useProblemDetails)));
 
     /// <summary>
-    /// Checks whether a ResultResponse is a success or failure, and returns the result of the corresponding function
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the corresponding function
     /// </summary>
-    /// <typeparam name="T_Result">The type of the expected result. Typically a Results<>, 
-    /// but can be any type that implements IResult.</typeparam>
+    /// <typeparam name="T_Result">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>, 
+    /// but can be any type that implements <see cref="IResult"/>.</typeparam>
     /// <typeparam name="T_Success">The type of the expected result on success. 
-    /// Typically something like TypedResults.Ok() or TypedResults.Created(), 
-    /// but can be anything that implements IResult and is compatible with T_Result.</typeparam>
+    /// Typically something like <see cref="TypedResults.Ok()"/> or <see cref="TypedResults.Created()"/>, 
+    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
     /// <typeparam name="T_Failure">The type of the result expected on failure. 
-    /// Typically something like TypedResults.BadRequest() or TypedResults.NotFound(), 
-    /// but can be anything that implements IResult and is compatible with T_Result.</typeparam>
+    /// Typically something like <see cref="TypedResults.BadRequest()"/> or <see cref="TypedResults.NotFound()"/>, 
+    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
     /// <param name="onSuccess">Function to be executed in case of success.</param>
     /// <param name="onFailure">Function to be executed in case of failure</param>
-    /// <returns>Returns the result of the onSuccess function in case of success, or of onFailure in case of failure.</returns>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
     public static T_Result Match<T_Result, T_Success, T_Failure>(this ResultResponse resultResponse,
         Func<ResultResponse, T_Success> onSuccess, Func<ResultResponse, T_Failure> onFailure)
         where T_Result : IResult
@@ -59,13 +64,17 @@ public static class MatchTResultsExtensions
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the function if successful.
     /// </summary>
-    /// <typeparam name="T_Result">The type of the expected result. Typically a Results<>, 
-    /// but can be any type that implements IResult.</typeparam>
+    /// <typeparam name="T_Result">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>, 
+    /// but can be any type that implements <see cref="IResult"/>.</typeparam>
     /// <typeparam name="T_Success">The type of the expected result on success. 
-    /// Typically something like TypedResults.Ok() or TypedResults.Created(), 
-    /// but can be anything that implements IResult and is compatible with T_Result.</typeparam>
+    /// Typically something like <see cref="TypedResults.Ok()"/> or <see cref="TypedResults.Created()"/>, 
+    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
+    /// <param name="result">The <see cref="ResultBase"/> to evaluate.</param>
     /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <returns>Returns the result of the onSuccess function on success, or a ProblemDetails on failure.</returns>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; 
+    /// if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by 
+    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
     public static T_Result Match<T_Result, T_Success>(this ResultBase result,
         Func<ResultResponse, T_Success> onSuccess, bool? useProblemDetails = null)
         where T_Result : IResult
@@ -75,17 +84,18 @@ public static class MatchTResultsExtensions
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
     /// </summary>
-    /// <typeparam name="T_Result">The type of the expected result. Typically a Results<>, 
-    /// but can be any type that implements IResult.</typeparam>
+    /// <typeparam name="T_Result">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>, 
+    /// but can be any type that implements <see cref="IResult"/>.</typeparam>
     /// <typeparam name="T_Success">The type of the expected result on success. 
-    /// Typically something like TypedResults.Ok() or TypedResults.Created(), 
-    /// but can be anything that implements IResult and is compatible with T_Result.</typeparam>
+    /// Typically something like <see cref="TypedResults.Ok()"/> or <see cref="TypedResults.Created()"/>, 
+    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
     /// <typeparam name="T_Failure">The type of the result expected on failure. 
-    /// Typically something like TypedResults.BadRequest() or TypedResults.NotFound(), 
-    /// but can be anything that implements IResult and is compatible with T_Result.</typeparam>
+    /// Typically something like <see cref="TypedResults.BadRequest()"/> or <see cref="TypedResults.NotFound()"/>, 
+    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
+    /// <param name="result">The <see cref="ResultBase"/> to evaluate.</param>
     /// <param name="onSuccess">Function to be executed in case of success.</param>
     /// <param name="onFailure">Function to be executed in case of failure</param>
-    /// <returns>Returns the result of the onSuccess function in case of success, or of onFailure in case of failure.</returns>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
     public static T_Result Match<T_Result, T_Success, T_Failure>(this ResultBase result,
         Func<ResultResponse, T_Success> onSuccess, Func<ResultResponse, T_Failure> onFailure)
         where T_Result : IResult

@@ -10,16 +10,18 @@ using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
 
 namespace ViniBas.ResultPattern.AspNet.ActionResultMvc;
-// TODO: Ajustar e revisar os comentários XML
+
 public static class MatchResultsExtensions
 {
     /// <summary>
-    /// Checks whether a ResultResponse is a success or failure, and returns the result of the function if successful.
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the function if successful.
     /// </summary>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
     /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <param name="useProblemDetails">Defines whether the default return should be a ProblemDetails or not.
-    /// If null, the global configuration in GlobalConfiguration.UseProblemDetails will be used.</param>
-    /// <returns>Returns the result of the onSuccess function on success, or a ProblemDetails on failure.</returns>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; 
+    /// if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by 
+    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
     public static IActionResult Match(this ResultResponse resultResponse,
         Func<ResultResponse, IActionResult> onSuccess, bool? useProblemDetails = null)
         => resultResponse.Match(onSuccess, response => OnErrorDefault(response, useProblemDetails));
@@ -37,11 +39,12 @@ public static class MatchResultsExtensions
     }
 
     /// <summary>
-    /// Checks whether a ResultResponse is a success or failure, and returns the result of the corresponding function
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the corresponding function
     /// </summary>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
     /// <param name="onSuccess">Function to be executed in case of success.</param>
     /// <param name="onFailure">Function to be executed in case of failure</param>
-    /// <returns>Returns the result of the onSuccess function in case of success, or of onFailure in case of failure.</returns>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
     public static IActionResult Match(this ResultResponse resultResponse,
         Func<ResultResponse, IActionResult> onSuccess, Func<ResultResponse, IActionResult> onFailure)
         => resultResponse.IsSuccess ? onSuccess(resultResponse) : onFailure(resultResponse);
@@ -49,8 +52,12 @@ public static class MatchResultsExtensions
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the function if successful.
     /// </summary>
+    /// <param name="result">The Result to evaluate.</param>
     /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <returns>Returns the result of the onSuccess function on success, or a ProblemDetails on failure.</returns>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; 
+    /// if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by 
+    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
     public static IActionResult Match(this ResultBase result,
         Func<ResultResponse, IActionResult> onSuccess, bool? useProblemDetails = null)
         => result.ToResponse().Match(onSuccess, useProblemDetails);
@@ -58,9 +65,10 @@ public static class MatchResultsExtensions
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
     /// </summary>
+    /// <param name="result">The <see cref="ResultBase"/> to evaluate.</param>
     /// <param name="onSuccess">Function to be executed in case of success.</param>
     /// <param name="onFailure">Function to be executed in case of failure</param>
-    /// <returns>Returns the result of the onSuccess function in case of success, or of onFailure in case of failure.</returns>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
     public static IActionResult Match(this ResultBase result,
         Func<ResultResponse, IActionResult> onSuccess, Func<ResultResponse, IActionResult> onFailure)
         => result.ToResponse().Match(onSuccess, onFailure);
