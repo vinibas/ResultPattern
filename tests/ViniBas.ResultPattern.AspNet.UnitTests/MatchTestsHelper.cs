@@ -18,35 +18,24 @@ public static class MatchTestsHelper
         ResultResponse ResultResponse,
         ResultResponse ResultResponseT);
 
-    public static TheoryData<bool, bool, bool?> AllScenariosTestData => new()
+    public static TheoryData<bool, bool?> AllScenariosTestData => new()
     {
-        { true, true, null },
-        { true, true, true },
-        { true, true, false },
-        { true, false, null },
-        { true, false, true },
-        { true, false, false },
-        { false, true, null },
-        { false, true, true },
-        { false, true, false },
-        { false, false, null },
-        { false, false, true },
-        { false, false, false },
+        { true, null },
+        { true, true },
+        { true, false },
+        { false, null },
+        { false, true },
+        { false, false },
     };
 
+    public const string SuccessValue = "Success";
+    public const string ErrorCode = "Erro Code";
+    public const string ErrorDescription = "Error Description";
 
-    public static ResultArranges CreateResultSuccessArranges()
-        => new (
-            Result.Success(),
-            Result<string>.Success("Test Data"),
-            ResultResponseSuccess.Create(),
-            ResultResponseSuccess.Create("Test Data"));
+    public static Result ResultSuccess = Result.Success();
+    public static Result<string> ResultTSuccess = Result.Success(SuccessValue);
+    public static Result ResultFailure = Result.Failure(Error.Conflict(ErrorCode, ErrorDescription));
+    public static Result<string> ResultTFailure = Result<string>.Failure(Error.Conflict(ErrorCode, ErrorDescription));
 
-    public static ResultArranges CreateResultFailureArranges()
-        => new (
-            Result.Failure(Error.Failure("1", "Error")),
-            Result<string>.Failure(Error.Failure("1", "Error")),
-            new ResultResponseError(["Error"], ErrorTypes.Failure),
-            new ResultResponseError(["Error"], ErrorTypes.Failure));
 
 }

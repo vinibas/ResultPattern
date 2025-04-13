@@ -7,7 +7,6 @@
 
 using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.ResultResponses;
-using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.AspNet.ActionResultMvc;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
@@ -16,43 +15,98 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
 public class MatchResultsExtensionsTests
 {
     public MatchResultsExtensionsTests()
-    {
-        GlobalConfiguration.UseProblemDetails = true;
-    }
+        => GlobalConfiguration.UseProblemDetails = true;
 
-    public static TheoryData<bool, bool, bool?> AllScenariosTestData => MatchTestsHelper.AllScenariosTestData;
+    public static TheoryData<bool, bool?> AllScenariosTestData => MatchTestsHelper.AllScenariosTestData;
 
     [Theory]
     [MemberData(nameof(AllScenariosTestData))]
-    public void MatchOmitOnFailure_ResultSuccess_ShouldReturnOnSuccess(
-        bool isAResponseType, bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
+    public void MatchResult_ResultSuccess_ShouldReturnOnSuccess(bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
     {
         GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
-        var resultArranges = MatchTestsHelper.CreateResultSuccessArranges();
 
-        var (resultMatched, resultMatchedT) = CreateResultMatchedAct(resultArranges, isAResponseType, useProblemDetailsParam);
+        var actResultOmitOnFailure = MatchTestsHelper.ResultSuccess.Match(ActionForSuccess, useProblemDetailsParam);
+        var actResultTOmitOnFailure = MatchTestsHelper.ResultTSuccess.Match(ActionForSuccessT, useProblemDetailsParam);
 
-        AssertMatchSuccess(resultMatched);
-        AssertMatchTSuccess(resultMatchedT);
+        var actResultPassingOnFailure = MatchTestsHelper.ResultSuccess.Match(ActionForSuccess, ActionForFailure);
+        var actResultTPassingOnFailure = MatchTestsHelper.ResultTSuccess.Match(ActionForSuccessT, ActionForFailure);
+
+        AssertMatchSuccess(actResultOmitOnFailure);
+        AssertMatchSuccess(actResultPassingOnFailure);
+        AssertMatchTSuccess(actResultTOmitOnFailure);
+        AssertMatchTSuccess(actResultTPassingOnFailure);
     }
 
-    private (IActionResult ResultMatched, IActionResult ResultMatchedT) CreateResultMatchedAct(
-        MatchTestsHelper.ResultArranges resultArranges, bool isAResponseType, bool? useProblemDetailsParam)
+    [Theory]
+    [MemberData(nameof(AllScenariosTestData))]
+    public void MatchResult_ResultFailure_ShouldReturnError(bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
     {
+        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
 
-        var resultMatched = isAResponseType ?
-            resultArranges.ResultResponse
-                .Match(rr => new CreatedResult((string?)null, rr), useProblemDetailsParam) :
-            resultArranges.Result
-                .Match(rr => new CreatedResult((string?)null, rr), useProblemDetailsParam);
-        var resultMatchedT = isAResponseType ?
-            resultArranges.ResultResponseT
-                .Match(rr => new OkObjectResult(rr), useProblemDetailsParam) :
-            resultArranges.ResultT
-                .Match(rr => new OkObjectResult(rr), useProblemDetailsParam);
+        var actResultOmitOnFailure = MatchTestsHelper.ResultFailure.Match(ActionForSuccess, useProblemDetailsParam);
+        var actResultTOmitOnFailure = MatchTestsHelper.ResultTFailure.Match(ActionForSuccessT, useProblemDetailsParam);
 
-        return (resultMatched, resultMatchedT);
+        var actResultPassingOnFailure = MatchTestsHelper.ResultFailure.Match(ActionForSuccess, ActionForFailure);
+        var actResultTPassingOnFailure = MatchTestsHelper.ResultTFailure.Match(ActionForSuccessT, ActionForFailure);
+
+        var useProblemDetailsValue = useProblemDetailsParam ?? useProblemDetailsGlobal;
+        AssertMatchFailure(actResultOmitOnFailure, true, useProblemDetailsValue);
+        AssertMatchFailure(actResultPassingOnFailure, false, useProblemDetailsValue);
+        AssertMatchFailure(actResultTOmitOnFailure, true, useProblemDetailsValue);
+        AssertMatchFailure(actResultTPassingOnFailure, false, useProblemDetailsValue);
     }
+
+    [Theory]
+    [MemberData(nameof(AllScenariosTestData))]
+    public void MatchResultResponse_ResultSuccess_ShouldReturnOnSuccess(bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
+    {
+        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
+
+        var actResultOmitOnFailure = MatchTestsHelper.ResultSuccess.ToResponse().Match(ActionForSuccess, useProblemDetailsParam);
+        var actResultTOmitOnFailure = MatchTestsHelper.ResultTSuccess.ToResponse().Match(ActionForSuccessT, useProblemDetailsParam);
+
+        var actResultPassingOnFailure = MatchTestsHelper.ResultSuccess.ToResponse().Match(ActionForSuccess, ActionForFailure);
+        var actResultTPassingOnFailure = MatchTestsHelper.ResultTSuccess.ToResponse().Match(ActionForSuccessT, ActionForFailure);
+
+        AssertMatchSuccess(actResultOmitOnFailure);
+        AssertMatchSuccess(actResultPassingOnFailure);
+        AssertMatchTSuccess(actResultTOmitOnFailure);
+        AssertMatchTSuccess(actResultTPassingOnFailure);
+    }
+
+    [Theory]
+    [MemberData(nameof(AllScenariosTestData))]
+    public void MatchResultResponse_ResultFailure_ShouldReturnError(bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
+    {
+        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
+
+        var actResultOmitOnFailure = MatchTestsHelper.ResultFailure.ToResponse().Match(ActionForSuccess, useProblemDetailsParam);
+        var actResultTOmitOnFailure = MatchTestsHelper.ResultTFailure.ToResponse().Match(ActionForSuccessT, useProblemDetailsParam);
+
+        var actResultPassingOnFailure = MatchTestsHelper.ResultFailure.ToResponse().Match(ActionForSuccess, ActionForFailure);
+        var actResultTPassingOnFailure = MatchTestsHelper.ResultTFailure.ToResponse().Match(ActionForSuccessT, ActionForFailure);
+
+        var useProblemDetailsValue = useProblemDetailsParam ?? useProblemDetailsGlobal;
+        AssertMatchFailure(actResultOmitOnFailure, true, useProblemDetailsValue);
+        AssertMatchFailure(actResultPassingOnFailure, false, useProblemDetailsValue);
+        AssertMatchFailure(actResultTOmitOnFailure, true, useProblemDetailsValue);
+        AssertMatchFailure(actResultTPassingOnFailure, false, useProblemDetailsValue);
+    }
+
+    #region Match Actions
+
+    private IActionResult ActionForSuccess(ResultResponse resultResponse)
+        => new CreatedResult((string?)null, resultResponse);
+
+    private IActionResult ActionForSuccessT(ResultResponse resultResponse)
+        => new OkObjectResult(resultResponse);
+
+    private IActionResult ActionForFailure(ResultResponse resultResponse)
+        => new BadRequestObjectResult(resultResponse);
+
+    #endregion
+
+    #region Asserts
 
     private void AssertMatchSuccess(IActionResult result)
     {
@@ -65,68 +119,36 @@ public class MatchResultsExtensionsTests
         var okResult = Assert.IsType<OkObjectResult>(result);
         var resultResponseValue = Assert.IsType<ResultResponseSuccess<string>>(okResult.Value);
         Assert.True(resultResponseValue.IsSuccess);
-        Assert.Equal("Test Data", resultResponseValue.Data);
+        Assert.Equal(MatchTestsHelper.SuccessValue, resultResponseValue.Data);
     }
 
-    [Theory]
-    [MemberData(nameof(AllScenariosTestData))]
-    public void MatchOmitOnFailure_ResultFailure_ShouldReturnOnFailure(
-        bool isAResponseType, bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
+    private void AssertMatchFailure(IActionResult result, bool omitOnFailure, bool useProblemDetailsValue)
     {
-        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
-        var resultArranges = MatchTestsHelper.CreateResultFailureArranges();
-        
-        var (resultMatched, resultMatchedT) = CreateResultMatchedAct(resultArranges, isAResponseType, useProblemDetailsParam);
-
-        AssertMatchFailure(resultMatched, useProblemDetailsParam ?? useProblemDetailsGlobal);
-        AssertMatchFailure(resultMatchedT, useProblemDetailsParam ?? useProblemDetailsGlobal);
-    }
-
-    private void AssertMatchFailure(IActionResult result, bool useProblemDetails)
-    {
-        var objRes = Assert.IsType<ObjectResult>(result);
-        if (useProblemDetails)
+        if (omitOnFailure)
         {
-            var problemDetails = Assert.IsType<ProblemDetails>(objRes.Value);
-            Assert.False(problemDetails.Extensions["isSuccess"] as bool?);
-            Assert.Equal("Error", problemDetails.Detail);
+            var objRes = Assert.IsType<ObjectResult>(result);
+
+            if (useProblemDetailsValue)
+            {
+                var problemDetails = Assert.IsType<ProblemDetails>(objRes.Value);
+                Assert.False(problemDetails.Extensions["isSuccess"] as bool?);
+                Assert.Equal(MatchTestsHelper.ErrorDescription, problemDetails.Detail);
+            }
+            else
+            {
+                var resultResponseValue = Assert.IsType<ResultResponseError>(objRes.Value);
+                Assert.False(resultResponseValue.IsSuccess);
+                Assert.Equal([MatchTestsHelper.ErrorDescription], resultResponseValue.Errors);
+            }
         }
         else
         {
+            var objRes = Assert.IsType<BadRequestObjectResult>(result);
             var resultResponseValue = Assert.IsType<ResultResponseError>(objRes.Value);
             Assert.False(resultResponseValue.IsSuccess);
-            Assert.Equal(["Error"], resultResponseValue.Errors);
+            Assert.Equal([MatchTestsHelper.ErrorDescription], resultResponseValue.Errors);
         }
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void MatchPassingOnFailure_ResultFailure_ShouldReturnOnFailure(bool isAResponseType)
-    {
-        var resultArranges = MatchTestsHelper.CreateResultFailureArranges();
-        var result = resultArranges.Result;
-        var resultT = resultArranges.ResultT;
-        var resultResponseError = resultArranges.ResultResponse;
-        
-        Func<ResultResponse, IActionResult> onSuccess = response => new NoContentResult();
-        Func<ResultResponse, IActionResult> onSuccessData = response => new ObjectResult(response);
-        Func<ResultResponse, IActionResult> onFailure = response => new BadRequestObjectResult(response);
-
-        var resultMatched = isAResponseType ?
-            resultResponseError.Match(onSuccess, onFailure) :
-            result.Match(onSuccess, onFailure);
-        var resultMatchedT = isAResponseType ?
-            resultResponseError.Match(onSuccessData, onFailure) :
-            resultT.Match(onSuccessData, onFailure);
-
-        foreach (var resultMatch in new IActionResult[] { resultMatched, resultMatchedT })
-        {
-            var badRequestResultCast = Assert.IsType<BadRequestObjectResult>(resultMatch);
-            var resultResponseErrorCast = Assert.IsType<ResultResponseError>(badRequestResultCast.Value);
-            Assert.False(resultResponseErrorCast.IsSuccess);
-            Assert.Equal(["Error"], resultResponseErrorCast.Errors);
-        }
-    }
-
+    #endregion
 }
