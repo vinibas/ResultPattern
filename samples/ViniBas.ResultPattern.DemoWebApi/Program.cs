@@ -26,6 +26,7 @@ app.RegisterUserEndpoints();
 app.MapControllers();
 
 Error.ErrorTypes.AddTypes("NotAcceptable");
-ErrorTypeMaps.Maps.Add("NotAcceptable", (StatusCodes.Status406NotAcceptable, "Not Acceptable"));
+GlobalConfiguration.ErrorTypeMaps.Add("NotAcceptable", (StatusCodes.Status406NotAcceptable, "Not Acceptable"));
+GlobalConfiguration.UseProblemDetails = true; // Default value
 
 app.Run();

@@ -33,7 +33,7 @@ public class MvcController(IMyService myService) : ControllerBase
         => _myService.Post(value).Match(_ => Created(), rr => rr.ToProblemDetailsActionResult());
 
     /// <summary>
-    /// You can omit the failure parameter, which will return a ProblemDetails.
+    /// You can omit the failure parameter, which will return a ProblemDetails or a ObjectResult.
     /// In this case, we are also using a custom error type, NotAcceptable, mapped to Program.
     /// </summary>
     [HttpPut("{value}")]
