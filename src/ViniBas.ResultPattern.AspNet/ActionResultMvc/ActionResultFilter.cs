@@ -27,14 +27,24 @@ public sealed class ActionResultFilter : IActionFilter
         {
             objectResult.Value = objectResult.Value switch
             {
-                Error error => error.ToProblemDetails(),
-                IEnumerable<Error> errors => ((Error)errors.ToList()).ToProblemDetails(),
+                Error error => ConvertToResultResponseOrProblemDetails(error),
+                IEnumerable<Error> errors => ConvertToResultResponseOrProblemDetails((Error)errors.ToList()),
                 ResultBase result => result.IsSuccess ?
                     result.ToResponse() :
-                    result.ToResponse().ToProblemDetails(),
-                ResultResponseError resultResponseError => resultResponseError.ToProblemDetails(),
+                    ConvertToProblemDetailsIfConfigured(result.ToResponse()),
+                ResultResponseError resultResponseError => ConvertToProblemDetailsIfConfigured(resultResponseError),
                 _ => objectResult.Value,
             };
         }
     }
+
+    private static object? ConvertToResultResponseOrProblemDetails(Error error)
+        => GlobalConfiguration.UseProblemDetails ?
+            error.ToProblemDetails() :
+            ((Result)error).ToResponse();
+
+    private static object? ConvertToProblemDetailsIfConfigured(ResultResponse error)
+        => GlobalConfiguration.UseProblemDetails ?
+            error.ToProblemDetails() :
+            error;
 }

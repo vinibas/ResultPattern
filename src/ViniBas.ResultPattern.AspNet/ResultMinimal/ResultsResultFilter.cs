@@ -20,15 +20,25 @@ public sealed class ResultsResultFilter : IEndpointFilter
 
         return endpointResult switch
         {
-            Error error => error.ToProblemDetails(),
-            IEnumerable<Error> errors => ((Error)errors.ToList()).ToProblemDetails(),
+            Error error => ConvertToResultResponseOrProblemDetails(error),
+            IEnumerable<Error> errors => ConvertToResultResponseOrProblemDetails((Error)errors.ToList()),
             ResultBase result => result.IsSuccess ?
                 result.ToResponse() :
-                result.ToResponse().ToProblemDetails(),
-            ResultResponseError resultResponseError => resultResponseError.ToProblemDetails(),
+                ConvertToProblemDetailsIfConfigured(result.ToResponse()),
+            ResultResponseError resultResponseError => ConvertToProblemDetailsIfConfigured(resultResponseError),
             _ => endpointResult,
         };
     }
+
+    private static object? ConvertToResultResponseOrProblemDetails(Error error)
+        => GlobalConfiguration.UseProblemDetails ?
+            error.ToProblemDetails() :
+            ((Result)error).ToResponse();
+
+    private static object? ConvertToProblemDetailsIfConfigured(ResultResponse error)
+        => GlobalConfiguration.UseProblemDetails ?
+            error.ToProblemDetails() :
+            error;
 }
 
 public static class ResultsResultFilterExtensions

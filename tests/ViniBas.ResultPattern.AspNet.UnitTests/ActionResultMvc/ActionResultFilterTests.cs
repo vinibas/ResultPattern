@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 using ViniBas.ResultPattern.ResultResponses;
-using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.AspNet.ActionResultMvc;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
@@ -20,27 +19,11 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
 public class ActionResultFilterTests
 {
     private readonly ActionExecutedContext _context;
-    private readonly ObjectResult _errorOR;
-    private readonly ObjectResult _errorsOR;
-    private readonly ObjectResult _resultSuccessOR;
-    private readonly ObjectResult _resultSuccessTOR;
-    private readonly ObjectResult _resultFailureOR;
-    private readonly ObjectResult _resultResponseErrorOR;
-    private readonly ObjectResult _problemDetailsOR;
     private readonly ActionResultFilter _filter;
+    private readonly ResultsToTestDataBuilder _dataB = new ();
 
     public ActionResultFilterTests()
     {
-        var error = new Error("code", "description", ErrorTypes.Validation);
-
-        _errorOR = new ObjectResult(error);
-        _errorsOR = new ObjectResult(new List<Error> { error });
-        _resultSuccessOR = new ObjectResult(Result.Success());
-        _resultSuccessTOR = new ObjectResult(Result<Object>.Success(new ()));
-        _resultFailureOR = new ObjectResult(Result.Failure(error));
-        _resultResponseErrorOR = new ObjectResult(new ResultResponseError([ "error" ], ErrorTypes.Failure));
-        _problemDetailsOR = new ObjectResult(new ProblemDetails());
-
         _filter = new ActionResultFilter();
 
         var modelState = new ModelStateDictionary();
@@ -60,53 +43,90 @@ public class ActionResultFilterTests
     [Fact]
     public void OnActionExecuted_ShouldConvertFailuresToProblemDetails()
     {
-        var failures = new List<ObjectResult>
+        GlobalConfiguration.UseProblemDetails = true;
+
+        foreach (var resultErrorTst in _dataB._resultErrorsToTest)
         {
-            _errorOR,
-            _errorsOR,
-            _resultFailureOR,
-            _resultResponseErrorOR,
-        };
-            
-        foreach (var failure in failures)
-        {
-            _context.Result = failure;
+            _context.Result = resultErrorTst.ResultToTestAsObjectResult();
 
             _filter.OnActionExecuted(_context);
 
             var result = Assert.IsType<ObjectResult>(_context.Result);
-            Assert.IsType<ProblemDetails>(result.Value);
+            var probDet = Assert.IsType<ProblemDetails>(result.Value);
+            Assert.Equal(resultErrorTst.ExpectedStatusCode, probDet.Status);
+            Assert.Equal(resultErrorTst.ExpectedMessages, probDet.Extensions["errors"]);
+        }
+    }
+    
+    [Fact]
+    public void OnActionExecuted_ShouldConvertFailuresToResultResponseError()
+    {
+        GlobalConfiguration.UseProblemDetails = false;
+
+        foreach (var resultErrorTst in _dataB._resultErrorsToTest)
+        {
+            _context.Result = resultErrorTst.ResultToTestAsObjectResult();
+
+            _filter.OnActionExecuted(_context);
+
+            var result = Assert.IsType<ObjectResult>(_context.Result);
+            var rre = Assert.IsType<ResultResponseError>(result.Value);
+            Assert.Equal(resultErrorTst.ExpectedType, rre.Type);
+            Assert.Equal(resultErrorTst.ExpectedMessages, rre.Errors);
         }
     }
 
     [Fact]
     public void OnActionExecuted_ShouldConvertSuccessToActionResponse()
     {
-        var successes = new List<(ObjectResult, Type)>
+        foreach (var successToTest in _dataB._resultSuccessesToTest)
         {
-            (_resultSuccessOR, typeof(ResultResponseSuccess)),
-            (_resultSuccessTOR, typeof(ResultResponseSuccess<Object>)),
-        };
-
-        foreach (var success in successes)
-        {
-            _context.Result = success.Item1;
+            _context.Result = successToTest.ResultToTestAsObjectResult();
 
             _filter.OnActionExecuted(_context);
 
-            var result = Assert.IsType<ObjectResult>(_context.Result);
-            Assert.IsType(success.Item2, result.Value);
+            var objRes = Assert.IsType<ObjectResult>(_context.Result);
+            if (successToTest.Data is null)
+                Assert.IsType<ResultResponseSuccess>(objRes.Value);
+            else
+            {
+                var resSuc = Assert.IsType<ResultResponseSuccess<object>>(objRes.Value);
+                Assert.Equal(successToTest.Data, resSuc.Data);
+            }
         }
     }
 
     [Fact]
     public void OnActionExecuted_ShouldNotModifyProblemDetails()
     {
-        _context.Result = _problemDetailsOR;
+        var problemDetails = new ProblemDetails
+        {
+            Title = "ProbDet Tst",
+            Status = 409,
+            Type = "Tst",
+            Extensions = new Dictionary<string, object?>() { { "errors", new List<string> { "error test" } } },
+        };
+    
+        _context.Result = new ObjectResult(problemDetails);
 
         _filter.OnActionExecuted(_context);
 
         var result = Assert.IsType<ObjectResult>(_context.Result);
-        Assert.Equal(_problemDetailsOR.Value, result.Value);
+        var probDet = Assert.IsType<ProblemDetails>(result.Value);
+        Assert.Equal(problemDetails, probDet);
+        Assert.Equal("Tst", probDet.Type);
+        Assert.Equal(new List<string> { "error test" }, probDet.Extensions["errors"]);
+    }
+
+    [Fact]
+    public void OnActionExecuted_OtherObject_ReturnsOriginalObject()
+    {
+        var obj = new { Test = "Value" };
+        
+        _context.Result = new ObjectResult(obj);
+        _filter.OnActionExecuted(_context);
+
+        var result = Assert.IsType<ObjectResult>(_context.Result);
+        Assert.Same(obj, result.Value);
     }
 }

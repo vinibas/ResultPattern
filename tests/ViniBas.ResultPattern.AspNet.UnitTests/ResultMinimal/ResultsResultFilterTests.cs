@@ -8,78 +8,79 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.AspNet.ResultMinimal;
-using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMinimal;
 
 public class ResultsResultFilterTests
 {
+    private readonly ResultsToTestDataBuilder _dataB = new ();
+
     [Fact]
     public async Task InvokeAsync_Error_ReturnsProblemDetails()
     {
-        var error = Error.Failure("TestError", "Error happened");
+        GlobalConfiguration.UseProblemDetails = true;
         
-        var result = await InvokeFilter(error);
-        
-        var problemDetails = Assert.IsType<ProblemDetails>(result);
-        Assert.Equal(500, problemDetails.Status);
-        Assert.Contains("Error happened", problemDetails.Detail);
+        foreach (var resultErrorTst in _dataB._resultErrorsToTest)
+        {
+            var result = await InvokeFilter(resultErrorTst.ResultToTest);
+
+            var probDet = Assert.IsType<ProblemDetails>(result);
+            Assert.Equal(resultErrorTst.ExpectedStatusCode, probDet.Status);
+            Assert.Equal(resultErrorTst.ExpectedMessages, probDet.Extensions["errors"]);
+        }
     }
 
     [Fact]
-    public async Task InvokeAsync_Errors_ReturnsProblemDetails()
+    public async Task InvokeAsync_Error_ReturnsResultResponseError()
     {
-        List<Error> errors = [
-            Error.Validation("Error1", "Description 1"),
-            Error.Validation("Error2", "Description 2"),
-        ];
-        
-        var result = await InvokeFilter(errors);
+        GlobalConfiguration.UseProblemDetails = false;
 
-        var problemDetails = Assert.IsType<ProblemDetails>(result);
-        Assert.Equal(400, problemDetails.Status);
-        Assert.Equal("Description 1" + Environment.NewLine + "Description 2", problemDetails.Detail);
+        foreach (var resultErrorTst in _dataB._resultErrorsToTest)
+        {
+            var result = await InvokeFilter(resultErrorTst.ResultToTest);
+
+            var rre = Assert.IsType<ResultResponseError>(result);
+            Assert.Equal(resultErrorTst.ExpectedType, rre.Type);
+            Assert.Equal(resultErrorTst.ExpectedMessages, rre.Errors);
+        }
     }
+
 
     [Fact]
     public async Task InvokeAsync_SuccessResult_ReturnsResultResponse()
     {
-        var result = Result.Success();
-        var resultT = Result.Success("TestSuccess");
+        foreach (var successToTest in _dataB._resultSuccessesToTest)
+        {
+            var response = await InvokeFilter(successToTest.ResultToTest);
 
-        var response = await InvokeFilter(result);
-        var responseT = await InvokeFilter(resultT);
-
-        var resultResponseSuccess = Assert.IsType<ResultResponseSuccess>(response);
-        var resultResponseSuccessT = Assert.IsType<ResultResponseSuccess<string>>(responseT);
-        
-        Assert.True(resultResponseSuccess.IsSuccess);
-        Assert.True(resultResponseSuccessT.IsSuccess);
+            if (successToTest.Data is null)
+                Assert.IsType<ResultResponseSuccess>(response);
+            else
+            {
+                var resSuc = Assert.IsType<ResultResponseSuccess<object>>(response);
+                Assert.Equal(successToTest.Data, resSuc.Data);
+            }
+        }
     }
 
     [Fact]
-    public async Task InvokeAsync_FailureResult_ReturnsProblemDetails()
+    public async Task OnActionExecuted_ShouldNotModifyProblemDetails()
     {
-        var result = Result.Failure(Error.Conflict("TestConflict", "Conflict message"));
-
-        var response = await InvokeFilter(result);
-
-        var problemDetails = Assert.IsType<ProblemDetails>(response);
-        Assert.Equal(409, problemDetails.Status);
-        Assert.Contains("Conflict message", problemDetails.Detail);
-    }
-
-    [Fact]
-    public async Task InvokeAsync_ResultResponseError_ReturnsProblemDetails()
-    {
-        var error = new ResultResponseError([ "Error 1", "Error 2" ], ErrorTypes.NotFound);
-
-        var result = await InvokeFilter(error);
+        var problemDetails = new ProblemDetails
+        {
+            Title = "ProbDet Tst",
+            Status = 409,
+            Type = "Tst",
+            Extensions = new Dictionary<string, object?>() { { "errors", new List<string> { "error test" } } },
+        };
+    
+        var response = await InvokeFilter(problemDetails);
         
-        var problemDetails = Assert.IsType<ProblemDetails>(result);
-        Assert.Equal(404, problemDetails.Status);
-        Assert.Equal("Error 1" + Environment.NewLine + "Error 2", problemDetails.Detail);
+        var probDet = Assert.IsType<ProblemDetails>(response);
+        Assert.Equal(problemDetails, probDet);
+        Assert.Equal("Tst", probDet.Type);
+        Assert.Equal(new List<string> { "error test" }, probDet.Extensions["errors"]);
     }
 
     [Fact]

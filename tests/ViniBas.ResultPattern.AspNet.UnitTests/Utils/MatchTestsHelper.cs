@@ -36,6 +36,4 @@ public static class MatchTestsHelper
     public static Result<string> ResultTSuccess = Result.Success(SuccessValue);
     public static Result ResultFailure = Result.Failure(Error.Conflict(ErrorCode, ErrorDescription));
     public static Result<string> ResultTFailure = Result<string>.Failure(Error.Conflict(ErrorCode, ErrorDescription));
-
-
 }
