@@ -24,6 +24,9 @@
     <PackageProjectUrl>https://github.com/vinibas/ResultPattern</PackageProjectUrl>
     <RepositoryUrl>https://github.com/vinibas/ResultPattern</RepositoryUrl>
     <PackageTags>ResultPattern;Result Pattern;Result;Notification;Notification Pattern;ViniBas</PackageTags>
+    <PackageReleaseNotes>
+      Introduced GlobalConfiguration; moved ErrorTypeMaps into it; added support for returning ProblemDetails via global and per-call configuration.
+    </PackageReleaseNotes>
   </PropertyGroup>
   
   <ItemGroup>

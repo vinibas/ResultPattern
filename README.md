@@ -69,10 +69,12 @@ The structure of the `ResultResponse` classes always includes an `IsSuccess` pro
 
 ## ViniBas.ResultPattern.AspNet
 
-The `ResultPattern.AspNet` library provides additional features for both ASP.NET Web API and Minimal API. The main feature is the `Match` method, which allows mapping API return functions for success or failure cases. It is even possible to omit the failure method, which results in a `ProblemDetails` response with the appropriate status code for the error type in `Result`. This way, the developer does not need to manually map the status code for each error type in `Result`. For example, if `Result` contains `NotFound` errors, the returned status code will be `404`. For `Failure`, it will be `500`.
+The `ResultPattern.AspNet` library provides additional features for both ASP.NET Web API and Minimal API. The main feature is the `Match` method, which allows mapping API return functions for success (`onSuccess`) or failure (`onFailure`) cases. It is even possible to omit the failure method, which results in a `ProblemDetails` response with the appropriate status code for the error type in `Result`. This way, the developer does not need to manually map the status code for each error type in `Result`. For example, if `Result` contains `NotFound` errors, the returned status code will be `404`. For `Failure`, it will be `500`.
+
+If the `OnFailure` parameter is omitted, the return may or may not be of the ProblemDetails type, depending on the configuration performed through `GlobalConfiguration.UseProblemDetails`, which can be done in your `program.cs`, with the value `true` by default. This configuration can be overridden when calling the Match method through the optional `useProblemDetails` parameter.
 
 For custom error types, just as we can create new error types with `Error.ErrorTypes.AddTypes("MyNewErrorType");`, we can also create new mappings by modifying the `Maps` dictionary, for example:  
-`ErrorTypeMaps.Maps.Add("MyNewErrorType", (StatusCodes.Status406NotAcceptable, "My New Error Type"));`.  
+`GlobalConfiguration.ErrorTypeMaps.Add("MyNewErrorType", (StatusCodes.Status406NotAcceptable, "My New Error Type"));`, which can also be configured in `program.cs`.  
 This way, the new type will always return the mapped status code, and the corresponding title will be used. It is also possible to modify existing mappings. If an error type is not pre-mapped, the default status code returned is `500`.
 
 See an example of usage in an MVC action:
@@ -93,14 +95,14 @@ app.MapGet("Results<>", ()
     => myService.Get().Match<Results<Ok, ProblemHttpResult>, Ok>(TypedResults.Ok));
 ```
 
-Again, the second parameter is optional, so it is omitted in the examples, returning a `ProblemDetails` object by default.
+Again, the second parameter is optional, so it is omitted in the examples, and may or may not return a ProblemDetails depending on the global configuration and the `useProblemDetails` parameter.
 
 The `Problem Details` standard is based on [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807), and the returned object is native to ASP.NET, as described in the [official documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.problemdetails).  
 The returned `ProblemDetails` object includes the following additional properties:
 - `isSuccess`: a fixed boolean with the value `false`;
 - `errors`: the list of error descriptions.
 
-Two filters are also included: `ActionResultFilter` for ASP.NET MVC and `ResultsResultFilter` for Minimal API. These filters ensure that if objects such as `Result`, `Error`, or `ResultResponse` are returned directly, they are properly converted into a `ResultResponseSuccess` or a `ProblemDetails`.
+Two filters are also included: `ActionResultFilter` for ASP.NET MVC and `ResultsResultFilter` for Minimal API. These filters ensure that if objects such as `Result`, `Error`, or `ResultResponse` are returned directly, they are properly converted, if necessary, into a `ResultResponseSuccess`, a `ResultResponseError`, or a `ProblemDetails`.
 
 To facilitate validation in MVC applications, it is also possible to easily convert a `ModelState` into an `Error` object or an `IActionResult` with a `ProblemDetails` using the extension methods `ModelStateToError` and `ToProblemDetailsActionResult`.
 
