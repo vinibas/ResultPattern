@@ -5,20 +5,21 @@
  * See the LICENSE file in the project root for full details.
 */
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
-namespace ViniBas.ResultPattern.AspNet.ResultMinimal;
+namespace ViniBas.ResultPattern.AspNet;
 
-public sealed class ResultsResultFilter : IEndpointFilter
+public interface IFilterMappings
 {
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
-    {
-        var endpointResult = await next(context);
+    object? MapToResultResponse(object? originalResult);
+}
 
-        return endpointResult switch
+public class FilterMappings : IFilterMappings
+{
+    public object? MapToResultResponse(object? originalResult)
+    {
+        return originalResult switch
         {
             Error error => ConvertToResultResponseOrProblemDetails(error),
             IEnumerable<Error> errors => ConvertToResultResponseOrProblemDetails((Error)errors.ToList()),
@@ -26,23 +27,17 @@ public sealed class ResultsResultFilter : IEndpointFilter
                 result.ToResponse() :
                 ConvertToProblemDetailsIfConfigured(result.ToResponse()),
             ResultResponseError resultResponseError => ConvertToProblemDetailsIfConfigured(resultResponseError),
-            _ => endpointResult,
+            _ => originalResult,
         };
     }
 
-    private static object? ConvertToResultResponseOrProblemDetails(Error error)
+    private object? ConvertToResultResponseOrProblemDetails(Error error)
         => GlobalConfiguration.UseProblemDetails ?
             error.ToProblemDetails() :
             ((Result)error).ToResponse();
 
-    private static object? ConvertToProblemDetailsIfConfigured(ResultResponse error)
+    private object? ConvertToProblemDetailsIfConfigured(ResultResponse error)
         => GlobalConfiguration.UseProblemDetails ?
             error.ToProblemDetails() :
             error;
-}
-
-public static class ResultsResultFilterExtensions
-{
-    public static RouteHandlerBuilder WithResultsResultFilter(this RouteHandlerBuilder builder)
-        => builder.AddEndpointFilter<ResultsResultFilter>();
 }

@@ -8,14 +8,12 @@
 using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
 using Microsoft.AspNetCore.Http;
-using System.Reflection;
+using ViniBas.ResultPattern.AspNet.ResultMatcher;
 
-namespace ViniBas.ResultPattern.AspNet.ResultMinimal;
+namespace ViniBas.ResultPattern.AspNet.ResultMinimalApi;
 
 public static class MatchTResultsExtensions
 {
-    private static readonly Dictionary<TypesForImplicitOperatorCacheKey, MethodInfo?> _implicitOperatorCache = new();
-
     /// <summary>
     /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the function if successful.
     /// </summary>
@@ -34,8 +32,8 @@ public static class MatchTResultsExtensions
         Func<ResultResponse, T_Success> onSuccess, bool? useProblemDetails = null)
         where T_Result : IResult
         where T_Success : IResult
-        => resultResponse.Match<T_Result, T_Success, IResult>(
-            onSuccess, response => TreatCast<T_Result>(MatchHelper.OnErrorDefault(response, useProblemDetails)));
+        => ResultMatcherFactory.GetTypedMatcher.Match<T_Result, T_Success, IResult>(
+            resultResponse, onSuccess, null, useProblemDetails);
 
     /// <summary>
     /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the corresponding function
@@ -57,9 +55,8 @@ public static class MatchTResultsExtensions
         where T_Result : IResult
         where T_Success : IResult
         where T_Failure : IResult
-        => resultResponse.IsSuccess ?
-            TreatCast<T_Result>(onSuccess(resultResponse)) :
-            TreatCast<T_Result>(onFailure(resultResponse));
+        => ResultMatcherFactory.GetTypedMatcher.Match<T_Result, T_Success, T_Failure>(
+            resultResponse, onSuccess, onFailure, null);
     
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the function if successful.
@@ -79,7 +76,8 @@ public static class MatchTResultsExtensions
         Func<ResultResponse, T_Success> onSuccess, bool? useProblemDetails = null)
         where T_Result : IResult
         where T_Success : IResult
-        => result.ToResponse().Match<T_Result, T_Success>(onSuccess, useProblemDetails);
+        => ResultMatcherFactory.GetTypedMatcher.Match<T_Result, T_Success, IResult>(
+            result, onSuccess, null, useProblemDetails);
 
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
@@ -101,53 +99,6 @@ public static class MatchTResultsExtensions
         where T_Result : IResult
         where T_Success : IResult
         where T_Failure : IResult
-        => result.ToResponse().Match<T_Result, T_Success, T_Failure>(onSuccess, onFailure);
-
-    private static T_Result TreatCast<T_Result>(IResult iresult)
-        where T_Result : IResult
-    {
-        // First check the type, to try to avoid Reflection, for performance reasons
-        if (iresult is T_Result tresult)
-            return tresult;
-        
-        var implicitOperator = getImplicitOperatorFromCacheOrReflection<T_Result>(iresult.GetType());
-        if (implicitOperator != null)
-            return (T_Result)implicitOperator.Invoke(null, new object[] { iresult })!;
-        
-        try
-        {
-            // Attempt to cast to classes with explicit conversion operators
-            return (T_Result)iresult;
-        }
-        catch (InvalidCastException)
-        {
-            throw new InvalidOperationException(
-                $"The type provided for T_Result ({typeof(T_Result).Name}) is not compatible " +
-                $"with the result ({iresult.GetType().Name}). " + Environment.NewLine +
-                "T_Result must be a type that can accept the result or a compatible interface.");
-        }
-    }
-
-    private static MethodInfo? getImplicitOperatorFromCacheOrReflection<T_Result>(Type tparam) where T_Result : IResult
-    {
-        Type typeOfT_Result = typeof(T_Result);
-        var key = new TypesForImplicitOperatorCacheKey(typeOfT_Result, tparam);
-        
-        if (!_implicitOperatorCache.TryGetValue(key, out MethodInfo? implicitOperator))
-        {
-            implicitOperator = typeOfT_Result
-                .GetMethods(BindingFlags.Public | BindingFlags.Static)
-                .FirstOrDefault(m =>
-                    m.Name == "op_Implicit" &&
-                    m.ReturnType == typeOfT_Result &&
-                    m.GetParameters().Length == 1 &&
-                    m.GetParameters()[0].ParameterType == tparam);
-            
-            _implicitOperatorCache[key] = implicitOperator;
-        }
-
-        return implicitOperator;
-    }
-    
-    private record TypesForImplicitOperatorCacheKey(Type typeOfT_Result, Type param);
+        => ResultMatcherFactory.GetTypedMatcher.Match<T_Result, T_Success, T_Failure>(
+            result, onSuccess, onFailure, null);
 }

@@ -11,15 +11,12 @@ using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
-namespace ViniBas.ResultPattern.AspNet.ResultMinimal;
+namespace ViniBas.ResultPattern.AspNet.ResultMinimalApi;
 
 public static class ResultToProblemDetailsExtensions
 {
     public static ProblemHttpResult ToProblemDetailsResult(this ResultResponse resultResponse)
         => ProblemDetailsToResult(resultResponse.ToProblemDetails());
-
-    public static ProblemDetails ToProblemDetails(this Error error)
-        => ((Result) error).ToResponse().ToProblemDetails();
 
     public static ProblemHttpResult ToProblemDetailsResult(this Error error)
         => ProblemDetailsToResult(error.ToProblemDetails());

@@ -6,342 +6,196 @@
 */
 
 using ViniBas.ResultPattern.ResultResponses;
-using ViniBas.ResultPattern.AspNet.ResultMinimal;
+using ViniBas.ResultPattern.AspNet.ResultMinimalApi;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using ViniBas.ResultPattern.ResultObjects;
+using ViniBas.ResultPattern.AspNet.ResultMatcher;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMinimal;
 
-using ResultsOkAndJson = Results<Ok<ResultResponse>, JsonHttpResult<ResultResponseError>>;
-using ResultsCreatedAndJson = Results<Created<ResultResponse>, JsonHttpResult<ResultResponseError>>;
-using ResultsOkAndProblem = Results<Ok<ResultResponse>, ProblemHttpResult>;
-using ResultsCreatedAndProblem = Results<Created<ResultResponse>, ProblemHttpResult>;
-using ResultsOkAndBadRequest = Results<Ok<ResultResponse>, BadRequest<ResultResponse>>;
-using ResultsCreatedAndBadRequest = Results<Created<ResultResponse>, BadRequest<ResultResponse>>;
+using ResultsOkAndBadRequest = Results<Ok<string>, BadRequest<string>>;
 
-[Collection("No parallelism because of GlobalConfiguration.UseProblemDetails")]
 public class MatchTResultsExtensionsTests
 {
-    public static TheoryData<bool, bool?> AllScenariosTestData => MatchTestsHelper.AllScenariosTestData;
+    private readonly Mock<ITypedResultMatcher> _matcherMock = new();
+    private readonly Ok<string> _defaultSuccessResult = TypedResults.Ok("Success");
+    private readonly BadRequest<string> _defaultErrorResult = TypedResults.BadRequest("Error");
+    private readonly Result _resultSuccess = Result.Success();
+    private readonly Result _resultError = Result.Failure(Error.Conflict("Code", "An error occurred."));
+    private readonly ResultResponseSuccess _resultResponseSuccess = ResultResponseSuccess.Create();
+    private readonly ResultResponseError _resultResponseError = ResultResponseError.Create(
+        ["An error occurred."], 
+        ErrorTypes.Conflict);
 
     public MatchTResultsExtensionsTests()
-        => GlobalConfiguration.UseProblemDetails = true;
+        => ResultMatcherFactory.TypedMatcherFactory = new(() => _matcherMock.Object);
 
     [Theory]
-    [MemberData(nameof(AllScenariosTestData))]
-    public void MatchResult_ResultSuccess_ShouldReturnOnSuccess(bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
+    [InlineData(true)]
+    [InlineData(false)]
+    [InlineData(null)]
+    public void MatchResult_ResultSuccess_ShouldReturnOnSuccess(bool? useProblemDetails)
     {
-        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
-
-        #region Omit onFailure
-
-        var actResultOmitOnFailure = MatchTestsHelper.ResultSuccess
-            .Match<IResult, IResult>(ActionForSuccess, useProblemDetailsParam);
-
-        var actResultOmitOnFailureTyped = MatchTestsHelper.ResultSuccess
-            .Match<ResultsCreatedAndProblem, Created<ResultResponse>>
-            (ActionForSuccessTyped, useProblemDetailsParam);
-
-        var actResultTOmitOnFailure = MatchTestsHelper.ResultTSuccess
-            .Match<IResult, IResult>(ActionForSuccessT, useProblemDetailsParam);
-
-        var actResultTOmitOnFailureTyped = MatchTestsHelper.ResultTSuccess
-            .Match<ResultsOkAndProblem, Ok<ResultResponse>>
-            (ActionForSuccessTTyped, useProblemDetailsParam);
-
-        #endregion
-        #region Passing onFailure
-
-        var actResultPassingOnFailure = MatchTestsHelper.ResultSuccess
-            .Match<IResult, IResult, IResult>(ActionForSuccess, ActionForFailure);
-
-        var actResultPassingOnFailureTyped = MatchTestsHelper.ResultSuccess
-            .Match<ResultsCreatedAndBadRequest, Created<ResultResponse>, BadRequest<ResultResponse>>
-            (ActionForSuccessTyped, ActionForFailureTyped);
-
-        var actResultTPassingOnFailure = MatchTestsHelper.ResultTSuccess
-            .Match<IResult, IResult, IResult>(ActionForSuccessT, ActionForFailure);
-
-        var actResultTPassingOnFailureTyped = MatchTestsHelper.ResultTSuccess
-            .Match<ResultsOkAndBadRequest, Ok<ResultResponse>, BadRequest<ResultResponse>>
-            (ActionForSuccessTTyped, ActionForFailureTyped);
-
-        #endregion
-
-        AssertMatchSuccess(actResultOmitOnFailure, false);
-        AssertMatchSuccess(actResultOmitOnFailureTyped, true, true);
-        AssertMatchTSuccess(actResultTOmitOnFailure, false);
-        AssertMatchTSuccess(actResultTOmitOnFailureTyped, true, true);
+        _matcherMock
+            .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+                It.Is<ResultBase>(r => r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Ok<string>>>(),
+                It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
+                It.IsAny<bool?>()))
+            .Returns(_defaultSuccessResult);
+        _matcherMock
+            .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
+                It.Is<ResultBase>(r => r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Ok<string>>>(),
+                It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
+                It.IsAny<bool?>()))
+            .Returns(_defaultSuccessResult);
         
-        AssertMatchSuccess(actResultPassingOnFailure, false);
-        AssertMatchSuccess(actResultPassingOnFailureTyped, true, false);
-        AssertMatchTSuccess(actResultTPassingOnFailure, false);
-        AssertMatchTSuccess(actResultTPassingOnFailureTyped, true, false);
+        var result = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+            _resultSuccess, r => _defaultSuccessResult, r => _defaultErrorResult);
+        var resultProb = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>>(
+            _resultSuccess, r => _defaultSuccessResult, useProblemDetails);
+
+        Assert.Equal(_defaultSuccessResult, result.Result);
+        Assert.Equal(_defaultSuccessResult, resultProb.Result);
+        
+        _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
+            _resultSuccess,
+            It.IsAny<Func<ResultResponse, Ok<string>>>(),
+            null,
+            useProblemDetails), Times.Once);
+        
+        _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+            _resultSuccess,
+            It.IsAny<Func<ResultResponse, Ok<string>>>(),
+            It.IsNotNull<Func<ResultResponse, BadRequest<string>>>(),
+            null), Times.Once);
     }
 
     [Theory]
-    [MemberData(nameof(AllScenariosTestData))]
-    public void MatchResult_ResultFailure_ShouldReturnError(bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
+    [InlineData(true)]
+    [InlineData(false)]
+    [InlineData(null)]
+    public void MatchResultResponse_ResultSuccess_ShouldReturnOnSuccess(bool? useProblemDetails)
     {
-        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
-        var useProblemDetailsValue = useProblemDetailsParam ?? useProblemDetailsGlobal;
-
-        #region Omit onFailure
-
-        var actResultOmitOnFailure = MatchTestsHelper.ResultFailure
-            .Match<IResult, IResult>(ActionForSuccess, useProblemDetailsParam);
-            
-        var actResultOmitOnFailureTyped = MatchForResultTyped(ActionForSuccessTyped, true, useProblemDetailsParam, useProblemDetailsValue);
+        _matcherMock
+            .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+                It.Is<ResultResponse>(r => r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Ok<string>>>(),
+                It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
+                It.IsAny<bool?>()))
+            .Returns(_defaultSuccessResult);
+        _matcherMock
+            .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
+                It.Is<ResultResponse>(r => r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Ok<string>>>(),
+                It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
+                It.IsAny<bool?>()))
+            .Returns(_defaultSuccessResult);
         
-        var actResultTOmitOnFailure = MatchTestsHelper.ResultTFailure
-            .Match<IResult, IResult>(ActionForSuccessT, useProblemDetailsParam);
+        var result = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+            _resultResponseSuccess, r => _defaultSuccessResult, r => _defaultErrorResult);
+        var resultProb = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>>(
+            _resultResponseSuccess, r => _defaultSuccessResult, useProblemDetails);
 
-        var actResultTOmitOnFailureTyped = MatchForResultTyped(ActionForSuccessTTyped, true, useProblemDetailsParam, useProblemDetailsValue);
-
-        #endregion
-        #region Passing onFailure
-
-        var actResultPassingOnFailure = MatchTestsHelper.ResultFailure
-            .Match<IResult, IResult, IResult>(ActionForSuccess, ActionForFailure);
-            
-        var actResultPassingOnFailureTyped = MatchForResultTyped(ActionForSuccessTyped, false, useProblemDetailsParam, useProblemDetailsValue);
-
-        var actResultTPassingOnFailure = MatchTestsHelper.ResultTFailure
-            .Match<IResult, IResult, IResult>(ActionForSuccessT, ActionForFailure);
-
-        var actResultTPassingOnFailureTyped = MatchForResultTyped(ActionForSuccessTTyped, false, useProblemDetailsParam, useProblemDetailsValue);
-
-        #endregion
-
-        AssertMatchFailure(actResultOmitOnFailure, true, false, false, useProblemDetailsValue);
-        AssertMatchFailure(actResultOmitOnFailureTyped, true, true, false,useProblemDetailsValue);
-        AssertMatchFailure(actResultTOmitOnFailure, true, false, true, useProblemDetailsValue);
-        AssertMatchFailure(actResultTOmitOnFailureTyped, true, true, true, useProblemDetailsValue);
-
-        AssertMatchFailure(actResultPassingOnFailure, false, false, false,useProblemDetailsValue);
-        AssertMatchFailure(actResultPassingOnFailureTyped, false, true, false,useProblemDetailsValue);
-        AssertMatchFailure(actResultTPassingOnFailure, false, false, true, useProblemDetailsValue);
-        AssertMatchFailure(actResultTPassingOnFailureTyped, false, true, true, useProblemDetailsValue);
-    }
-
-    private IResult MatchForResultTyped<T_Success>(Func<ResultResponse, T_Success> onSuccess, bool omitOnFailure, bool? useProblemDetailsParam, bool useProblemDetailsValue)
-        where T_Success : IResult
-    {
-        if (!omitOnFailure)
-            return MatchTestsHelper.ResultFailure
-                .Match<Results<T_Success, BadRequest<ResultResponse>>, T_Success, BadRequest<ResultResponse>>
-                (onSuccess, ActionForFailureTyped);
-        if (useProblemDetailsValue)
-            return MatchTestsHelper.ResultFailure
-                .Match<Results<T_Success, ProblemHttpResult>, T_Success>(onSuccess, useProblemDetailsParam);
-        else
-            return MatchTestsHelper.ResultFailure
-                .Match<Results<T_Success, JsonHttpResult<ResultResponseError>>, T_Success>(onSuccess, useProblemDetailsParam);
+        Assert.Equal(_defaultSuccessResult, result.Result);
+        Assert.Equal(_defaultSuccessResult, resultProb.Result);
+        
+        _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
+            _resultResponseSuccess,
+            It.IsAny<Func<ResultResponse, Ok<string>>>(),
+            null,
+            useProblemDetails), Times.Once);
+        
+        _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+            _resultResponseSuccess,
+            It.IsAny<Func<ResultResponse, Ok<string>>>(),
+            It.IsNotNull<Func<ResultResponse, BadRequest<string>>>(),
+            null), Times.Once);
     }
 
     [Theory]
-    [MemberData(nameof(AllScenariosTestData))]
-    public void MatchResultResponse_ResultSuccess_ShouldReturnOnSuccess(bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
+    [InlineData(true)]
+    [InlineData(false)]
+    [InlineData(null)]
+    public void MatchResult_ResultFailure_ShouldReturnError(bool? useProblemDetails)
     {
-        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
+        _matcherMock
+            .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+                It.Is<ResultBase>(r => !r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Ok<string>>>(),
+                It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
+                It.IsAny<bool?>()))
+            .Returns(_defaultErrorResult);
+        _matcherMock
+            .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
+                It.Is<ResultBase>(r => !r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Ok<string>>>(),
+                It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
+                It.IsAny<bool?>()))
+            .Returns(_defaultErrorResult);
 
-        #region Omit onFailure
+        var result = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+            _resultError, r => _defaultSuccessResult, r => _defaultErrorResult);
+        var resultProb = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>>(
+            _resultError, r => _defaultSuccessResult, useProblemDetails);
 
-        var actResultOmitOnFailure = MatchTestsHelper.ResultSuccess.ToResponse()
-            .Match<IResult, IResult>(ActionForSuccess, useProblemDetailsParam);
-
-        var actResultOmitOnFailureTyped = MatchTestsHelper.ResultSuccess.ToResponse()
-            .Match<ResultsCreatedAndProblem, Created<ResultResponse>>
-            (ActionForSuccessTyped, useProblemDetailsParam);
-
-        var actResultTOmitOnFailure = MatchTestsHelper.ResultTSuccess.ToResponse()
-            .Match<IResult, IResult>(ActionForSuccessT, useProblemDetailsParam);
-
-        var actResultTOmitOnFailureTyped = MatchTestsHelper.ResultTSuccess.ToResponse()
-            .Match<ResultsOkAndProblem, Ok<ResultResponse>>
-            (ActionForSuccessTTyped, useProblemDetailsParam);
-
-        #endregion
-        #region Passing onFailure
-
-        var actResultPassingOnFailure = MatchTestsHelper.ResultSuccess.ToResponse()
-            .Match<IResult, IResult, IResult>(ActionForSuccess, ActionForFailure);
-
-        var actResultPassingOnFailureTyped = MatchTestsHelper.ResultSuccess.ToResponse()
-            .Match<ResultsCreatedAndBadRequest, Created<ResultResponse>, BadRequest<ResultResponse>>
-            (ActionForSuccessTyped, ActionForFailureTyped);
-
-        var actResultTPassingOnFailure = MatchTestsHelper.ResultTSuccess.ToResponse()
-            .Match<IResult, IResult, IResult>(ActionForSuccessT, ActionForFailure);
-
-        var actResultTPassingOnFailureTyped = MatchTestsHelper.ResultTSuccess.ToResponse()
-            .Match<ResultsOkAndBadRequest, Ok<ResultResponse>, BadRequest<ResultResponse>>
-            (ActionForSuccessTTyped, ActionForFailureTyped);
-
-        #endregion
-
-        AssertMatchSuccess(actResultOmitOnFailure, false);
-        AssertMatchSuccess(actResultOmitOnFailureTyped, true, true);
-        AssertMatchTSuccess(actResultTOmitOnFailure, false);
-        AssertMatchTSuccess(actResultTOmitOnFailureTyped, true, true);
+        Assert.Equal(_defaultErrorResult, result.Result);
+        Assert.Equal(_defaultErrorResult, resultProb.Result);
         
-        AssertMatchSuccess(actResultPassingOnFailure, false);
-        AssertMatchSuccess(actResultPassingOnFailureTyped, true, false);
-        AssertMatchTSuccess(actResultTPassingOnFailure, false);
-        AssertMatchTSuccess(actResultTPassingOnFailureTyped, true, false);
+        _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
+            _resultError,
+            It.IsAny<Func<ResultResponse, Ok<string>>>(),
+            null,
+            useProblemDetails), Times.Once);
+        
+        _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+            _resultError,
+            It.IsAny<Func<ResultResponse, Ok<string>>>(),
+            It.IsNotNull<Func<ResultResponse, BadRequest<string>>>(),
+            null), Times.Once);
     }
 
     [Theory]
-    [MemberData(nameof(AllScenariosTestData))]
-    public void MatchResultResonse_ResultFailure_ShouldReturnError(bool useProblemDetailsGlobal, bool? useProblemDetailsParam)
+    [InlineData(true)]
+    [InlineData(false)]
+    [InlineData(null)]
+    public void MatchResultResponse_ResultFailure_ShouldReturnError(bool? useProblemDetails)
     {
-        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobal;
-        var useProblemDetailsValue = useProblemDetailsParam ?? useProblemDetailsGlobal;
+        _matcherMock
+            .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+                It.Is<ResultResponse>(r => !r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Ok<string>>>(),
+                It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
+                It.IsAny<bool?>()))
+            .Returns(_defaultErrorResult);
+        _matcherMock
+            .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
+                It.Is<ResultResponse>(r => !r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Ok<string>>>(),
+                It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
+                It.IsAny<bool?>()))
+            .Returns(_defaultErrorResult);
 
-        #region Omit onFailure
+        var result = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+            _resultResponseError, r => _defaultSuccessResult, r => _defaultErrorResult);
+        var resultProb = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>>(
+            _resultResponseError, r => _defaultSuccessResult, useProblemDetails);
 
-        var actResultOmitOnFailure = MatchTestsHelper.ResultFailure
-            .Match<IResult, IResult>(ActionForSuccess, useProblemDetailsParam);
-            
-        var actResultOmitOnFailureTyped = MatchForResultResponseTyped(ActionForSuccessTyped, true, useProblemDetailsParam, useProblemDetailsValue);
+        Assert.Equal(_defaultErrorResult, result.Result);
+        Assert.Equal(_defaultErrorResult, resultProb.Result);
         
-        var actResultTOmitOnFailure = MatchTestsHelper.ResultTFailure
-            .Match<IResult, IResult>(ActionForSuccessT, useProblemDetailsParam);
-
-        var actResultTOmitOnFailureTyped = MatchForResultResponseTyped(ActionForSuccessTTyped, true, useProblemDetailsParam, useProblemDetailsValue);
-
-        #endregion
-        #region Passing onFailure
-
-        var actResultPassingOnFailure = MatchTestsHelper.ResultFailure
-            .Match<IResult, IResult, IResult>(ActionForSuccess, ActionForFailure);
-            
-        var actResultPassingOnFailureTyped = MatchForResultResponseTyped(ActionForSuccessTyped, false, useProblemDetailsParam, useProblemDetailsValue);
-
-        var actResultTPassingOnFailure = MatchTestsHelper.ResultTFailure
-            .Match<IResult, IResult, IResult>(ActionForSuccessT, ActionForFailure);
-
-        var actResultTPassingOnFailureTyped = MatchForResultResponseTyped(ActionForSuccessTTyped, false, useProblemDetailsParam, useProblemDetailsValue);
-
-        #endregion
-
-        AssertMatchFailure(actResultOmitOnFailure, true, false, false, useProblemDetailsValue);
-        AssertMatchFailure(actResultOmitOnFailureTyped, true, true, false,useProblemDetailsValue);
-        AssertMatchFailure(actResultTOmitOnFailure, true, false, true, useProblemDetailsValue);
-        AssertMatchFailure(actResultTOmitOnFailureTyped, true, true, true, useProblemDetailsValue);
-
-        AssertMatchFailure(actResultPassingOnFailure, false, false, false,useProblemDetailsValue);
-        AssertMatchFailure(actResultPassingOnFailureTyped, false, true, false,useProblemDetailsValue);
-        AssertMatchFailure(actResultTPassingOnFailure, false, false, true, useProblemDetailsValue);
-        AssertMatchFailure(actResultTPassingOnFailureTyped, false, true, true, useProblemDetailsValue);
-    }
-
-    private IResult MatchForResultResponseTyped<T_Success>(Func<ResultResponse, T_Success> onSuccess, bool omitOnFailure, bool? useProblemDetailsParam, bool useProblemDetailsValue)
-        where T_Success : IResult
-    {
-        if (!omitOnFailure)
-            return MatchTestsHelper.ResultFailure.ToResponse()
-                .Match<Results<T_Success, BadRequest<ResultResponse>>, T_Success, BadRequest<ResultResponse>>
-                (onSuccess, ActionForFailureTyped);
-        if (useProblemDetailsValue)
-            return MatchTestsHelper.ResultFailure.ToResponse()
-                .Match<Results<T_Success, ProblemHttpResult>, T_Success>(onSuccess, useProblemDetailsParam);
-        else
-            return MatchTestsHelper.ResultFailure.ToResponse()
-                .Match<Results<T_Success, JsonHttpResult<ResultResponseError>>, T_Success>(onSuccess, useProblemDetailsParam);
-    }
-    #region Match Actions
-
-    private IResult ActionForSuccess(ResultResponse resultResponse)
-        => Results.Created((string?)null, resultResponse);
-
-    private IResult ActionForSuccessT(ResultResponse resultResponse)
-        => Results.Ok(resultResponse);
-
-    private Created<ResultResponse> ActionForSuccessTyped(ResultResponse resultResponse)
-        => TypedResults.Created((string?)null, resultResponse);
-
-    private Ok<ResultResponse> ActionForSuccessTTyped(ResultResponse resultResponse)
-        => TypedResults.Ok(resultResponse);
-
-    private IResult ActionForFailure(ResultResponse resultResponse)
-        => Results.BadRequest(resultResponse);
-
-    private BadRequest<ResultResponse> ActionForFailureTyped(ResultResponse resultResponse)
-        => TypedResults.BadRequest(resultResponse);
-
-    #endregion
-
-    #region Asserts
-
-    private void AssertMatchSuccess(IResult result, bool isTyped, bool useProblemDetails = true)
-    {
-        if (isTyped)
-        {
-            INestedHttpResult resultFull = useProblemDetails ?
-                Assert.IsType<ResultsCreatedAndProblem>(result) :
-                Assert.IsType<ResultsCreatedAndBadRequest>(result);
-            result = resultFull.Result;
-        }
+        _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
+            _resultResponseError,
+            It.IsAny<Func<ResultResponse, Ok<string>>>(),
+            null,
+            useProblemDetails), Times.Once);
         
-        var createdResult = Assert.IsType<Created<ResultResponse>>(result);
-        var resultTyped = Assert.IsType<ResultResponseSuccess>(createdResult.Value);
-        Assert.True(resultTyped.IsSuccess);
+        _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
+            _resultResponseError,
+            It.IsAny<Func<ResultResponse, Ok<string>>>(),
+            It.IsNotNull<Func<ResultResponse, BadRequest<string>>>(),
+            null), Times.Once);
     }
-    private void AssertMatchTSuccess(IResult result, bool isTyped, bool useProblemDetails = true)
-    {
-        if (isTyped)
-        {
-            INestedHttpResult resultFull = useProblemDetails ?
-                Assert.IsType<ResultsOkAndProblem>(result) :
-                Assert.IsType<ResultsOkAndBadRequest>(result);
-            result = resultFull.Result;
-        }
-        
-        var okResult = Assert.IsType<Ok<ResultResponse>>(result);
-        var resultResponseValue = Assert.IsType<ResultResponseSuccess<string>>(okResult.Value);
-        Assert.True(resultResponseValue.IsSuccess);
-        Assert.Equal(MatchTestsHelper.SuccessValue, resultResponseValue.Data);
-    }
-
-    private void AssertMatchFailure(IResult result, bool omitOnFailure, bool isTyped, bool hasData, bool useProblemDetailsValue)
-    {
-        if (isTyped)
-        {
-            INestedHttpResult resultFull = (omitOnFailure, hasData, useProblemDetailsValue) switch
-            {
-                (true, true, true) => Assert.IsType<ResultsOkAndProblem>(result),
-                (true, true, false) => Assert.IsType<ResultsOkAndJson>(result),
-                (true, false, true) => Assert.IsType<ResultsCreatedAndProblem>(result),
-                (true, false, false) => Assert.IsType<ResultsCreatedAndJson>(result),
-                (false, true, _) => Assert.IsType<ResultsOkAndBadRequest>(result),
-                (false, false, _) => Assert.IsType<ResultsCreatedAndBadRequest>(result),
-            };
-
-            result = resultFull.Result;
-        }
-        
-        if (omitOnFailure && useProblemDetailsValue)
-        {
-            var problemResult = Assert.IsType<ProblemHttpResult>(result);
-            var problemDetails = problemResult.ProblemDetails;
-            Assert.False(problemDetails.Extensions["isSuccess"] as bool?);
-            Assert.Equal(MatchTestsHelper.ErrorDescription, problemDetails.Detail);
-
-            return;
-        }
-
-        IValueHttpResult<ResultResponse> objRes;
-    
-        if (omitOnFailure)
-            objRes = Assert.IsType<JsonHttpResult<ResultResponseError>>(result);
-        else
-            objRes = Assert.IsType<BadRequest<ResultResponse>>(result);
-
-        var resultResponseValue = Assert.IsType<ResultResponseError>(objRes.Value);
-        Assert.False(resultResponseValue.IsSuccess);
-        Assert.Equal([MatchTestsHelper.ErrorDescription], resultResponseValue.Errors);
-    }
-
-    #endregion
 }

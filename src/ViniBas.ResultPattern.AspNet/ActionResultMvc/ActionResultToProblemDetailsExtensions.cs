@@ -16,9 +16,6 @@ public static class ActionResultToProblemDetailsExtensions
     public static IActionResult ToProblemDetailsActionResult(this ResultResponse resultResponse)
         => ProblemDetailsToActionResult(resultResponse.ToProblemDetails());
 
-    public static ProblemDetails ToProblemDetails(this Error error)
-        => ((Result) error).ToResponse().ToProblemDetails();
-
     public static IActionResult ToProblemDetailsActionResult(this Error error)
         => ProblemDetailsToActionResult(error.ToProblemDetails());
 

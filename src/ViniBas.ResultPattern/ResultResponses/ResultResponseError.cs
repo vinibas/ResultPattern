@@ -9,6 +9,7 @@ namespace ViniBas.ResultPattern.ResultResponses;
 
 public record ResultResponseError : ResultResponse
 {
+    public static ResultResponseError Create(IEnumerable<string> errors, string type) => new(errors, type);
     public ResultResponseError(IEnumerable<string> errors, string type)
     {
         IsSuccess = false;

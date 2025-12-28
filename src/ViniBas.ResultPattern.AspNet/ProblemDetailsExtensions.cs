@@ -7,12 +7,16 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
 namespace ViniBas.ResultPattern.AspNet;
 
 public static class ProblemDetailsExtensions
 {
+    public static ProblemDetails ToProblemDetails(this Error error)
+        => ((Result) error).ToResponse().ToProblemDetails();
+
     public static ProblemDetails ToProblemDetails(this ResultResponse resultResponse)
     {
         if (resultResponse.IsSuccess || resultResponse is not ResultResponseError resultResponseError)

@@ -5,97 +5,39 @@
  * See the LICENSE file in the project root for full details.
 */
 
+using System.Reflection;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using ViniBas.ResultPattern.AspNet.ResultMinimal;
-using ViniBas.ResultPattern.ResultResponses;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Patterns;
+using ViniBas.ResultPattern.AspNet.ResultMinimalApi;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMinimal;
 
 public class ResultsResultFilterTests
 {
-    private readonly ResultsToTestDataBuilder _dataB = new ();
+    private readonly Mock<IFilterMappings> _mockFilterMappings = new ();
 
     [Fact]
-    public async Task InvokeAsync_Error_ReturnsProblemDetails()
+    public async Task OnActionExecuted_ShouldCallMapResult()
     {
-        GlobalConfiguration.UseProblemDetails = true;
-        
-        foreach (var resultErrorTst in _dataB._resultErrorsToTest)
-        {
-            var result = await InvokeFilter(resultErrorTst.ResultToTest);
+        var objectResult = new Object();
+        var expectedResult = new Object();
 
-            var probDet = Assert.IsType<ProblemDetails>(result);
-            Assert.Equal(resultErrorTst.ExpectedStatusCode, probDet.Status);
-            Assert.Equal(resultErrorTst.ExpectedMessages, probDet.Extensions["errors"]);
-        }
+        _mockFilterMappings
+            .Setup(fm => fm.MapToResultResponse(objectResult))
+            .Returns(expectedResult);
+
+        var result = await InvokeFilter(objectResult);
+
+        Assert.Same(expectedResult, result);
+        _mockFilterMappings.Verify(fm => fm.MapToResultResponse(objectResult), Times.Once);
     }
 
-    [Fact]
-    public async Task InvokeAsync_Error_ReturnsResultResponseError()
-    {
-        GlobalConfiguration.UseProblemDetails = false;
-
-        foreach (var resultErrorTst in _dataB._resultErrorsToTest)
-        {
-            var result = await InvokeFilter(resultErrorTst.ResultToTest);
-
-            var rre = Assert.IsType<ResultResponseError>(result);
-            Assert.Equal(resultErrorTst.ExpectedType, rre.Type);
-            Assert.Equal(resultErrorTst.ExpectedMessages, rre.Errors);
-        }
-    }
-
-
-    [Fact]
-    public async Task InvokeAsync_SuccessResult_ReturnsResultResponse()
-    {
-        foreach (var successToTest in _dataB._resultSuccessesToTest)
-        {
-            var response = await InvokeFilter(successToTest.ResultToTest);
-
-            if (successToTest.Data is null)
-                Assert.IsType<ResultResponseSuccess>(response);
-            else
-            {
-                var resSuc = Assert.IsType<ResultResponseSuccess<object>>(response);
-                Assert.Equal(successToTest.Data, resSuc.Data);
-            }
-        }
-    }
-
-    [Fact]
-    public async Task OnActionExecuted_ShouldNotModifyProblemDetails()
-    {
-        var problemDetails = new ProblemDetails
-        {
-            Title = "ProbDet Tst",
-            Status = 409,
-            Type = "Tst",
-            Extensions = new Dictionary<string, object?>() { { "errors", new List<string> { "error test" } } },
-        };
-    
-        var response = await InvokeFilter(problemDetails);
-        
-        var probDet = Assert.IsType<ProblemDetails>(response);
-        Assert.Equal(problemDetails, probDet);
-        Assert.Equal("Tst", probDet.Type);
-        Assert.Equal(new List<string> { "error test" }, probDet.Extensions["errors"]);
-    }
-
-    [Fact]
-    public async Task InvokeAsync_OtherObject_ReturnsOriginalObject()
-    {
-        var obj = new { Test = "Value" };
-
-        var result = await InvokeFilter(obj);
-        
-        Assert.Same(obj, result);
-    }
-    
-    private static async Task<object?> InvokeFilter(object endpointResult)
+    private async Task<object?> InvokeFilter(object endpointResult)
     {
         var filter = new ResultsResultFilter();
+        filter.filterMappings = _mockFilterMappings.Object;
         var httpContext = new DefaultHttpContext();
         var context = new DefaultEndpointFilterInvocationContext(httpContext, Array.Empty<object>(), new Endpoint(null, null, null));
         var next = new EndpointFilterDelegate(_ => new ValueTask<object?>(endpointResult));

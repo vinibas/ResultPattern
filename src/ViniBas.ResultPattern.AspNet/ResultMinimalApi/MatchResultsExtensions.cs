@@ -8,8 +8,9 @@
 using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
 using Microsoft.AspNetCore.Http;
+using ViniBas.ResultPattern.AspNet.ResultMatcher;
 
-namespace ViniBas.ResultPattern.AspNet.ResultMinimal;
+namespace ViniBas.ResultPattern.AspNet.ResultMinimalApi;
 
 public static class MatchResultsExtensions
 {
@@ -24,7 +25,8 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
     public static IResult Match(this ResultResponse resultResponse,
         Func<ResultResponse, IResult> onSuccess, bool? useProblemDetails = null)
-        => resultResponse.Match(onSuccess, response => MatchHelper.OnErrorDefault(response, useProblemDetails));
+        => ResultMatcherFactory.GetMinimalApiMatcher.Match<IResult, IResult>(
+            resultResponse, onSuccess, null, useProblemDetails);
 
     /// <summary>
     /// Checks whether a ResultResponse is a success or failure, and returns the result of the corresponding function
@@ -35,7 +37,7 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
     public static IResult Match(this ResultResponse resultResponse,
         Func<ResultResponse, IResult> onSuccess, Func<ResultResponse, IResult> onFailure)
-        => resultResponse.IsSuccess ? onSuccess(resultResponse) : onFailure(resultResponse);
+        => ResultMatcherFactory.GetMinimalApiMatcher.Match(resultResponse, onSuccess, onFailure, null);
     
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the function if successful.
@@ -48,7 +50,8 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
     public static IResult Match(this ResultBase result,
         Func<ResultResponse, IResult> onSuccess, bool? useProblemDetails = null)
-        => result.ToResponse().Match(onSuccess, useProblemDetails);
+        => ResultMatcherFactory.GetMinimalApiMatcher.Match<IResult, IResult>(
+            result, onSuccess, null, useProblemDetails);
 
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
@@ -59,5 +62,5 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
     public static IResult Match(this ResultBase result,
         Func<ResultResponse, IResult> onSuccess, Func<ResultResponse, IResult> onFailure)
-        => result.ToResponse().Match(onSuccess, onFailure);
+        => ResultMatcherFactory.GetMinimalApiMatcher.Match(result, onSuccess, onFailure, null);
 }

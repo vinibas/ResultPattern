@@ -8,6 +8,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
+using ViniBas.ResultPattern.AspNet.ResultMatcher;
 
 namespace ViniBas.ResultPattern.AspNet.ActionResultMvc;
 
@@ -24,19 +25,8 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
     public static IActionResult Match(this ResultResponse resultResponse,
         Func<ResultResponse, IActionResult> onSuccess, bool? useProblemDetails = null)
-        => resultResponse.Match(onSuccess, response => OnErrorDefault(response, useProblemDetails));
-
-    private static IActionResult OnErrorDefault(ResultResponse resultResponse, bool? useProblemDetails)
-    {
-        if (resultResponse is not ResultResponseError resultResponseError)
-            throw new Exception();
-
-        useProblemDetails ??= GlobalConfiguration.UseProblemDetails;
-        return useProblemDetails.Value ? resultResponse.ToProblemDetailsActionResult() : new ObjectResult(resultResponseError)
-        {
-            StatusCode = GlobalConfiguration.GetStatusCode(resultResponseError.Type),
-        };
-    }
+        => ResultMatcherFactory.GetActionResultMatcher.Match<IActionResult, IActionResult>(
+            resultResponse, onSuccess, null, useProblemDetails);
 
     /// <summary>
     /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the corresponding function
@@ -47,7 +37,7 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
     public static IActionResult Match(this ResultResponse resultResponse,
         Func<ResultResponse, IActionResult> onSuccess, Func<ResultResponse, IActionResult> onFailure)
-        => resultResponse.IsSuccess ? onSuccess(resultResponse) : onFailure(resultResponse);
+        => ResultMatcherFactory.GetActionResultMatcher.Match(resultResponse, onSuccess, onFailure, null);
     
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the function if successful.
@@ -60,7 +50,8 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
     public static IActionResult Match(this ResultBase result,
         Func<ResultResponse, IActionResult> onSuccess, bool? useProblemDetails = null)
-        => result.ToResponse().Match(onSuccess, useProblemDetails);
+        => ResultMatcherFactory.GetActionResultMatcher.Match<IActionResult, IActionResult>(
+            result, onSuccess, null, useProblemDetails);
 
     /// <summary>
     /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
@@ -71,5 +62,6 @@ public static class MatchResultsExtensions
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
     public static IActionResult Match(this ResultBase result,
         Func<ResultResponse, IActionResult> onSuccess, Func<ResultResponse, IActionResult> onFailure)
-        => result.ToResponse().Match(onSuccess, onFailure);
+        => ResultMatcherFactory.GetActionResultMatcher.Match(
+            result, onSuccess, onFailure, null);
 }

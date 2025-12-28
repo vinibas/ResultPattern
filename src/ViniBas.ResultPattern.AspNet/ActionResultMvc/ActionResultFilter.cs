@@ -7,13 +7,13 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using ViniBas.ResultPattern.ResultResponses;
-using ViniBas.ResultPattern.ResultObjects;
 
 namespace ViniBas.ResultPattern.AspNet.ActionResultMvc;
 
 public sealed class ActionResultFilter : IActionFilter
 {
+    internal IFilterMappings filterMappings = new FilterMappings();
+
     public void OnActionExecuting(ActionExecutingContext context) { }
 
     public void OnActionExecuted(ActionExecutedContext context)
@@ -25,26 +25,7 @@ public sealed class ActionResultFilter : IActionFilter
         if (contextResult is ObjectResult objectResult &&
             objectResult.Value is not ProblemDetails)
         {
-            objectResult.Value = objectResult.Value switch
-            {
-                Error error => ConvertToResultResponseOrProblemDetails(error),
-                IEnumerable<Error> errors => ConvertToResultResponseOrProblemDetails((Error)errors.ToList()),
-                ResultBase result => result.IsSuccess ?
-                    result.ToResponse() :
-                    ConvertToProblemDetailsIfConfigured(result.ToResponse()),
-                ResultResponseError resultResponseError => ConvertToProblemDetailsIfConfigured(resultResponseError),
-                _ => objectResult.Value,
-            };
+            objectResult.Value = filterMappings.MapToResultResponse(objectResult.Value);
         }
     }
-
-    private static object? ConvertToResultResponseOrProblemDetails(Error error)
-        => GlobalConfiguration.UseProblemDetails ?
-            error.ToProblemDetails() :
-            ((Result)error).ToResponse();
-
-    private static object? ConvertToProblemDetailsIfConfigured(ResultResponse error)
-        => GlobalConfiguration.UseProblemDetails ?
-            error.ToProblemDetails() :
-            error;
 }
