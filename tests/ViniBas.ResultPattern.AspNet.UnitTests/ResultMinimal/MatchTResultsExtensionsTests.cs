@@ -19,8 +19,8 @@ using ResultsOkAndBadRequest = Results<Ok<string>, BadRequest<string>>;
 public class MatchTResultsExtensionsTests
 {
     private readonly Mock<ITypedResultMatcher> _matcherMock = new();
-    private readonly Ok<string> _defaultSuccessResult = TypedResults.Ok("Success");
-    private readonly BadRequest<string> _defaultErrorResult = TypedResults.BadRequest("Error");
+    private readonly Ok<string> _successResult = TypedResults.Ok("Success");
+    private readonly BadRequest<string> _errorResult = TypedResults.BadRequest("Error");
     private readonly Result _resultSuccess = Result.Success();
     private readonly Result _resultError = Result.Failure(Error.Conflict("Code", "An error occurred."));
     private readonly ResultResponseSuccess _resultResponseSuccess = ResultResponseSuccess.Create();
@@ -43,22 +43,22 @@ public class MatchTResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, Ok<string>>>(),
                 It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultSuccessResult);
+            .Returns(_successResult);
         _matcherMock
             .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
                 It.Is<ResultBase>(r => r.IsSuccess),
                 It.IsAny<Func<ResultResponse, Ok<string>>>(),
                 It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultSuccessResult);
+            .Returns(_successResult);
         
         var result = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
-            _resultSuccess, r => _defaultSuccessResult, r => _defaultErrorResult);
+            _resultSuccess, r => _successResult, r => _errorResult);
         var resultProb = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>>(
-            _resultSuccess, r => _defaultSuccessResult, useProblemDetails);
+            _resultSuccess, r => _successResult, useProblemDetails);
 
-        Assert.Equal(_defaultSuccessResult, result.Result);
-        Assert.Equal(_defaultSuccessResult, resultProb.Result);
+        Assert.Equal(_successResult, result.Result);
+        Assert.Equal(_successResult, resultProb.Result);
         
         _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
             _resultSuccess,
@@ -85,22 +85,22 @@ public class MatchTResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, Ok<string>>>(),
                 It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultSuccessResult);
+            .Returns(_successResult);
         _matcherMock
             .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
                 It.Is<ResultResponse>(r => r.IsSuccess),
                 It.IsAny<Func<ResultResponse, Ok<string>>>(),
                 It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultSuccessResult);
+            .Returns(_successResult);
         
         var result = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
-            _resultResponseSuccess, r => _defaultSuccessResult, r => _defaultErrorResult);
+            _resultResponseSuccess, r => _successResult, r => _errorResult);
         var resultProb = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>>(
-            _resultResponseSuccess, r => _defaultSuccessResult, useProblemDetails);
+            _resultResponseSuccess, r => _successResult, useProblemDetails);
 
-        Assert.Equal(_defaultSuccessResult, result.Result);
-        Assert.Equal(_defaultSuccessResult, resultProb.Result);
+        Assert.Equal(_successResult, result.Result);
+        Assert.Equal(_successResult, resultProb.Result);
         
         _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
             _resultResponseSuccess,
@@ -127,22 +127,22 @@ public class MatchTResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, Ok<string>>>(),
                 It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultErrorResult);
+            .Returns(_errorResult);
         _matcherMock
             .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
                 It.Is<ResultBase>(r => !r.IsSuccess),
                 It.IsAny<Func<ResultResponse, Ok<string>>>(),
                 It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultErrorResult);
+            .Returns(_errorResult);
 
         var result = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
-            _resultError, r => _defaultSuccessResult, r => _defaultErrorResult);
+            _resultError, r => _successResult, r => _errorResult);
         var resultProb = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>>(
-            _resultError, r => _defaultSuccessResult, useProblemDetails);
+            _resultError, r => _successResult, useProblemDetails);
 
-        Assert.Equal(_defaultErrorResult, result.Result);
-        Assert.Equal(_defaultErrorResult, resultProb.Result);
+        Assert.Equal(_errorResult, result.Result);
+        Assert.Equal(_errorResult, resultProb.Result);
         
         _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
             _resultError,
@@ -169,22 +169,22 @@ public class MatchTResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, Ok<string>>>(),
                 It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultErrorResult);
+            .Returns(_errorResult);
         _matcherMock
             .Setup(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
                 It.Is<ResultResponse>(r => !r.IsSuccess),
                 It.IsAny<Func<ResultResponse, Ok<string>>>(),
                 It.IsAny<Func<ResultResponse, BadRequest<string>>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultErrorResult);
+            .Returns(_errorResult);
 
         var result = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>, BadRequest<string>>(
-            _resultResponseError, r => _defaultSuccessResult, r => _defaultErrorResult);
+            _resultResponseError, r => _successResult, r => _errorResult);
         var resultProb = MatchTResultsExtensions.Match<ResultsOkAndBadRequest, Ok<string>>(
-            _resultResponseError, r => _defaultSuccessResult, useProblemDetails);
+            _resultResponseError, r => _successResult, useProblemDetails);
 
-        Assert.Equal(_defaultErrorResult, result.Result);
-        Assert.Equal(_defaultErrorResult, resultProb.Result);
+        Assert.Equal(_errorResult, result.Result);
+        Assert.Equal(_errorResult, resultProb.Result);
         
         _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest, Ok<string>, IResult>(
             _resultResponseError,

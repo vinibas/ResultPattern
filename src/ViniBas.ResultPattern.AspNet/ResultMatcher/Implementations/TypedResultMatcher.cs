@@ -13,7 +13,7 @@ namespace ViniBas.ResultPattern.AspNet.ResultMatcher.Implementations;
 
 internal sealed class TypedResultMatcher : ITypedResultMatcher
 {
-    internal ITypedResultDefaultMatcher MatchDefaultInstance { get; set; } = new TypedResultDefaultMatcher();
+    internal ITypedResultFallbackMatcher MatchFallbackInstance { get; set; } = new TypedResultFallbackMatcher();
 
     public TResult Match<TResult, TSuccess, TFailure>(
         ResultBase resultBase,
@@ -23,7 +23,7 @@ internal sealed class TypedResultMatcher : ITypedResultMatcher
         where TResult : IResult
         where TSuccess : IResult
         where TFailure : IResult
-        => MatchDefaultInstance.Match<TResult, TSuccess, TFailure>(
+        => MatchFallbackInstance.Match<TResult, TSuccess, TFailure>(
             resultBase.ToResponse(), onSuccess, onFailure, useProblemDetails);
 
     public TResult Match<TResult, TSuccess, TFailure>(
@@ -34,6 +34,6 @@ internal sealed class TypedResultMatcher : ITypedResultMatcher
         where TResult : IResult
         where TSuccess : IResult
         where TFailure : IResult
-        => MatchDefaultInstance.Match<TResult, TSuccess, TFailure>(
+        => MatchFallbackInstance.Match<TResult, TSuccess, TFailure>(
             response, onSuccess, onFailure, useProblemDetails);
 }

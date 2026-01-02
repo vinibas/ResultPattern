@@ -16,11 +16,11 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMatcher.Implementations;
 public class TypedResultMatcherTests
 {
     private readonly TypedResultMatcher _matcher;
-    private readonly Mock<ITypedResultDefaultMatcher> _matchDefaultInstance;
-    private readonly Mock<Func<ResultResponse, Ok<ResultResponseSuccess>>> _onSuccessDefault;
-    private readonly Mock<Func<ResultResponse, bool?, BadRequest<ResultResponseError>>> _onFailureDefault;
-    private readonly Ok<ResultResponseSuccess> _successDefaultResult;
-    private readonly BadRequest<ResultResponseError> _failureDefaultResult;
+    private readonly Mock<ITypedResultFallbackMatcher> _matchFallbackInstance;
+    private readonly Mock<Func<ResultResponse, Ok<ResultResponseSuccess>>> _onSuccessFallback;
+    private readonly Mock<Func<ResultResponse, bool?, BadRequest<ResultResponseError>>> _onFailureFallback;
+    private readonly Ok<ResultResponseSuccess> _successFallbackResult;
+    private readonly BadRequest<ResultResponseError> _failureFallbackResult;
     private readonly Result _resultSuccess = Result.Success();
     private readonly Result _resultError = Result.Failure(Error.Validation("Code", "An error occurred."));
     private readonly ResultResponseSuccess _resultResponseSuccess = ResultResponseSuccess.Create();
@@ -33,24 +33,24 @@ public class TypedResultMatcherTests
     {
         _matcher = new TypedResultMatcher();
 
-        _matchDefaultInstance = new Mock<ITypedResultDefaultMatcher>();
-        _matcher.MatchDefaultInstance = _matchDefaultInstance.Object;
+        _matchFallbackInstance = new Mock<ITypedResultFallbackMatcher>();
+        _matcher.MatchFallbackInstance = _matchFallbackInstance.Object;
         
-        _onSuccessDefault = new Mock<Func<ResultResponse, Ok<ResultResponseSuccess>>>();
-        _onFailureDefault = new Mock<Func<ResultResponse, bool?, BadRequest<ResultResponseError>>>();
+        _onSuccessFallback = new Mock<Func<ResultResponse, Ok<ResultResponseSuccess>>>();
+        _onFailureFallback = new Mock<Func<ResultResponse, bool?, BadRequest<ResultResponseError>>>();
 
-        _successDefaultResult = TypedResults.Ok(_resultResponseSuccess);
-        _failureDefaultResult = TypedResults.BadRequest(_resultResponseError);
+        _successFallbackResult = TypedResults.Ok(_resultResponseSuccess);
+        _failureFallbackResult = TypedResults.BadRequest(_resultResponseError);
 
-        _onSuccessDefault.Setup(f => f(It.IsAny<ResultResponse>()))
-            .Returns(_successDefaultResult);
-        _onFailureDefault.Setup(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()))
-            .Returns((ResultResponse r, bool? u) => _failureDefaultResult);
+        _onSuccessFallback.Setup(f => f(It.IsAny<ResultResponse>()))
+            .Returns(_successFallbackResult);
+        _onFailureFallback.Setup(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()))
+            .Returns((ResultResponse r, bool? u) => _failureFallbackResult);
 
-        _matcher.MatchDefaultInstance = new TypedResultDefaultMatcher
+        _matcher.MatchFallbackInstance = new TypedResultFallbackMatcher
         {
-            OnSuccessDefault = _onSuccessDefault.Object,
-            OnFailureDefault = _onFailureDefault.Object
+            OnSuccessFallback = _onSuccessFallback.Object,
+            OnFailureFallback = _onFailureFallback.Object
         };
     }
     
@@ -75,21 +75,21 @@ public class TypedResultMatcherTests
         okResult = Assert.IsType<Ok<ResultResponse>>(matcherResultResponse.Result);
         Assert.Equal(_resultResponseSuccess, okResult.Value);
         
-        _onSuccessDefault.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureDefault.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
     }
 
     [Fact]
-    public void Match_DontPassingOnSuccess_WhenSuccess_ReturnsDefaultResult()
+    public void Match_DontPassingOnSuccess_WhenSuccess_ReturnsFallbackResult()
     {
         // Arrange
-        _matchDefaultInstance
+        _matchFallbackInstance
             .Setup(m => m.Match<Results<Ok<ResultResponseSuccess>, IResult>, Ok<ResultResponseSuccess>, IResult>(
                 It.IsAny<ResultResponseSuccess>(),
                 It.IsAny<Func<ResultResponse, Ok<ResultResponseSuccess>>>(),
                 null,
                 null))
-            .Returns(() => _successDefaultResult);
+            .Returns(() => _successFallbackResult);
 
         // Act
         var matcherResult = _matcher.Match<Results<Ok<ResultResponse>, IResult>, Ok<ResultResponse>, IResult>(
@@ -109,8 +109,8 @@ public class TypedResultMatcherTests
         okResult = Assert.IsType<Ok<ResultResponseSuccess>>(matcherResultResponse.Result);
         Assert.Equal(_resultResponseSuccess, okResult.Value);
 
-        _onSuccessDefault.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(2));
-        _onFailureDefault.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(2));
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
     }
 
     [Theory]
@@ -137,24 +137,24 @@ public class TypedResultMatcherTests
         badRequestResult = Assert.IsType<BadRequest>(matcherResultResponse.Result);
         Assert.Equal(badRequestResult, matcherResultResponse.Result);
 
-        _onSuccessDefault.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureDefault.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData(true)]
     [InlineData(false)]
-    public void Match_DontPassingOnFailure_WhenError_ReturnsDefaultFailure(bool? useProblemDetails)
+    public void Match_DontPassingOnFailure_WhenError_ReturnsFallbackFailure(bool? useProblemDetails)
     {
         // Arrange
-        _matchDefaultInstance
+        _matchFallbackInstance
             .Setup(m => m.Match<Results<IResult, BadRequest<ResultResponseError>>, IResult, BadRequest<ResultResponseError>>(
                 It.IsAny<ResultResponseError>(),
                 It.IsAny<Func<ResultResponse, Ok<ResultResponseError>>>(),
                 null,
                 null))
-            .Returns(() => _failureDefaultResult);
+            .Returns(() => _failureFallbackResult);
 
         // Act
         var matcherResult = _matcher.Match<Results<IResult, BadRequest>, IResult, BadRequest>(
@@ -170,11 +170,11 @@ public class TypedResultMatcherTests
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequest<ResultResponseError>>(matcherResult.Result);
-        Assert.Equal(_failureDefaultResult, matcherResult.Result);
+        Assert.Equal(_failureFallbackResult, matcherResult.Result);
         badRequestResult = Assert.IsType<BadRequest<ResultResponseError>>(matcherResultResponse.Result);
-        Assert.Equal(_failureDefaultResult, matcherResultResponse.Result);
+        Assert.Equal(_failureFallbackResult, matcherResultResponse.Result);
 
-        _onSuccessDefault.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureDefault.Verify(f => f(It.IsAny<ResultResponse>(), useProblemDetails), Times.Exactly(2));
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), useProblemDetails), Times.Exactly(2));
     }
 }

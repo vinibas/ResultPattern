@@ -10,7 +10,7 @@ using ViniBas.ResultPattern.ResultResponses;
 
 namespace ViniBas.ResultPattern.AspNet.ResultMatcher.Implementations;
 
-internal interface ITypedResultDefaultMatcher
+internal interface ITypedResultFallbackMatcher
 {
     public TResult Match<TResult, TSuccess, TFailure>(
         ResultResponse response,
@@ -22,12 +22,12 @@ internal interface ITypedResultDefaultMatcher
         where TFailure : IResult;
 }
 
-internal class TypedResultDefaultMatcher : ITypedResultDefaultMatcher
+internal class TypedResultFallbackMatcher : ITypedResultFallbackMatcher
 {
-    internal Func<ResultResponse, IResult> OnSuccessDefault { get; set; }
-        = DefaultMinimalMatchHelper.OnSuccessDefault;
-    internal Func<ResultResponse, bool?, IResult> OnFailureDefault { get; set; }
-        = DefaultMinimalMatchHelper.OnFailureDefault;
+    internal Func<ResultResponse, IResult> OnSuccessFallback { get; set; }
+        = FallbackMinimalMatchHelper.OnSuccessFallback;
+    internal Func<ResultResponse, bool?, IResult> OnFailureFallback { get; set; }
+        = FallbackMinimalMatchHelper.OnFailureFallback;
     internal TypeCaster TypeCasterInstance { get; set; } = new TypeCaster();
 
     public TResult Match<TResult, TSuccess, TFailure>(
@@ -40,8 +40,8 @@ internal class TypedResultDefaultMatcher : ITypedResultDefaultMatcher
         where TFailure : IResult
     {
         var result = response.IsSuccess ?
-            (onSuccess is not null ? onSuccess(response) : OnSuccessDefault(response)) :
-            (onFailure is not null ? onFailure(response) : OnFailureDefault(response, useProblemDetails));
+            (onSuccess is not null ? onSuccess(response) : OnSuccessFallback(response)) :
+            (onFailure is not null ? onFailure(response) : OnFailureFallback(response, useProblemDetails));
 
         return TypeCasterInstance.Cast<TResult>(result);
     }

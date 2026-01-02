@@ -15,7 +15,7 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests;
 public class FilterMappingsTests
 {
     [Fact]
-    public void MapToResultResponse_ShouldReturnResultResponse_WhenReicivesSomeResultTypeAndProblemDetailsIsFalse()
+    public void MapToResultResponse_ShouldReturnResultResponse_WhenReceivesSomeResultTypeAndProblemDetailsIsFalse()
     {
         var filterMappings = new FilterMappings();
         GlobalConfiguration.UseProblemDetails = false;
@@ -51,7 +51,7 @@ public class FilterMappingsTests
     }
 
     [Fact]
-    public void MapToResultResponse_ShouldReturnResultResponse_WhenReicivesSomeResultTypeAndProblemDetailsIsTrue()
+    public void MapToResultResponse_ShouldReturnResultResponse_WhenReceivesSomeResultTypeAndProblemDetailsIsTrue()
     {
         var filterMappings = new FilterMappings();
         GlobalConfiguration.UseProblemDetails = true;

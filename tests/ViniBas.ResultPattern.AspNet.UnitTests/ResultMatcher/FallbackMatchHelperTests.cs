@@ -14,22 +14,22 @@ using ViniBas.ResultPattern.ResultResponses;
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMatcher;
 
 [Collection("No parallelism because of GlobalConfiguration.UseProblemDetails")]
-public class DefaultMatchHelperTests
+public class FallbackMatchHelperTests
 {
-    public DefaultMatchHelperTests()
+    public FallbackMatchHelperTests()
     {
         GlobalConfiguration.UseProblemDetails = true;
     }
     
     [Fact]
-    public void OnSuccessDefault_WhenResultResponseTyped_ReturnsOkObjectResult()
+    public void OnSuccessFallback_WhenResultResponseTyped_ReturnsOkObjectResult()
     {
         // Arrange
         var resultResponse = ResultResponseSuccess.Create("Test Value");
 
         // Act
-        var matcherResultMvc = DefaultMvcMatchHelper.OnSuccessDefault(resultResponse);
-        var matcherResultMinimal = DefaultMinimalMatchHelper.OnSuccessDefault(resultResponse);
+        var matcherResultMvc = FallbackMvcMatchHelper.OnSuccessFallback(resultResponse);
+        var matcherResultMinimal = FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse);
 
         // Assert Mvc
         var okResultMvc = Assert.IsType<OkObjectResult>(matcherResultMvc);
@@ -41,14 +41,14 @@ public class DefaultMatchHelperTests
     }
     
     [Fact]
-    public void OnSuccessDefault_WhenResultResponseNotTyped_ReturnsOkResult()
+    public void OnSuccessFallback_WhenResultResponseNotTyped_ReturnsOkResult()
     {
         // Arrange
         var resultResponse = ResultResponseSuccess.Create();
 
         // Act
-        var matcherResultMvc = DefaultMvcMatchHelper.OnSuccessDefault(resultResponse);
-        var matcherResultMinimal = DefaultMinimalMatchHelper.OnSuccessDefault(resultResponse);
+        var matcherResultMvc = FallbackMvcMatchHelper.OnSuccessFallback(resultResponse);
+        var matcherResultMinimal = FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse);
 
         // Assert Mvc
         var okResultMvc = Assert.IsType<OkObjectResult>(matcherResultMvc);
@@ -60,14 +60,14 @@ public class DefaultMatchHelperTests
     }
 
     [Fact]
-    public void OnSuccessDefault_WhenResultResponseIsNotSuccess_ThrowsInvalidOperationException()
+    public void OnSuccessFallback_WhenResultResponseIsNotSuccess_ThrowsInvalidOperationException()
     {
         // Arrange
         var resultResponse = ResultResponseError.Create(["Test Error"], ErrorTypes.Validation);
 
         // Act
-        var exceptionMvc = Record.Exception(() => DefaultMvcMatchHelper.OnSuccessDefault(resultResponse));
-        var exceptionMinimal = Record.Exception(() => DefaultMinimalMatchHelper.OnSuccessDefault(resultResponse));
+        var exceptionMvc = Record.Exception(() => FallbackMvcMatchHelper.OnSuccessFallback(resultResponse));
+        var exceptionMinimal = Record.Exception(() => FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse));
 
         // Assert
         Assert.IsType<InvalidOperationException>(exceptionMvc);
@@ -86,8 +86,8 @@ public class DefaultMatchHelperTests
         var useProblemDetailsParam = useProblemDetailsGlobally ? (bool?)null : false;
 
         // Act
-        var matcherResultMvc = DefaultMvcMatchHelper.OnFailureDefault(resultResponse, useProblemDetailsParam);
-        var matcherResultMinimal = DefaultMinimalMatchHelper.OnFailureDefault(resultResponse, useProblemDetailsParam);
+        var matcherResultMvc = FallbackMvcMatchHelper.OnFailureFallback(resultResponse, useProblemDetailsParam);
+        var matcherResultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(resultResponse, useProblemDetailsParam);
 
         // Assert
         var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
@@ -113,8 +113,8 @@ public class DefaultMatchHelperTests
         var useProblemDetailsParam = useProblemDetailsGlobally ? (bool?)null : true;
 
         // Act
-        var matcherResultMvc = DefaultMvcMatchHelper.OnFailureDefault(resultResponse, useProblemDetailsParam);
-        var matcherResultMinimal = DefaultMinimalMatchHelper.OnFailureDefault(resultResponse, useProblemDetailsParam);
+        var matcherResultMvc = FallbackMvcMatchHelper.OnFailureFallback(resultResponse, useProblemDetailsParam);
+        var matcherResultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(resultResponse, useProblemDetailsParam);
 
         // Assert
         var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
@@ -136,8 +136,8 @@ public class DefaultMatchHelperTests
         var resultResponse = ResultResponseSuccess.Create();
 
         // Act
-        var exceptionMvc = Record.Exception(() => DefaultMvcMatchHelper.OnFailureDefault(resultResponse, null));
-        var exceptionMinimal = Record.Exception(() => DefaultMinimalMatchHelper.OnFailureDefault(resultResponse, null));
+        var exceptionMvc = Record.Exception(() => FallbackMvcMatchHelper.OnFailureFallback(resultResponse, null));
+        var exceptionMinimal = Record.Exception(() => FallbackMinimalMatchHelper.OnFailureFallback(resultResponse, null));
 
         // Assert
         Assert.IsType<InvalidOperationException>(exceptionMvc);

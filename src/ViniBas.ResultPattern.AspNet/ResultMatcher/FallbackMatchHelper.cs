@@ -14,9 +14,9 @@ using ViniBas.ResultPattern.ResultResponses;
 
 namespace ViniBas.ResultPattern.AspNet.ResultMatcher;
 
-internal static class DefaultMvcMatchHelper
+internal static class FallbackMvcMatchHelper
 {
-    internal static IActionResult OnSuccessDefault(ResultResponse resultResponse)
+    internal static IActionResult OnSuccessFallback(ResultResponse resultResponse)
     {
         if (resultResponse.IsSuccess)
             return new OkObjectResult(resultResponse);
@@ -24,7 +24,7 @@ internal static class DefaultMvcMatchHelper
         throw new InvalidOperationException("Invalid success result response type.");
     }
     
-    internal static IActionResult OnFailureDefault(ResultResponse resultResponse, bool? useProblemDetails)
+    internal static IActionResult OnFailureFallback(ResultResponse resultResponse, bool? useProblemDetails)
     {
         if (resultResponse.IsSuccess)
             throw new InvalidOperationException("Invalid error result response type.");
@@ -44,9 +44,9 @@ internal static class DefaultMvcMatchHelper
     }
 }
 
-internal static class DefaultMinimalMatchHelper
+internal static class FallbackMinimalMatchHelper
 {
-    internal static IResult OnSuccessDefault(ResultResponse resultResponse)
+    internal static IResult OnSuccessFallback(ResultResponse resultResponse)
     {
         if (resultResponse.IsSuccess)
             return TypedResults.Ok(resultResponse);
@@ -54,7 +54,7 @@ internal static class DefaultMinimalMatchHelper
         throw new InvalidOperationException("Invalid success result response type.");
     }
     
-    internal static IResult OnFailureDefault(ResultResponse resultResponse, bool? useProblemDetails)
+    internal static IResult OnFailureFallback(ResultResponse resultResponse, bool? useProblemDetails)
     {
         if (resultResponse.IsSuccess)
             throw new InvalidOperationException("Invalid error result response type.");

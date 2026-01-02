@@ -15,7 +15,7 @@ public interface IFilterMappings
     object? MapToResultResponse(object? originalResult);
 }
 
-public class FilterMappings : IFilterMappings
+internal class FilterMappings : IFilterMappings
 {
     public object? MapToResultResponse(object? originalResult)
     {

@@ -16,8 +16,8 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
 public class MatchResultsExtensionsTests
 {
     private readonly Mock<ISimpleResultMatcher<IActionResult>> _matcherMock = new();
-    private readonly IActionResult _defaultSuccessResult = new ObjectResult("Success");
-    private readonly IActionResult _defaultErrorResult = new ObjectResult("Error");
+    private readonly IActionResult _successResult = new ObjectResult("Success");
+    private readonly IActionResult _errorResult = new ObjectResult("Error");
     private readonly Result _resultSuccess = Result.Success();
     private readonly Result _resultError = Result.Failure(Error.Conflict("Code", "An error occurred."));
     private readonly ResultResponseSuccess _resultResponseSuccess = ResultResponseSuccess.Create();
@@ -40,13 +40,13 @@ public class MatchResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, IActionResult>>(),
                 It.IsAny<Func<ResultResponse, IActionResult>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultSuccessResult);
+            .Returns(_successResult);
         
-        var result = MatchResultsExtensions.Match(_resultSuccess, r => _defaultSuccessResult, r => _defaultErrorResult);
-        var resultProb = MatchResultsExtensions.Match(_resultSuccess, r => _defaultSuccessResult, useProblemDetails);
+        var result = MatchResultsExtensions.Match(_resultSuccess, r => _successResult, r => _errorResult);
+        var resultProb = MatchResultsExtensions.Match(_resultSuccess, r => _successResult, useProblemDetails);
 
-        Assert.Equal(_defaultSuccessResult, result);
-        Assert.Equal(_defaultSuccessResult, resultProb);
+        Assert.Equal(_successResult, result);
+        Assert.Equal(_successResult, resultProb);
         
         _matcherMock.Verify(m => m.Match<IActionResult, IActionResult>(
             _resultSuccess,
@@ -73,13 +73,13 @@ public class MatchResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, IActionResult>>(),
                 It.IsAny<Func<ResultResponse, IActionResult>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultSuccessResult);
+            .Returns(_successResult);
         
-        var resultResp = MatchResultsExtensions.Match(_resultResponseSuccess, r => _defaultSuccessResult, r => _defaultErrorResult);
-        var resultRespProb = MatchResultsExtensions.Match(_resultResponseSuccess, r => _defaultSuccessResult, useProblemDetails);
+        var resultResp = MatchResultsExtensions.Match(_resultResponseSuccess, r => _successResult, r => _errorResult);
+        var resultRespProb = MatchResultsExtensions.Match(_resultResponseSuccess, r => _successResult, useProblemDetails);
 
-        Assert.Equal(_defaultSuccessResult, resultResp);
-        Assert.Equal(_defaultSuccessResult, resultRespProb);
+        Assert.Equal(_successResult, resultResp);
+        Assert.Equal(_successResult, resultRespProb);
         
         _matcherMock.Verify(m => m.Match<IActionResult, IActionResult>(
             _resultResponseSuccess,
@@ -106,13 +106,13 @@ public class MatchResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, IActionResult>>(),
                 It.IsAny<Func<ResultResponse, IActionResult>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultErrorResult);
+            .Returns(_errorResult);
 
-        var result = MatchResultsExtensions.Match(_resultError, r => _defaultSuccessResult, r => _defaultErrorResult);
-        var resultProb = MatchResultsExtensions.Match(_resultError, r => _defaultSuccessResult, useProblemDetails);
+        var result = MatchResultsExtensions.Match(_resultError, r => _successResult, r => _errorResult);
+        var resultProb = MatchResultsExtensions.Match(_resultError, r => _successResult, useProblemDetails);
 
-        Assert.Equal(_defaultErrorResult, result);
-        Assert.Equal(_defaultErrorResult, resultProb);
+        Assert.Equal(_errorResult, result);
+        Assert.Equal(_errorResult, resultProb);
         
         _matcherMock.Verify(m => m.Match<IActionResult, IActionResult>(
             _resultError,
@@ -139,13 +139,13 @@ public class MatchResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, IActionResult>>(),
                 It.IsAny<Func<ResultResponse, IActionResult>>(),
                 It.IsAny<bool?>()))
-            .Returns(_defaultErrorResult);
+            .Returns(_errorResult);
 
-        var resultResp = MatchResultsExtensions.Match(_resultResponseError, r => _defaultSuccessResult, r => _defaultErrorResult);
-        var resultRespProb = MatchResultsExtensions.Match(_resultResponseError, r => _defaultSuccessResult, useProblemDetails);
+        var resultResp = MatchResultsExtensions.Match(_resultResponseError, r => _successResult, r => _errorResult);
+        var resultRespProb = MatchResultsExtensions.Match(_resultResponseError, r => _successResult, useProblemDetails);
 
-        Assert.Equal(_defaultErrorResult, resultResp);
-        Assert.Equal(_defaultErrorResult, resultRespProb);
+        Assert.Equal(_errorResult, resultResp);
+        Assert.Equal(_errorResult, resultRespProb);
         
         _matcherMock.Verify(m => m.Match<IActionResult, IActionResult>(
             _resultResponseError,
