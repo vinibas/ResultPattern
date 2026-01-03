@@ -13,7 +13,7 @@ using ViniBas.ResultPattern.ResultObjects;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
 
-public class MatchResultsExtensionsTests
+public class MatchResultsExtensionsTests : IDisposable
 {
     private readonly Mock<ISimpleResultMatcher<IActionResult>> _matcherMock = new();
     private readonly IActionResult _successResult = new ObjectResult("Success");
@@ -159,4 +159,7 @@ public class MatchResultsExtensionsTests
             null,
             useProblemDetails), Times.Once);
     }
+
+    public void Dispose()
+        => ResultMatcherFactory.Reset();
 }

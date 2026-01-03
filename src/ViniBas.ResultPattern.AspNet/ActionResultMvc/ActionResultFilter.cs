@@ -26,6 +26,7 @@ public sealed class ActionResultFilter : IActionFilter
             objectResult.Value is not ProblemDetails)
         {
             objectResult.Value = filterMappings.MapToResultResponse(objectResult.Value);
+            objectResult.DeclaredType = null;
         }
     }
 }

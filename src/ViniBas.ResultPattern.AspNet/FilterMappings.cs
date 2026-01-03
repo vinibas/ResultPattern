@@ -10,7 +10,7 @@ using ViniBas.ResultPattern.ResultResponses;
 
 namespace ViniBas.ResultPattern.AspNet;
 
-public interface IFilterMappings
+internal interface IFilterMappings
 {
     object? MapToResultResponse(object? originalResult);
 }
@@ -31,12 +31,12 @@ internal class FilterMappings : IFilterMappings
         };
     }
 
-    private object? ConvertToResultResponseOrProblemDetails(Error error)
+    private static object? ConvertToResultResponseOrProblemDetails(Error error)
         => GlobalConfiguration.UseProblemDetails ?
             error.ToProblemDetails() :
             ((Result)error).ToResponse();
 
-    private object? ConvertToProblemDetailsIfConfigured(ResultResponse error)
+    private static object? ConvertToProblemDetailsIfConfigured(ResultResponse error)
         => GlobalConfiguration.UseProblemDetails ?
             error.ToProblemDetails() :
             error;

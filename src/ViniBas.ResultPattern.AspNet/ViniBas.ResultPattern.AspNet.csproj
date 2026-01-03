@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFrameworks>net9.0;net8.0;net7.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -43,4 +44,5 @@
     <ProjectReference Include="..\ViniBas.ResultPattern\ViniBas.ResultPattern.csproj" Condition="'$(UseLocalReference)' == 'true'" />
     <PackageReference Include="ViniBas.ResultPattern" Version="1.0.0" Condition="'$(UseLocalReference)' != 'true'" PrivateAssets="all" />
   </ItemGroup>
+
 </Project>

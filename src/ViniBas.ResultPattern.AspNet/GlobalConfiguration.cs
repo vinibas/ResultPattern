@@ -5,6 +5,7 @@
  * See the LICENSE file in the project root for full details.
 */
 
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
 using ViniBas.ResultPattern.ResultObjects;
 
@@ -12,7 +13,7 @@ namespace ViniBas.ResultPattern.AspNet;
 
 public static class GlobalConfiguration
 {
-    public static Dictionary<string, (int StatusCode, string Title)> ErrorTypeMaps { get; } = new ()
+    public static ConcurrentDictionary<string, (int StatusCode, string Title)> ErrorTypeMaps { get; } = new ()
         {
             [ErrorTypes.Failure] = (StatusCodes.Status500InternalServerError, "Server Failure"),
             [ErrorTypes.Validation] = (StatusCodes.Status400BadRequest, "Bad Request"),
