@@ -65,7 +65,7 @@ If your method does not need to return any value besides the `Result` itself, yo
 
 The `ResultResponse` classes exist to make responses cleaner and more explicit, particularly in cases of JSON serialization. While the `Result` class is more complete for internal handling, `ResultResponse` classes represent the final result that can be returned to the user without implementation details. They consist of three classes: `ResultResponseError`, `ResultResponseSuccess`, and `ResultResponseSuccess<T>`, and can be automatically generated from `Result.ToResponse()`.
 
-The structure of the `ResultResponse` classes always includes an `IsSuccess` property. In case of an error, there is a list of `Errors` (strings) and a `Type` (string) indicating the error type. In case of success, there may be a `Data` property containing the return value.
+The structure of the `ResultResponse` classes always includes an `IsSuccess` property. In case of an error, there is a list of `Errors` (object with Code and Description string fields) and a `Type` (string) indicating the error type. In case of success, there may be a `Data` property containing the return value.
 
 ## ViniBas.ResultPattern.AspNet
 
@@ -100,7 +100,7 @@ Again, the second parameter is optional, so it is omitted in the examples, and m
 The `Problem Details` standard is based on [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807), and the returned object is native to ASP.NET, as described in the [official documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.problemdetails).  
 The returned `ProblemDetails` object includes the following additional properties:
 - `isSuccess`: a fixed boolean with the value `false`;
-- `errors`: the list of error descriptions.
+- `errors`: the list of error objects, with code and description fields.
 
 Two filters are also included: `ActionResultFilter` for ASP.NET MVC and `ResultsResultFilter` for Minimal API. These filters ensure that if objects such as `Result`, `Error`, or `ResultResponse` are returned directly, they are properly converted, if necessary, into a `ResultResponseSuccess`, a `ResultResponseError`, or a `ProblemDetails`.
 

@@ -26,7 +26,7 @@ public static class ProblemDetailsExtensions
         {
             Title = GlobalConfiguration.GetTitle(resultResponseError.Type),
             Status = GlobalConfiguration.GetStatusCode(resultResponseError.Type),
-            Detail = string.Join(Environment.NewLine, resultResponseError.Errors),
+            Detail = string.Join("," + Environment.NewLine, resultResponseError.Errors.Select(d => d.ToString())),
             Extensions =
             {
                 ["isSuccess"] = false,

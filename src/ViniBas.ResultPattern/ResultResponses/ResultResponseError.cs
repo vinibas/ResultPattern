@@ -5,18 +5,22 @@
  * See the LICENSE file in the project root for full details.
 */
 
+using ViniBas.ResultPattern.ResultObjects;
+
 namespace ViniBas.ResultPattern.ResultResponses;
 
 public record ResultResponseError : ResultResponse
 {
-    public static ResultResponseError Create(IEnumerable<string> errors, string type) => new(errors, type);
-    public ResultResponseError(IEnumerable<string> errors, string type)
+    public static ResultResponseError Create(IEnumerable<ErrorDetails> errors, string type)
+        => new(errors, type);
+
+    private ResultResponseError(IEnumerable<ErrorDetails> errors, string type)
     {
         IsSuccess = false;
         Errors = errors;
         Type = type;
     }
 
-    public IEnumerable<string> Errors { get; private set; }
+    public IEnumerable<ErrorDetails> Errors { get; private set; }
     public string Type { get; private set; }
 }

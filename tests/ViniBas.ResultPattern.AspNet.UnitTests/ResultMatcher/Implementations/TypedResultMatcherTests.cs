@@ -24,8 +24,8 @@ public class TypedResultMatcherTests
     private readonly Result _resultSuccess = Result.Success();
     private readonly Result _resultError = Result.Failure(Error.Validation("Code", "An error occurred."));
     private readonly ResultResponseSuccess _resultResponseSuccess = ResultResponseSuccess.Create();
-    private readonly ResultResponseError _resultResponseError = new ResultResponseError(
-            ["Error occurred."],
+    private readonly ResultResponseError _resultResponseError = ResultResponseError.Create(
+            [new ErrorDetails("Code", "Error occurred.")],
             ErrorTypes.Validation);
 
 

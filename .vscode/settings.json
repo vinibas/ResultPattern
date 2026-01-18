@@ -19,17 +19,17 @@
         }
     ],
     "psi-header.config": {
-		"forceToTop": true,
+        "forceToTop": true,
         "license": "LGPL v3",
-		"author": "Vinícius Bastos da Silva",
+        "author": "Vinícius Bastos da Silva",
         "blankLinesAfter": 1
     },
     "psi-header.changes-tracking": {
-		"autoHeader": "autoSave",
-		"enforceHeader": true
+        "autoHeader": "autoSave",
+        "enforceHeader": true
     },
     "psi-header.license-reference": {
-		"uri": "LICENSE.txt",
-		"uriIsLocalFile": true
-	}
+        "uri": "LICENSE.txt",
+        "uriIsLocalFile": true
+    }
 }

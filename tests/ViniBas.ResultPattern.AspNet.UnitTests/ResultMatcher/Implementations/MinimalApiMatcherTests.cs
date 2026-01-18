@@ -99,7 +99,7 @@ public class MinimalApiMatcherTests
         var badRequestResult = TypedResults.BadRequest();
         var error = Error.Validation("Code", "An error occurred.");
         var resultError = Result.Failure(error);
-        var resultResponseError = ResultResponseError.Create(error.ListDescriptions(), error.Type);
+        var resultResponseError = ResultResponseError.Create(error.Details, error.Type);
 
         // Act
         var matcherResult = _matcher.Match<IResult, IResult>(
@@ -129,7 +129,7 @@ public class MinimalApiMatcherTests
         // Arrange
         var error = Error.Validation("Code", "An error occurred.");
         var resultError = Result.Failure(error);
-        var resultResponseError = ResultResponseError.Create(error.ListDescriptions(), error.Type);
+        var resultResponseError = ResultResponseError.Create(error.Details, error.Type);
 
         // Act
         var matcherResult = _matcher.Match<IResult, IResult>(

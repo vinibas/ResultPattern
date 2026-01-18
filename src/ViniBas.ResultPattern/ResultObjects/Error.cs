@@ -60,12 +60,12 @@ public sealed record Error
         => Details.Select(d => d.Description).ToList();
 
     public override string ToString() => string.Join(Environment.NewLine, Details.Select(d => d.ToString()));
-
-    public sealed record ErrorDetails(string Code, string Description)
-    {
-        public override string ToString() => $"({Code}): {Description}";
-    };
 }
+
+public sealed record ErrorDetails(string Code, string Description)
+{
+    public override string ToString() => Code is null or "" ? Description : $"{Code}: {Description}";
+};
 
 public sealed class ErrorTypes
 {
@@ -73,6 +73,8 @@ public sealed class ErrorTypes
     public const string Validation = "Validation";
     public const string NotFound = "NotFound";
     public const string Conflict = "Conflict";
+    public const string Unauthorized = "Unauthorized";
+    public const string Forbidden = "Forbidden";
     
     public HashSet<string> _types = new ()
     {
@@ -80,6 +82,8 @@ public sealed class ErrorTypes
         Validation,
         NotFound,
         Conflict,
+        Unauthorized,
+        Forbidden,
     };
     public IReadOnlySet<string> Types { get => _types; }
 

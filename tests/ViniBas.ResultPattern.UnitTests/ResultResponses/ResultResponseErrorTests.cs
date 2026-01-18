@@ -15,10 +15,10 @@ public class ResultResponseErrorTests
     [Fact]
     public void Constructor_ShouldInitializeCorrectly()
     {
-        var errors = new List<string> { "Error 1", "Error 2" };
+        var errors = new List<ErrorDetails> { new ("Code 1", "Error 1"), new ("Code 2", "Error 2") };
         var errorType = ErrorTypes.Validation;
 
-        var resultResponseError = new ResultResponseError(errors, errorType);
+        var resultResponseError = ResultResponseError.Create(errors, errorType);
 
         Assert.False(resultResponseError.IsSuccess);
         Assert.Equal(errors, resultResponseError.Errors);

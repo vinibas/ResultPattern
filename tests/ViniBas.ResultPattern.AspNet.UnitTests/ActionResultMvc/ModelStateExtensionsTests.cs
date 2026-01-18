@@ -59,7 +59,7 @@ public class ModelStateExtensionsTests
         Assert.Equal(400, objectResult.StatusCode);
         Assert.Equal(400, problemDetails.Status);
         Assert.Equal("Bad Request", problemDetails.Title);
-        Assert.Equal(string.Join(Environment.NewLine, ["Error 1", "Error 2"]), problemDetails.Detail);
+        Assert.Equal(string.Join("," + Environment.NewLine, ["key1: Error 1", "key2: Error 2"]), problemDetails.Detail);
     }
 
     [Fact]

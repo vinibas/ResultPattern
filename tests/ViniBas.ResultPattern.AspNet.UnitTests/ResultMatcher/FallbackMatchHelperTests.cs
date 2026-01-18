@@ -63,7 +63,7 @@ public class FallbackMatchHelperTests
     public void OnSuccessFallback_WhenResultResponseIsNotSuccess_ThrowsInvalidOperationException()
     {
         // Arrange
-        var resultResponse = ResultResponseError.Create(["Test Error"], ErrorTypes.Validation);
+        var resultResponse = ResultResponseError.Create([new ErrorDetails("Code", "Test Error")], ErrorTypes.Validation);
 
         // Act
         var exceptionMvc = Record.Exception(() => FallbackMvcMatchHelper.OnSuccessFallback(resultResponse));
@@ -80,7 +80,7 @@ public class FallbackMatchHelperTests
     public void OnFailureDefault_WhenDontUseProblemDetails_ReturnsErrorAsResultResponseError(bool useProblemDetailsGlobally)
     {
         // Arrange
-        var resultResponse = ResultResponseError.Create(["Test Error"], ErrorTypes.Validation);
+        var resultResponse = ResultResponseError.Create([new ErrorDetails("Code", "Test Error")], ErrorTypes.Validation);
 
         GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobally ? false : true;
         var useProblemDetailsParam = useProblemDetailsGlobally ? (bool?)null : false;
@@ -107,7 +107,7 @@ public class FallbackMatchHelperTests
     public void OnFailureDefault_WhenUseProblemDetails_ReturnsErrorAsProblemDetails(bool useProblemDetailsGlobally)
     {
         // Arrange
-        var resultResponse = ResultResponseError.Create(["Test Error"], ErrorTypes.Validation);
+        var resultResponse = ResultResponseError.Create([new ErrorDetails("Code", "Test Error")], ErrorTypes.Validation);
 
         GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobally ? true : false;
         var useProblemDetailsParam = useProblemDetailsGlobally ? (bool?)null : true;

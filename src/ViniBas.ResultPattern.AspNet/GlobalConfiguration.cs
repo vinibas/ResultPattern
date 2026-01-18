@@ -19,6 +19,8 @@ public static class GlobalConfiguration
             [ErrorTypes.Validation] = (StatusCodes.Status400BadRequest, "Bad Request"),
             [ErrorTypes.NotFound] = (StatusCodes.Status404NotFound, "Not Found"),
             [ErrorTypes.Conflict] = (StatusCodes.Status409Conflict, "Conflict"),
+            [ErrorTypes.Unauthorized] = (StatusCodes.Status401Unauthorized, "Unauthorized"),
+            [ErrorTypes.Forbidden] = (StatusCodes.Status403Forbidden, "Forbidden"),
         };
 
     public static bool UseProblemDetails { get; set; } = true;

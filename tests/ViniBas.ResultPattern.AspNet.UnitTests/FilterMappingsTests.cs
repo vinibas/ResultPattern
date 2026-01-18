@@ -46,7 +46,7 @@ public class FilterMappingsTests
 
             var resultTyped = Assert.IsType<ResultResponseError>(result);
             Assert.Equal("NotFound", resultTyped.Type);
-            Assert.Contains("Not Found Error", resultTyped.Errors);
+            Assert.Contains("001: Not Found Error", resultTyped.Errors.ToString());
         }
     }
 

@@ -13,8 +13,15 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests;
 
 public class ProblemDetailsExtensionsTests
 {
-    private readonly ResultResponseError _resultResponse = new ([ "Error 1", "Error 2" ], ErrorTypes.Validation);
-    private readonly string _problemDetailsDetail = string.Join(Environment.NewLine, [ "Error 1", "Error 2" ]);
+    private readonly ErrorDetails[] errorDetails =
+    [
+        new ErrorDetails("Code 1", "Error 1"),
+        new ErrorDetails("Code 2", "Error 2")
+    ];
+    private readonly ResultResponseError _resultResponse;
+    
+    public ProblemDetailsExtensionsTests()
+        => _resultResponse = ResultResponseError.Create(errorDetails, ErrorTypes.Validation);
 
     [Fact]
     public void ToProblemDetails_WithResultResponseError_ShouldReturnProblemDetails()
@@ -22,7 +29,8 @@ public class ProblemDetailsExtensionsTests
         var problemDetails = _resultResponse.ToProblemDetails();
 
         Assert.IsType<ProblemDetails>(problemDetails);
-        Assert.Equal(_problemDetailsDetail, problemDetails.Detail);
+        var expectedDetails = $"Code 1: Error 1,{Environment.NewLine}Code 2: Error 2";
+        Assert.Equal(expectedDetails, problemDetails.Detail);
         Assert.Equal(400, problemDetails.Status);
         Assert.Equal(false, problemDetails.Extensions["isSuccess"]);
         Assert.Equal(_resultResponse.Errors, problemDetails.Extensions["errors"]);
@@ -36,7 +44,7 @@ public class ProblemDetailsExtensionsTests
         
         try
         {
-            var resultResponse = new ResultResponseError([ "Error 1", "Error 2" ], "NewType");
+            var resultResponse = ResultResponseError.Create(errorDetails, "NewType");
             var problemDetails = resultResponse.ToProblemDetails();
 
             Assert.IsType<ProblemDetails>(problemDetails);
@@ -54,7 +62,7 @@ public class ProblemDetailsExtensionsTests
     {
         Error.ErrorTypes.AddTypes("NewType");
         
-        var resultResponse = new ResultResponseError([ "Error 1", "Error 2" ], "NewType");
+        var resultResponse = ResultResponseError.Create(errorDetails, "NewType");
         var problemDetails = resultResponse.ToProblemDetails();
 
         Assert.IsType<ProblemDetails>(problemDetails);

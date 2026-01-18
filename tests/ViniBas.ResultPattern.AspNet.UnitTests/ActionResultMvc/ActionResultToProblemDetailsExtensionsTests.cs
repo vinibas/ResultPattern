@@ -14,8 +14,19 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
 
 public class ActionResultToProblemDetailsExtensionsTests
 {
-    private readonly ResultResponseError _resultResponse = new ([ "Error 1", "Error 2" ], ErrorTypes.Validation);
-    private readonly string _problemDetailsDetail = string.Join(Environment.NewLine, [ "Error 1", "Error 2" ]);
+    private readonly ResultResponseError _resultResponse;
+    private readonly string _problemDetailsDetail;
+
+    public ActionResultToProblemDetailsExtensionsTests()
+    {
+        ErrorDetails[] _errorDetails = [
+            new ErrorDetails("code1", "description1"),
+            new ErrorDetails("code2", "description2"),
+        ];
+
+        _resultResponse = ResultResponseError.Create(_errorDetails, ErrorTypes.Validation);
+        _problemDetailsDetail = string.Join("," + Environment.NewLine, _errorDetails.Select(d => d.ToString()));
+    }
 
     [Fact]
     public void ToProblemDetailsActionResult_ShouldReturnProblemDetails()
@@ -35,7 +46,7 @@ public class ActionResultToProblemDetailsExtensionsTests
         var result = error.ToProblemDetails();
 
         var probDet = Assert.IsType<ProblemDetails>(result);
-        Assert.Equal("description", probDet.Detail);
+        Assert.Equal("code: description", probDet.Detail);
     }
 
     [Fact]
@@ -47,6 +58,6 @@ public class ActionResultToProblemDetailsExtensionsTests
 
         var objectResult =Assert.IsType<ObjectResult>(result);
         var probDet = Assert.IsType<ProblemDetails>(objectResult.Value);
-        Assert.Equal("description", probDet.Detail);
+        Assert.Equal("code: description", probDet.Detail);
     }
 }

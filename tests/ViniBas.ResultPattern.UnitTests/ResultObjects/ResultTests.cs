@@ -141,7 +141,7 @@ public class ResultTests : ResultTestsBase
         {
             Assert.IsType<ResultResponseError>(responseItem);
             var errorResponse = (ResultResponseError)responseItem;
-            Assert.Equal(_error.ListDescriptions(), errorResponse.Errors);
+            Assert.Equal(_error.Details, errorResponse.Errors);
             Assert.Equal(_error.Type, errorResponse.Type);
         }
     }
@@ -163,7 +163,7 @@ public class ResultTests : ResultTestsBase
             Assert.False(resultItem.IsSuccess);
             Assert.True(resultItem.IsFailure);
             Assert.Equal(ErrorTypes.NotFound, resultItem.Error.Type);
-            Assert.Equal("(Code1): Description1", resultItem.Error.ToString());
+            Assert.Equal("Code1: Description1", resultItem.Error.ToString());
         }
     }
 
@@ -181,7 +181,7 @@ public class ResultTests : ResultTestsBase
             resultT,
         })
         {
-            var expectedErrorStr = "(Code1): Description1" + Environment.NewLine + "(Code2): Description2";
+            var expectedErrorStr = "Code1: Description1" + Environment.NewLine + "Code2: Description2";
             
             Assert.False(resultItem.IsSuccess);
             Assert.True(resultItem.IsFailure);
@@ -204,9 +204,9 @@ public class ResultTests : ResultTestsBase
         Assert.Equal(ErrorTypes.Conflict, result.Error.Type);
         var errorExpected = string.Join(Environment.NewLine, new[]
         {
-            "(code1): description1",
-            "(code2): description2",
-            "(code3): description3",
+            "code1: description1",
+            "code2: description2",
+            "code3: description3",
         });
         Assert.Equal(errorExpected, result.Error.ToString());
     }
@@ -236,7 +236,7 @@ public class ResultTests : ResultTestsBase
             Assert.False(resultItem.IsSuccess);
             Assert.True(resultItem.IsFailure);
             Assert.Equal(ErrorTypes.Validation, resultItem.Error.Type);
-            Assert.Equal("(code1): description1", resultItem.Error.ToString());
+            Assert.Equal("code1: description1", resultItem.Error.ToString());
         }
     }
 
@@ -270,6 +270,6 @@ public class ResultTests : ResultTestsBase
 
         var resultError = Assert.IsType<ResultResponseError>(response);
         Assert.False(resultError.IsSuccess);
-        Assert.Equal(new [] { "description1" }, resultError.Errors);
+        Assert.Equal(["code1: description1"], resultError.Errors.Select(d => d.ToString()));
     }
 }

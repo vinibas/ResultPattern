@@ -38,13 +38,12 @@ public record Result : ResultBase
 
     public static Result Success() => new(Error.None);
     public static Result<T> Success<T>(T item) => Result<T>.Success(item);
-
     public static Result Failure(Error error) => new(error);
 
-    public static implicit operator Result(List<Error> errors) => Failure(errors);
+    public static implicit operator Result(List<Error> errors) => (Error)errors;
 
     public override ResultResponse ToResponse()
-        => IsSuccess ? ResultResponseSuccess.Create() : new ResultResponseError(Error.ListDescriptions(), Error.Type);
+        => IsSuccess ? ResultResponseSuccess.Create() : ResultResponseError.Create(Error.Details, Error.Type);
 }
 
 public record Result<T> : ResultBase
@@ -61,8 +60,8 @@ public record Result<T> : ResultBase
     public static implicit operator Result<T>(List<Error> errors) => Failure(errors);
 
     public override ResultResponse ToResponse()
-        => IsSuccess ? ResultResponseSuccess.Create(Data!) : new ResultResponseError(Error.ListDescriptions(), Error.Type);
-
+        => IsSuccess ? ResultResponseSuccess.Create(Data!) : ResultResponseError.Create(Error.Details, Error.Type);
+    
     public static implicit operator Result<T>(T item) => Success(item);
     public static implicit operator Result<T>(Error error) => Failure(error);
 }

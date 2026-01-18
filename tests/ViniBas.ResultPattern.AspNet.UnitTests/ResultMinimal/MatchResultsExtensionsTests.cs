@@ -22,7 +22,7 @@ public class MatchResultsExtensionsTests
     private readonly Result _resultError = Result.Failure(Error.Conflict("Code", "An error occurred."));
     private readonly ResultResponseSuccess _resultResponseSuccess = ResultResponseSuccess.Create();
     private readonly ResultResponseError _resultResponseError = ResultResponseError.Create(
-        ["An error occurred."], 
+        [ new ErrorDetails("Code", "An error occurred.") ], 
         ErrorTypes.Conflict);
 
     public MatchResultsExtensionsTests()

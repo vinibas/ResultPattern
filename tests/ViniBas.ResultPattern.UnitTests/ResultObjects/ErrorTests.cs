@@ -16,7 +16,7 @@ public class ErrorTests
         Error.Failure("Code1", "Description1"),
         Error.Failure("Code2", "Description2"),
     ];
-    private readonly List<Error.ErrorDetails> _errorDetails = [
+    private readonly List<ErrorDetails> _errorDetails = [
         new("Code1", "Description1"),
         new("Code2", "Description2"),
     ];
@@ -169,5 +169,20 @@ public class ErrorTests
         Assert.Equal(string.Empty, Error.None.Details.First().Code);
         Assert.Equal(string.Empty, Error.None.Details.First().Description);
         Assert.Equal(ErrorTypes.Failure, Error.None.Type);
+    }
+}
+
+public class ErrorDetailsTests
+{
+    [Fact]
+    public void ToString_ShouldReturnFormattedString()
+    {
+        var errorDetailWithCode = new ErrorDetails("Code1", "Description1");
+        var errorDetailWithoutCode = new ErrorDetails(string.Empty, "Description2");
+        var errorDetailWithoutCode2 = new ErrorDetails(null!, "Description3");
+
+        Assert.Equal("Code: Description1", errorDetailWithCode.ToString());
+        Assert.Equal("Description2", errorDetailWithoutCode.ToString());
+        Assert.Equal("Description3", errorDetailWithoutCode2.ToString());
     }
 }

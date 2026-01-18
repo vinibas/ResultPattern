@@ -98,7 +98,7 @@ public class ActionResultMatcherTests
         var badRequestResultValue = new BadRequestResult();
         var error = Error.Validation("Code", "An error occurred.");
         var resultError = Result.Failure(error);
-        var resultResponseError = ResultResponseError.Create(error.ListDescriptions(), error.Type);
+        var resultResponseError = ResultResponseError.Create(error.Details, error.Type);
 
         // Act
         var matcherResult = _matcher.Match<IActionResult, IActionResult>(
@@ -128,7 +128,7 @@ public class ActionResultMatcherTests
         // Arrange
         var error = Error.Validation("Code", "An error occurred.");
         var resultError = Result.Failure(error);
-        var resultResponseError = ResultResponseError.Create(error.ListDescriptions(), error.Type);
+        var resultResponseError = ResultResponseError.Create(error.Details, error.Type);
 
         // Act
         var matcherResult = _matcher.Match<IActionResult, IActionResult>(

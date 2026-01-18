@@ -25,7 +25,7 @@ public class TypedResultFallbackMatcherTests
     private readonly IResult _successResult = TypedResults.Ok("Success");
     private readonly IResult _failureResult = TypedResults.BadRequest("Error");
     private readonly ResultResponseSuccess _resultResponseSuccess = ResultResponseSuccess.Create();
-    private readonly ResultResponseError _resultResponseError = ResultResponseError.Create(["Error"], ErrorTypes.Validation);
+    private readonly ResultResponseError _resultResponseError = ResultResponseError.Create([new ErrorDetails("Code", "Error")], ErrorTypes.Validation);
 
     public TypedResultFallbackMatcherTests()
     {
