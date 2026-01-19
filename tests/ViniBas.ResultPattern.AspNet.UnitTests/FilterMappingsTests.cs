@@ -46,7 +46,7 @@ public class FilterMappingsTests
 
             var resultTyped = Assert.IsType<ResultResponseError>(result);
             Assert.Equal("NotFound", resultTyped.Type);
-            Assert.Contains("001: Not Found Error", resultTyped.Errors.ToString());
+            Assert.Contains("001: Not Found Error", resultTyped.Errors.Select(e => e.ToString()).Single());
         }
     }
 
@@ -82,9 +82,9 @@ public class FilterMappingsTests
 
             var resultTyped = Assert.IsType<ProblemDetails>(result);
             Assert.Equal("Not Found", resultTyped.Title);
-            Assert.Equal("Not Found Error", resultTyped.Detail);
-            var errorsExtensions = Assert.IsType<List<string>>(resultTyped.Extensions["errors"]);
-            Assert.Contains("Not Found Error", errorsExtensions);
+            Assert.Equal("001: Not Found Error", resultTyped.Detail);
+            var errorsExtensions = Assert.IsType<ErrorDetails[]>(resultTyped.Extensions["errors"]);
+            Assert.Contains("001: Not Found Error", errorsExtensions.Select(e => e.ToString()));
         }
     }
 

@@ -181,7 +181,7 @@ public class ErrorDetailsTests
         var errorDetailWithoutCode = new ErrorDetails(string.Empty, "Description2");
         var errorDetailWithoutCode2 = new ErrorDetails(null!, "Description3");
 
-        Assert.Equal("Code: Description1", errorDetailWithCode.ToString());
+        Assert.Equal("Code1: Description1", errorDetailWithCode.ToString());
         Assert.Equal("Description2", errorDetailWithoutCode.ToString());
         Assert.Equal("Description3", errorDetailWithoutCode2.ToString());
     }
