@@ -6,6 +6,7 @@
 */
 
 using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 using ViniBas.ResultPattern.ResultResponses;
 
 namespace ViniBas.ResultPattern.AspNet.ResultMatcher.Implementations;
@@ -16,6 +17,15 @@ internal interface ITypedResultFallbackMatcher
         ResultResponse response,
         Func<ResultResponse, TSuccess>? onSuccess,
         Func<ResultResponse, TFailure>? onFailure,
+        bool? useProblemDetails)
+        where TResult : IResult
+        where TSuccess : IResult
+        where TFailure : IResult;
+
+    public Task<TResult> MatchAsync<TResult, TSuccess, TFailure>(
+        ResultResponse response,
+        Func<ResultResponse, Task<TSuccess>>? onSuccess,
+        Func<ResultResponse, Task<TFailure>>? onFailure,
         bool? useProblemDetails)
         where TResult : IResult
         where TSuccess : IResult
@@ -42,6 +52,22 @@ internal class TypedResultFallbackMatcher : ITypedResultFallbackMatcher
         var result = response.IsSuccess ?
             (onSuccess is not null ? onSuccess(response) : OnSuccessFallback(response)) :
             (onFailure is not null ? onFailure(response) : OnFailureFallback(response, useProblemDetails));
+
+        return TypeCasterInstance.Cast<TResult>(result);
+    }
+
+    public async Task<TResult> MatchAsync<TResult, TSuccess, TFailure>(
+        ResultResponse response,
+        Func<ResultResponse, Task<TSuccess>>? onSuccess,
+        Func<ResultResponse, Task<TFailure>>? onFailure,
+        bool? useProblemDetails)
+        where TResult : IResult
+        where TSuccess : IResult
+        where TFailure : IResult
+    {
+        var result = response.IsSuccess
+            ? (onSuccess is not null ? await onSuccess(response) : OnSuccessFallback(response))
+            : (onFailure is not null ? await onFailure(response) : OnFailureFallback(response, useProblemDetails));
 
         return TypeCasterInstance.Cast<TResult>(result);
     }

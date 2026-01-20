@@ -7,11 +7,9 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Moq;
 using ViniBas.ResultPattern.AspNet.ResultMatcher.Implementations;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
-using Xunit;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMatcher.Implementations;
 
@@ -43,7 +41,7 @@ public class TypedResultFallbackMatcherTests
     }
 
     [Fact]
-    public void Match_PassingOnSuccess_WhenSuccess_ReturnsExpectedResult()
+    public async Task Match_PassingOnSuccess_WhenSuccess_ReturnsExpectedResult()
     {
         // Arrange
         var expectedResult = TypedResults.Ok(_resultResponseSuccess);
@@ -54,15 +52,21 @@ public class TypedResultFallbackMatcherTests
             onSuccess: r => expectedResult,
             onFailure: null,
             useProblemDetails: null);
+        var resultAsync = await _matcher.MatchAsync<IResult, Ok<ResultResponseSuccess>, IResult>(
+            _resultResponseSuccess,
+            onSuccess: async r => expectedResult,
+            onFailure: null,
+            useProblemDetails: null);
 
         // Assert
         Assert.Equal(expectedResult, result);
+        Assert.Equal(expectedResult, resultAsync);
         _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _typeCasterMock.Verify(t => t.Cast<IResult>(expectedResult), Times.Once);
+        _typeCasterMock.Verify(t => t.Cast<IResult>(expectedResult), Times.Exactly(2));
     }
 
     [Fact]
-    public void Match_DontPassingOnSuccess_WhenSuccess_ReturnsFallbackResult()
+    public async Task Match_DontPassingOnSuccess_WhenSuccess_ReturnsFallbackResult()
     {
         // Arrange
         _onSuccessFallback.Setup(f => f(_resultResponseSuccess)).Returns(_successResult);
@@ -73,18 +77,24 @@ public class TypedResultFallbackMatcherTests
             onSuccess: null,
             onFailure: null,
             useProblemDetails: null);
+        var resultAsync = await _matcher.MatchAsync<IResult, IResult, IResult>(
+            _resultResponseSuccess,
+            onSuccess: null,
+            onFailure: null,
+            useProblemDetails: null);
 
         // Assert
         Assert.Equal(_successResult, result);
-        _onSuccessFallback.Verify(f => f(_resultResponseSuccess), Times.Once);
-        _typeCasterMock.Verify(t => t.Cast<IResult>(_successResult), Times.Once);
+        Assert.Equal(_successResult, resultAsync);
+        _onSuccessFallback.Verify(f => f(_resultResponseSuccess), Times.Exactly(2));
+        _typeCasterMock.Verify(t => t.Cast<IResult>(_successResult), Times.Exactly(2));
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData(true)]
     [InlineData(false)]
-    public void Match_PassingOnFailure_WhenError_ReturnsExpectedResult(bool? useProblemDetails)
+    public async Task Match_PassingOnFailure_WhenError_ReturnsExpectedResult(bool? useProblemDetails)
     {
         // Arrange
         var expectedResult = TypedResults.BadRequest(_resultResponseError);
@@ -95,18 +105,24 @@ public class TypedResultFallbackMatcherTests
             onSuccess: null,
             onFailure: r => expectedResult,
             useProblemDetails: useProblemDetails);
+        var resultAsync = await _matcher.MatchAsync<IResult, IResult, BadRequest<ResultResponseError>>(
+            _resultResponseError,
+            onSuccess: null,
+            onFailure: async r => expectedResult,
+            useProblemDetails: useProblemDetails);
 
         // Assert
         Assert.Equal(expectedResult, result);
+        Assert.Equal(expectedResult, resultAsync);
         _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
-        _typeCasterMock.Verify(t => t.Cast<IResult>(expectedResult), Times.Once);
+        _typeCasterMock.Verify(t => t.Cast<IResult>(expectedResult), Times.Exactly(2));
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData(true)]
     [InlineData(false)]
-    public void Match_DontPassingOnFailure_WhenError_ReturnsFallbackFailure(bool? useProblemDetails)
+    public async Task Match_DontPassingOnFailure_WhenError_ReturnsFallbackFailure(bool? useProblemDetails)
     {
         // Arrange
         _onFailureFallback.Setup(f => f(_resultResponseError, useProblemDetails)).Returns(_failureResult);
@@ -117,10 +133,16 @@ public class TypedResultFallbackMatcherTests
             onSuccess: null,
             onFailure: null,
             useProblemDetails: useProblemDetails);
+        var resultAsync = await _matcher.MatchAsync<IResult, IResult, IResult>(
+            _resultResponseError,
+            onSuccess: null,
+            onFailure: null,
+            useProblemDetails: useProblemDetails);
 
         // Assert
         Assert.Equal(_failureResult, result);
-        _onFailureFallback.Verify(f => f(_resultResponseError, useProblemDetails), Times.Once);
-        _typeCasterMock.Verify(t => t.Cast<IResult>(_failureResult), Times.Once);
+        Assert.Equal(_failureResult, resultAsync);
+        _onFailureFallback.Verify(f => f(_resultResponseError, useProblemDetails), Times.Exactly(2));
+        _typeCasterMock.Verify(t => t.Cast<IResult>(_failureResult), Times.Exactly(2));
     }
 }

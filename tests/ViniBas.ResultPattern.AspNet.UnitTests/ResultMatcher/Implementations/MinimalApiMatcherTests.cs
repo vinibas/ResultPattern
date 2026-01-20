@@ -37,7 +37,7 @@ public class MinimalApiMatcherTests
     }
     
     [Fact]
-    public void Match_PassingOnSuccess_WhenSuccess_ReturnsExpectedResult()
+    public async Task Match_PassingOnSuccess_WhenSuccess_ReturnsExpectedResult()
     {
         // Arrange
         var okResult = TypedResults.Ok();
@@ -50,21 +50,33 @@ public class MinimalApiMatcherTests
             onSuccess: r => okResult,
             onFailure: null,
             null);
+        var matcherResultAsync = await _matcher.MatchAsync<IResult, IResult>(
+            resultSuccess,
+            onSuccess: async r => okResult,
+            onFailure: null,
+            null);
         var matcherResultResponse = _matcher.Match<IResult, IResult>(
             resultResponseSuccess,
             onSuccess: r => okResult,
             onFailure: null,
             null);
+        var matcherResultResponseAsync = await _matcher.MatchAsync<IResult, IResult>(
+            resultResponseSuccess,
+            onSuccess: async r => okResult,
+            onFailure: null,
+            null);
 
         // Assert
         Assert.Equal(okResult, matcherResult);
+        Assert.Equal(okResult, matcherResultAsync);
         Assert.Equal(okResult, matcherResultResponse);
+        Assert.Equal(okResult, matcherResultResponseAsync);
         _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
         _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
     }
 
     [Fact]
-    public void Match_DontPassingOnSuccess_WhenSuccess_ReturnsFallbackResult()
+    public async Task Match_DontPassingOnSuccess_WhenSuccess_ReturnsFallbackResult()
     {
         // Arrange
         var resultSuccess = Result.Success();
@@ -76,7 +88,17 @@ public class MinimalApiMatcherTests
             onSuccess: null,
             onFailure: null,
             null);
+        var matcherResultAsync = await _matcher.MatchAsync<IResult, IResult>(
+            resultSuccess,
+            onSuccess: null,
+            onFailure: null,
+            null);
         var matcherResultResponse = _matcher.Match<IResult, IResult>(
+            resultResponseSuccess,
+            onSuccess: null,
+            onFailure: null,
+            null);
+        var matcherResultResponseAsync = await _matcher.MatchAsync<IResult, IResult>(
             resultResponseSuccess,
             onSuccess: null,
             onFailure: null,
@@ -84,8 +106,10 @@ public class MinimalApiMatcherTests
 
         // Assert
         Assert.IsType<Ok>(matcherResult);
+        Assert.IsType<Ok>(matcherResultAsync);
         Assert.IsType<Ok>(matcherResultResponse);
-        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(2));
+        Assert.IsType<Ok>(matcherResultResponseAsync);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(4));
         _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
     }
 
@@ -93,7 +117,7 @@ public class MinimalApiMatcherTests
     [InlineData(null)]
     [InlineData(true)]
     [InlineData(false)]
-    public void Match_PassingOnFailure_WhenError_ReturnsExpectedResult(bool? useProblemDetails)
+    public async Task Match_PassingOnFailure_WhenError_ReturnsExpectedResult(bool? useProblemDetails)
     {
         // Arrange
         var badRequestResult = TypedResults.BadRequest();
@@ -107,15 +131,27 @@ public class MinimalApiMatcherTests
             onSuccess: null,
             onFailure: r => badRequestResult,
             useProblemDetails);
+        var matcherResultAsync = await _matcher.MatchAsync<IResult, IResult>(
+            resultError,
+            onSuccess: null,
+            onFailure: async r => badRequestResult,
+            useProblemDetails);
         var matcherResultResponse = _matcher.Match<IResult, IResult>(
             resultResponseError,
             onSuccess: null,
             onFailure: r => badRequestResult,
             useProblemDetails);
+        var matcherResultResponseAsync = await _matcher.MatchAsync<IResult, IResult>(
+            resultResponseError,
+            onSuccess: null,
+            onFailure: async r => badRequestResult,
+            useProblemDetails);
 
         // Assert
         Assert.Equal(badRequestResult, matcherResult);
+        Assert.Equal(badRequestResult, matcherResultAsync);
         Assert.Equal(badRequestResult, matcherResultResponse);
+        Assert.Equal(badRequestResult, matcherResultResponseAsync);
         _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
         _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
     }
@@ -124,7 +160,7 @@ public class MinimalApiMatcherTests
     [InlineData(null)]
     [InlineData(true)]
     [InlineData(false)]
-    public void Match_DontPassingOnFailure_WhenError_ReturnsFallbackFailure(bool? useProblemDetails)
+    public async Task Match_DontPassingOnFailure_WhenError_ReturnsFallbackFailure(bool? useProblemDetails)
     {
         // Arrange
         var error = Error.Validation("Code", "An error occurred.");
@@ -137,7 +173,17 @@ public class MinimalApiMatcherTests
             onSuccess: null,
             onFailure: null,
             useProblemDetails);
+        var matcherResultAsync = await _matcher.MatchAsync<IResult, IResult>(
+            resultError,
+            onSuccess: null,
+            onFailure: null,
+            useProblemDetails);
         var matcherResultResponse = _matcher.Match<IResult, IResult>(
+            resultResponseError,
+            onSuccess: null,
+            onFailure: null,
+            useProblemDetails);
+        var matcherResultResponseAsync = await _matcher.MatchAsync<IResult, IResult>(
             resultResponseError,
             onSuccess: null,
             onFailure: null,
@@ -145,8 +191,10 @@ public class MinimalApiMatcherTests
 
         // Assert
         Assert.Equal(_failureFallbackResult, matcherResult);
+        Assert.Equal(_failureFallbackResult, matcherResultAsync);
         Assert.Equal(_failureFallbackResult, matcherResultResponse);
+        Assert.Equal(_failureFallbackResult, matcherResultResponseAsync);
         _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), useProblemDetails), Times.Exactly(2));
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), useProblemDetails), Times.Exactly(4));
     }
 }

@@ -1,48 +1,48 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <None Include="../../LICENSE.txt" Pack="true" PackagePath="" />
-    <None Include="../../README.md" Pack="true" PackagePath="" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="../../LICENSE.txt" Pack="true" PackagePath="" />
+        <None Include="../../README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
 
-  <PropertyGroup>
-    <PackageId>ViniBas.ResultPattern.AspNet</PackageId>
-    <VersionPrefix>2.0.0</VersionPrefix>
-    <VersionSuffix />
-    <Authors>Vinícius Bastos da Silva</Authors>
-    <Description>Library that implements the Result Pattern in Asp.net in a clean and flexible way.</Description>
-    <Copyright>Copyright (c) Vinícius Bastos da Silva 2025</Copyright>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/vinibas/ResultPattern</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/vinibas/ResultPattern</RepositoryUrl>
-    <PackageTags>ResultPattern;Result Pattern;Result;Notification;Notification Pattern;ViniBas</PackageTags>
-    <PackageReleaseNotes>
-      Introduced GlobalConfiguration; moved ErrorTypeMaps into it; added support for returning ProblemDetails via global and per-call configuration.
-    </PackageReleaseNotes>
-  </PropertyGroup>
+    <PropertyGroup>
+        <PackageId>ViniBas.ResultPattern.AspNet</PackageId>
+        <VersionPrefix>2.0.0</VersionPrefix>
+        <VersionSuffix />
+        <Authors>Vinícius Bastos da Silva</Authors>
+        <Description>Library that implements the Result Pattern in Asp.net in a clean and flexible way.</Description>
+        <Copyright>Copyright (c) Vinícius Bastos da Silva 2025</Copyright>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+        <PackageProjectUrl>https://github.com/vinibas/ResultPattern</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/vinibas/ResultPattern</RepositoryUrl>
+        <PackageTags>ResultPattern;Result Pattern;Result;Notification;Notification Pattern;ViniBas</PackageTags>
+        <PackageReleaseNotes>
+            Introduced GlobalConfiguration; moved ErrorTypeMaps into it; added support for returning ProblemDetails via global and per-call configuration.
+        </PackageReleaseNotes>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="..\ViniBas.ResultPattern\ViniBas.ResultPattern.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <ProjectReference Include="..\ViniBas.ResultPattern\ViniBas.ResultPattern.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
-    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
-  </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
+        <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ViniBas.ResultPattern\ViniBas.ResultPattern.csproj" Condition="'$(UseLocalReference)' == 'true'" />
-    <PackageReference Include="ViniBas.ResultPattern" Version="1.0.0" Condition="'$(UseLocalReference)' != 'true'" PrivateAssets="all" />
-  </ItemGroup>
-
+    <ItemGroup>
+        <ProjectReference Include="..\ViniBas.ResultPattern\ViniBas.ResultPattern.csproj" Condition="'$(UseLocalReference)' == 'true'" />
+        <PackageReference Include="ViniBas.ResultPattern" Version="1.0.0" Condition="'$(UseLocalReference)' != 'true'" PrivateAssets="all" />
+    </ItemGroup>
+    
 </Project>

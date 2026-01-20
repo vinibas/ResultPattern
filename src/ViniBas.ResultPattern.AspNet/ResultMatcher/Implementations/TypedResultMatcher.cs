@@ -6,6 +6,7 @@
 */
 
 using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
@@ -35,5 +36,27 @@ internal sealed class TypedResultMatcher : ITypedResultMatcher
         where TSuccess : IResult
         where TFailure : IResult
         => MatchFallbackInstance.Match<TResult, TSuccess, TFailure>(
+            response, onSuccess, onFailure, useProblemDetails);
+
+    public Task<TResult> MatchAsync<TResult, TSuccess, TFailure>(
+        ResultBase resultBase,
+        Func<ResultResponse, Task<TSuccess>>? onSuccess,
+        Func<ResultResponse, Task<TFailure>>? onFailure,
+        bool? useProblemDetails)
+        where TResult : IResult
+        where TSuccess : IResult
+        where TFailure : IResult
+        => MatchFallbackInstance.MatchAsync<TResult, TSuccess, TFailure>(
+            resultBase.ToResponse(), onSuccess, onFailure, useProblemDetails);
+
+    public Task<TResult> MatchAsync<TResult, TSuccess, TFailure>(
+        ResultResponse response,
+        Func<ResultResponse, Task<TSuccess>>? onSuccess,
+        Func<ResultResponse, Task<TFailure>>? onFailure,
+        bool? useProblemDetails)
+        where TResult : IResult
+        where TSuccess : IResult
+        where TFailure : IResult
+        => MatchFallbackInstance.MatchAsync<TResult, TSuccess, TFailure>(
             response, onSuccess, onFailure, useProblemDetails);
 }

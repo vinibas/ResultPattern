@@ -6,6 +6,7 @@
 */
 
 using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
@@ -28,6 +29,22 @@ internal interface ISimpleResultMatcher<TResult>
         bool? useProblemDetails)
         where TSuccess : TResult
         where TFailure : TResult;
+
+    Task<TResult> MatchAsync<TSuccess, TFailure>(
+        ResultBase resultBase,
+        Func<ResultResponse, Task<TSuccess>>? onSuccess,
+        Func<ResultResponse, Task<TFailure>>? onFailure,
+        bool? useProblemDetails)
+        where TSuccess : TResult
+        where TFailure : TResult;
+
+    Task<TResult> MatchAsync<TSuccess, TFailure>(
+        ResultResponse response,
+        Func<ResultResponse, Task<TSuccess>>? onSuccess,
+        Func<ResultResponse, Task<TFailure>>? onFailure,
+        bool? useProblemDetails)
+        where TSuccess : TResult
+        where TFailure : TResult;
 }
 
 internal interface ITypedResultMatcher
@@ -45,6 +62,24 @@ internal interface ITypedResultMatcher
         ResultResponse response,
         Func<ResultResponse, TSuccess>? onSuccess,
         Func<ResultResponse, TFailure>? onFailure,
+        bool? useProblemDetails)
+        where TResult : IResult
+        where TSuccess : IResult
+        where TFailure : IResult;
+
+    Task<TResult> MatchAsync<TResult, TSuccess, TFailure>(
+        ResultBase resultBase,
+        Func<ResultResponse, Task<TSuccess>>? onSuccess,
+        Func<ResultResponse, Task<TFailure>>? onFailure,
+        bool? useProblemDetails)
+        where TResult : IResult
+        where TSuccess : IResult
+        where TFailure : IResult;
+
+    Task<TResult> MatchAsync<TResult, TSuccess, TFailure>(
+        ResultResponse response,
+        Func<ResultResponse, Task<TSuccess>>? onSuccess,
+        Func<ResultResponse, Task<TFailure>>? onFailure,
         bool? useProblemDetails)
         where TResult : IResult
         where TSuccess : IResult
