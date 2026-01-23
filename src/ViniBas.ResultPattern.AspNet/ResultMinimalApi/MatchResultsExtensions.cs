@@ -14,53 +14,253 @@ namespace ViniBas.ResultPattern.AspNet.ResultMinimalApi;
 
 public static class MatchResultsExtensions
 {
+    private static ISimpleResultMatcher<IResult> Matcher => ResultMatcherFactory.GetMinimalApiMatcher;
+    
     /// <summary>
     /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the function if successful.
     /// </summary>
     /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
-    /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; 
-    /// if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by 
-    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
-    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error <see cref="IResult"/> on failure.</returns>
     public static IResult Match(this ResultResponse resultResponse,
-        Func<ResultResponse, IResult> onSuccess, bool? useProblemDetails = null)
-        => ResultMatcherFactory.GetMinimalApiMatcher.Match<IResult, IResult>(
-            resultResponse, onSuccess, null, useProblemDetails);
+        Func<ResultResponseSuccess, IResult> onSuccess, bool? useProblemDetails = null)
+        => Matcher.Match<IResult, IResult>(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            null,
+            useProblemDetails);
 
     /// <summary>
-    /// Checks whether a ResultResponse is a success or failure, and returns the result of the corresponding function
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the corresponding function.
     /// </summary>
     /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
-    /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <param name="onFailure">Function to be executed in case of failure.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure. Receives a <see cref="ResultResponseError"/>.</param>
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
     public static IResult Match(this ResultResponse resultResponse,
-        Func<ResultResponse, IResult> onSuccess, Func<ResultResponse, IResult> onFailure)
-        => ResultMatcherFactory.GetMinimalApiMatcher.Match(resultResponse, onSuccess, onFailure, null);
-    
-    /// <summary>
-    /// Checks whether a Result is a success or failure, and returns the result of the function if successful.
-    /// </summary>
-    /// <param name="result">The Result to evaluate.</param>
-    /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; 
-    /// if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by 
-    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
-    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
-    public static IResult Match(this ResultBase result,
-        Func<ResultResponse, IResult> onSuccess, bool? useProblemDetails = null)
-        => ResultMatcherFactory.GetMinimalApiMatcher.Match<IResult, IResult>(
-            result, onSuccess, null, useProblemDetails);
+        Func<ResultResponseSuccess, IResult> onSuccess, Func<ResultResponseError, IResult> onFailure)
+        => Matcher.Match(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
 
     /// <summary>
-    /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
+    /// Checks whether a <see cref="ResultResponse"/> that may contain a typed value is a success or failure, and returns the result of the function if successful.
     /// </summary>
-    /// <param name="result">The Result to evaluate.</param>
-    /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <param name="onFailure">Function to be executed in case of failure.</param>
+    /// <typeparam name="T">Type of the success data value.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess{T}"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error <see cref="IResult"/> on failure.</returns>
+    public static IResult Match<T>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess<T>, IResult> onSuccess, bool? useProblemDetails = null)
+        => Matcher.Match<IResult, IResult>(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess<T>)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="T">Type of the success data value.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess{T}"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure. Receives a <see cref="ResultResponseError"/>.</param>
     /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
-    public static IResult Match(this ResultBase result,
-        Func<ResultResponse, IResult> onSuccess, Func<ResultResponse, IResult> onFailure)
-        => ResultMatcherFactory.GetMinimalApiMatcher.Match(result, onSuccess, onFailure, null);
+    public static IResult Match<T>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess<T>, IResult> onSuccess, Func<ResultResponseError, IResult> onFailure)
+        => Matcher.Match(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess<T>)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Checks whether a <see cref="Result"/> is a success or failure, and returns the result of the function if successful.
+    /// </summary>
+    /// <param name="result">The <see cref="Result"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error <see cref="IResult"/> on failure.</returns>
+    public static IResult Match(this Result result,
+        Func<ResultResponseSuccess, IResult> onSuccess, bool? useProblemDetails = null)
+        => Matcher.Match<IResult, IResult>(
+            result,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Checks whether a <see cref="Result"/> is a success or failure, and returns the result of the corresponding function.
+    /// </summary>
+    /// <param name="result">The <see cref="Result"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure. Receives a <see cref="ResultResponseError"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static IResult Match(this Result result,
+        Func<ResultResponseSuccess, IResult> onSuccess, Func<ResultResponseError, IResult> onFailure)
+        => Matcher.Match(
+            result,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Checks whether a <see cref="Result{T}"/> is a success or failure, and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="T">Type of the result value.</typeparam>
+    /// <param name="result">The <see cref="Result{T}"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess{T}"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error <see cref="IResult"/> on failure.</returns>
+    public static IResult Match<T>(this Result<T> result,
+        Func<ResultResponseSuccess<T>, IResult> onSuccess, bool? useProblemDetails = null)
+        => Matcher.Match<IResult, IResult>(
+            result,
+            rr => onSuccess((ResultResponseSuccess<T>)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Checks whether a <see cref="Result{T}"/> is a success or failure, and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="T">Type of the result value.</typeparam>
+    /// <param name="result">The <see cref="Result{T}"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess{T}"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure. Receives a <see cref="ResultResponseError"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static IResult Match<T>(this Result<T> result,
+        Func<ResultResponseSuccess<T>, IResult> onSuccess, Func<ResultResponseError, IResult> onFailure)
+        => Matcher.Match(
+            result,
+            rr => onSuccess((ResultResponseSuccess<T>)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the function if successful.
+    /// </summary>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error <see cref="Task{IResult}"/> on failure.</returns>
+    public static Task<IResult> MatchAsync(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess, Task<IResult>> onSuccess, bool? useProblemDetails = null)
+        => Matcher.MatchAsync<IResult, IResult>(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the corresponding function.
+    /// </summary>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure. Receives a <see cref="ResultResponseError"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static Task<IResult> MatchAsync(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess, Task<IResult>> onSuccess, Func<ResultResponseError, Task<IResult>> onFailure)
+        => Matcher.MatchAsync(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="ResultResponse"/> that may contain a typed value is a success or failure, and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="T">Type of the success data value.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess{T}"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error <see cref="Task{IResult}"/> on failure.</returns>
+    public static Task<IResult> MatchAsync<T>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess<T>, Task<IResult>> onSuccess, bool? useProblemDetails = null)
+        => Matcher.MatchAsync<IResult, IResult>(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess<T>)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="T">Type of the success data value.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess{T}"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure. Receives a <see cref="ResultResponseError"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static Task<IResult> MatchAsync<T>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess<T>, Task<IResult>> onSuccess, Func<ResultResponseError, Task<IResult>> onFailure)
+        => Matcher.MatchAsync(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess<T>)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="Result"/> is a success or failure, and returns the result of the function if successful.
+    /// </summary>
+    /// <param name="result">The <see cref="Result"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error <see cref="Task{IResult}"/> on failure.</returns>
+    public static Task<IResult> MatchAsync(this Result result,
+        Func<ResultResponseSuccess, Task<IResult>> onSuccess, bool? useProblemDetails = null)
+        => Matcher.MatchAsync<IResult, IResult>(
+            result,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="Result"/> is a success or failure, and returns the result of the corresponding function.
+    /// </summary>
+    /// <param name="result">The <see cref="Result"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure. Receives a <see cref="ResultResponseError"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static Task<IResult> MatchAsync(this Result result,
+        Func<ResultResponseSuccess, Task<IResult>> onSuccess, Func<ResultResponseError, Task<IResult>> onFailure)
+        => Matcher.MatchAsync(
+            result,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="Result{T}"/> is a success or failure, and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="T">Type of the result value.</typeparam>
+    /// <param name="result">The <see cref="Result{T}"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess{T}"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error <see cref="Task{IResult}"/> on failure.</returns>
+    public static Task<IResult> MatchAsync<T>(this Result<T> result,
+        Func<ResultResponseSuccess<T>, Task<IResult>> onSuccess, bool? useProblemDetails = null)
+        => Matcher.MatchAsync<IResult, IResult>(
+            result,
+            rr => onSuccess((ResultResponseSuccess<T>)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="Result{T}"/> is a success or failure, and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="T">Type of the result value.</typeparam>
+    /// <param name="result">The <see cref="Result{T}"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success. Receives a <see cref="ResultResponseSuccess{T}"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure. Receives a <see cref="ResultResponseError"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static Task<IResult> MatchAsync<T>(this Result<T> result,
+        Func<ResultResponseSuccess<T>, Task<IResult>> onSuccess, Func<ResultResponseError, Task<IResult>> onFailure)
+        => Matcher.MatchAsync(
+            result,
+            rr => onSuccess((ResultResponseSuccess<T>)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
 }

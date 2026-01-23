@@ -13,17 +13,10 @@ using ViniBas.ResultPattern.ResultObjects;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMinimal;
 
-public class MatchResultsExtensionsTests
+public class MatchResultsExtensionsTests : IDisposable
 {
     private readonly Mock<ISimpleResultMatcher<IResult>> _matcherMock = new();
-    private readonly IResult _successResult = Results.Ok("Success");
-    private readonly IResult _errorResult = Results.BadRequest("Error");
-    private readonly Result _resultSuccess = Result.Success();
-    private readonly Result _resultError = Result.Failure(Error.Conflict("Code", "An error occurred."));
-    private readonly ResultResponseSuccess _resultResponseSuccess = ResultResponseSuccess.Create();
-    private readonly ResultResponseError _resultResponseError = ResultResponseError.Create(
-        [ new ErrorDetails("Code", "An error occurred.") ], 
-        ErrorTypes.Conflict);
+    private readonly FakeHelpers _fakes = new();
 
     public MatchResultsExtensionsTests()
         => ResultMatcherFactory.MinimalApiMatcherFactory = new(() => _matcherMock.Object);
@@ -32,7 +25,7 @@ public class MatchResultsExtensionsTests
     [InlineData(true)]
     [InlineData(false)]
     [InlineData(null)]
-    public void MatchResult_ResultSuccess_ShouldReturnOnSuccess(bool? useProblemDetails)
+    public void Match_Result_Success_ShouldReturnOnSuccess(bool? useProblemDetails)
     {
         _matcherMock
             .Setup(m => m.Match(
@@ -40,22 +33,38 @@ public class MatchResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, IResult>>(),
                 It.IsAny<Func<ResultResponse, IResult>>(),
                 It.IsAny<bool?>()))
-            .Returns(_successResult);
-        
-        var result = MatchResultsExtensions.Match(_resultSuccess, r => _successResult, r => _errorResult);
-        var resultProb = MatchResultsExtensions.Match(_resultSuccess, r => _successResult, useProblemDetails);
+            .Returns(_fakes.IResultSuccess);
 
-        Assert.Equal(_successResult, result);
-        Assert.Equal(_successResult, resultProb);
-        
+        var result = MatchResultsExtensions.Match(_fakes.ResultSuccess, r => _fakes.IResultSuccess, r => _fakes.IResultError);
+        var resultT = MatchResultsExtensions.Match(_fakes.ResultStrSuccess, r => _fakes.IResultSuccess, r => _fakes.IResultError);
+        var resultProb = MatchResultsExtensions.Match(_fakes.ResultSuccess, r => _fakes.IResultSuccess, useProblemDetails);
+        var resultTProb = MatchResultsExtensions.Match(_fakes.ResultStrSuccess, r => _fakes.IResultSuccess, useProblemDetails);
+
+        Assert.Equal(_fakes.IResultSuccess, result);
+        Assert.Equal(_fakes.IResultSuccess, resultT);
+        Assert.Equal(_fakes.IResultSuccess, resultProb);
+        Assert.Equal(_fakes.IResultSuccess, resultTProb);
+
         _matcherMock.Verify(m => m.Match<IResult, IResult>(
-            _resultSuccess,
+            _fakes.ResultSuccess,
             It.IsAny<Func<ResultResponse, IResult>>(),
             It.IsNotNull<Func<ResultResponse, IResult>>(),
             null), Times.Once);
-        
+
         _matcherMock.Verify(m => m.Match<IResult, IResult>(
-            _resultSuccess,
+            _fakes.ResultStrSuccess,
+            It.IsAny<Func<ResultResponse, IResult>>(),
+            It.IsNotNull<Func<ResultResponse, IResult>>(),
+            null), Times.Once);
+
+        _matcherMock.Verify(m => m.Match<IResult, IResult>(
+            _fakes.ResultSuccess,
+            It.IsAny<Func<ResultResponse, IResult>>(),
+            null,
+            useProblemDetails), Times.Once);
+
+        _matcherMock.Verify(m => m.Match<IResult, IResult>(
+            _fakes.ResultStrSuccess,
             It.IsAny<Func<ResultResponse, IResult>>(),
             null,
             useProblemDetails), Times.Once);
@@ -65,7 +74,56 @@ public class MatchResultsExtensionsTests
     [InlineData(true)]
     [InlineData(false)]
     [InlineData(null)]
-    public void MatchResultResponse_ResultSuccess_ShouldReturnOnSuccess(bool? useProblemDetails)
+    public async Task MatchAsync_Result_Success_ShouldReturnOnSuccess(bool? useProblemDetails)
+    {
+        _matcherMock
+            .Setup(m => m.MatchAsync(
+                It.Is<ResultBase>(r => r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+                It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+                It.IsAny<bool?>()))
+            .ReturnsAsync(_fakes.IResultSuccess);
+
+        var result = await MatchResultsExtensions.MatchAsync(_fakes.ResultSuccess, async r => _fakes.IResultSuccess, async r => _fakes.IResultError);
+        var resultT = await MatchResultsExtensions.MatchAsync(_fakes.ResultStrSuccess, async r => _fakes.IResultSuccess, async r => _fakes.IResultError);
+        var resultProb = await MatchResultsExtensions.MatchAsync(_fakes.ResultSuccess, async r => _fakes.IResultSuccess, useProblemDetails);
+        var resultTProb = await MatchResultsExtensions.MatchAsync(_fakes.ResultStrSuccess, async r => _fakes.IResultSuccess, useProblemDetails);
+
+        Assert.Equal(_fakes.IResultSuccess, result);
+        Assert.Equal(_fakes.IResultSuccess, resultT);
+        Assert.Equal(_fakes.IResultSuccess, resultProb);
+        Assert.Equal(_fakes.IResultSuccess, resultTProb);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultSuccess,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            It.IsNotNull<Func<ResultResponse, Task<IResult>>>(),
+            null), Times.Once);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultStrSuccess,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            It.IsNotNull<Func<ResultResponse, Task<IResult>>>(),
+            null), Times.Once);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultSuccess,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            null,
+            useProblemDetails), Times.Once);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultStrSuccess,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            null,
+            useProblemDetails), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    [InlineData(null)]
+    public void Match_ResultResponse_Success_ShouldReturnOnSuccess(bool? useProblemDetails)
     {
         _matcherMock
             .Setup(m => m.Match(
@@ -73,22 +131,38 @@ public class MatchResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, IResult>>(),
                 It.IsAny<Func<ResultResponse, IResult>>(),
                 It.IsAny<bool?>()))
-            .Returns(_successResult);
-        
-        var result = MatchResultsExtensions.Match(_resultResponseSuccess, r => _successResult, r => _errorResult);
-        var resultProb = MatchResultsExtensions.Match(_resultResponseSuccess, r => _successResult, useProblemDetails);
+            .Returns(_fakes.IResultSuccess);
 
-        Assert.Equal(_successResult, result);
-        Assert.Equal(_successResult, resultProb);
-        
+        var resultResp = MatchResultsExtensions.Match(_fakes.ResultResponseSuccess, r => _fakes.IResultSuccess, r => _fakes.IResultError);
+        var resultRespT = MatchResultsExtensions.Match<string>(_fakes.ResultResponseSuccessStr, r => _fakes.IResultSuccess, r => _fakes.IResultError);
+        var resultRespProb = MatchResultsExtensions.Match(_fakes.ResultResponseSuccess, r => _fakes.IResultSuccess, useProblemDetails);
+        var resultRespTProb = MatchResultsExtensions.Match<string>(_fakes.ResultResponseSuccessStr, r => _fakes.IResultSuccess, useProblemDetails);
+
+        Assert.Equal(_fakes.IResultSuccess, resultResp);
+        Assert.Equal(_fakes.IResultSuccess, resultRespT);
+        Assert.Equal(_fakes.IResultSuccess, resultRespProb);
+        Assert.Equal(_fakes.IResultSuccess, resultRespTProb);
+
         _matcherMock.Verify(m => m.Match<IResult, IResult>(
-            _resultResponseSuccess,
+            _fakes.ResultResponseSuccess,
             It.IsAny<Func<ResultResponse, IResult>>(),
             It.IsNotNull<Func<ResultResponse, IResult>>(),
             null), Times.Once);
-        
+
         _matcherMock.Verify(m => m.Match<IResult, IResult>(
-            _resultResponseSuccess,
+            _fakes.ResultResponseSuccessStr,
+            It.IsAny<Func<ResultResponse, IResult>>(),
+            It.IsNotNull<Func<ResultResponse, IResult>>(),
+            null), Times.Once);
+
+        _matcherMock.Verify(m => m.Match<IResult, IResult>(
+            _fakes.ResultResponseSuccess,
+            It.IsAny<Func<ResultResponse, IResult>>(),
+            null,
+            useProblemDetails), Times.Once);
+
+        _matcherMock.Verify(m => m.Match<IResult, IResult>(
+            _fakes.ResultResponseSuccessStr,
             It.IsAny<Func<ResultResponse, IResult>>(),
             null,
             useProblemDetails), Times.Once);
@@ -98,7 +172,56 @@ public class MatchResultsExtensionsTests
     [InlineData(true)]
     [InlineData(false)]
     [InlineData(null)]
-    public void MatchResult_ResultFailure_ShouldReturnError(bool? useProblemDetails)
+    public async Task MatchAsync_ResultResponse_Success_ShouldReturnOnSuccess(bool? useProblemDetails)
+    {
+        _matcherMock
+            .Setup(m => m.MatchAsync(
+                It.Is<ResultResponse>(r => r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+                It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+                It.IsAny<bool?>()))
+            .ReturnsAsync(_fakes.IResultSuccess);
+
+        var resultResp = await MatchResultsExtensions.MatchAsync(_fakes.ResultResponseSuccess, async r => _fakes.IResultSuccess, async r => _fakes.IResultError);
+        var resultRespT = await MatchResultsExtensions.MatchAsync<string>(_fakes.ResultResponseSuccessStr, async r => _fakes.IResultSuccess, async r => _fakes.IResultError);
+        var resultRespProb = await MatchResultsExtensions.MatchAsync(_fakes.ResultResponseSuccess, async r => _fakes.IResultSuccess, useProblemDetails);
+        var resultRespTProb = await MatchResultsExtensions.MatchAsync<string>(_fakes.ResultResponseSuccessStr, async r => _fakes.IResultSuccess, useProblemDetails);
+
+        Assert.Equal(_fakes.IResultSuccess, resultResp);
+        Assert.Equal(_fakes.IResultSuccess, resultRespT);
+        Assert.Equal(_fakes.IResultSuccess, resultRespProb);
+        Assert.Equal(_fakes.IResultSuccess, resultRespTProb);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultResponseSuccess,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            It.IsNotNull<Func<ResultResponse, Task<IResult>>>(),
+            null), Times.Once);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultResponseSuccessStr,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            It.IsNotNull<Func<ResultResponse, Task<IResult>>>(),
+            null), Times.Once);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultResponseSuccess,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            null,
+            useProblemDetails), Times.Once);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultResponseSuccessStr,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            null,
+            useProblemDetails), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    [InlineData(null)]
+    public void Match_Result_Failure_ShouldReturnError(bool? useProblemDetails)
     {
         _matcherMock
             .Setup(m => m.Match(
@@ -106,22 +229,38 @@ public class MatchResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, IResult>>(),
                 It.IsAny<Func<ResultResponse, IResult>>(),
                 It.IsAny<bool?>()))
-            .Returns(_errorResult);
+            .Returns(_fakes.IResultError);
 
-        var result = MatchResultsExtensions.Match(_resultError, r => _successResult, r => _errorResult);
-        var resultProb = MatchResultsExtensions.Match(_resultError, r => _successResult, useProblemDetails);
+        var result = MatchResultsExtensions.Match(_fakes.ResultError, r => _fakes.IResultSuccess, r => _fakes.IResultError);
+        var resultT = MatchResultsExtensions.Match(_fakes.ResultStrError, r => _fakes.IResultSuccess, r => _fakes.IResultError);
+        var resultProb = MatchResultsExtensions.Match(_fakes.ResultError, r => _fakes.IResultSuccess, useProblemDetails);
+        var resultTProb = MatchResultsExtensions.Match(_fakes.ResultStrError, r => _fakes.IResultSuccess, useProblemDetails);
 
-        Assert.Equal(_errorResult, result);
-        Assert.Equal(_errorResult, resultProb);
-        
+        Assert.Equal(_fakes.IResultError, result);
+        Assert.Equal(_fakes.IResultError, resultT);
+        Assert.Equal(_fakes.IResultError, resultProb);
+        Assert.Equal(_fakes.IResultError, resultTProb);
+
         _matcherMock.Verify(m => m.Match<IResult, IResult>(
-            _resultError,
+            _fakes.ResultError,
             It.IsAny<Func<ResultResponse, IResult>>(),
             It.IsNotNull<Func<ResultResponse, IResult>>(),
             null), Times.Once);
-        
+
         _matcherMock.Verify(m => m.Match<IResult, IResult>(
-            _resultError,
+            _fakes.ResultStrError,
+            It.IsAny<Func<ResultResponse, IResult>>(),
+            It.IsNotNull<Func<ResultResponse, IResult>>(),
+            null), Times.Once);
+
+        _matcherMock.Verify(m => m.Match<IResult, IResult>(
+            _fakes.ResultError,
+            It.IsAny<Func<ResultResponse, IResult>>(),
+            null,
+            useProblemDetails), Times.Once);
+
+        _matcherMock.Verify(m => m.Match<IResult, IResult>(
+            _fakes.ResultStrError,
             It.IsAny<Func<ResultResponse, IResult>>(),
             null,
             useProblemDetails), Times.Once);
@@ -131,7 +270,56 @@ public class MatchResultsExtensionsTests
     [InlineData(true)]
     [InlineData(false)]
     [InlineData(null)]
-    public void MatchResultResponse_ResultFailure_ShouldReturnError(bool? useProblemDetails)
+    public async Task MatchAsync_Result_Failure_ShouldReturnError(bool? useProblemDetails)
+    {
+        _matcherMock
+            .Setup(m => m.MatchAsync(
+                It.Is<ResultBase>(r => !r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+                It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+                It.IsAny<bool?>()))
+            .ReturnsAsync(_fakes.IResultError);
+
+        var result = await MatchResultsExtensions.MatchAsync(_fakes.ResultError, async r => _fakes.IResultSuccess, async r => _fakes.IResultError);
+        var resultT = await MatchResultsExtensions.MatchAsync(_fakes.ResultStrError, async r => _fakes.IResultSuccess, async r => _fakes.IResultError);
+        var resultProb = await MatchResultsExtensions.MatchAsync(_fakes.ResultError, async r => _fakes.IResultSuccess, useProblemDetails);
+        var resultTProb = await MatchResultsExtensions.MatchAsync(_fakes.ResultStrError, async r => _fakes.IResultSuccess, useProblemDetails);
+
+        Assert.Equal(_fakes.IResultError, result);
+        Assert.Equal(_fakes.IResultError, resultT);
+        Assert.Equal(_fakes.IResultError, resultProb);
+        Assert.Equal(_fakes.IResultError, resultTProb);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultError,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            It.IsNotNull<Func<ResultResponse, Task<IResult>>>(),
+            null), Times.Once);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultStrError,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            It.IsNotNull<Func<ResultResponse, Task<IResult>>>(),
+            null), Times.Once);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultError,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            null,
+            useProblemDetails), Times.Once);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultStrError,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            null,
+            useProblemDetails), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    [InlineData(null)]
+    public void Match_ResultResponse_Failure_ShouldReturnError(bool? useProblemDetails)
     {
         _matcherMock
             .Setup(m => m.Match(
@@ -139,24 +327,72 @@ public class MatchResultsExtensionsTests
                 It.IsAny<Func<ResultResponse, IResult>>(),
                 It.IsAny<Func<ResultResponse, IResult>>(),
                 It.IsAny<bool?>()))
-            .Returns(_errorResult);
+            .Returns(_fakes.IResultError);
 
-        var result = MatchResultsExtensions.Match(_resultResponseError, r => _successResult, r => _errorResult);
-        var resultProb = MatchResultsExtensions.Match(_resultResponseError, r => _successResult, useProblemDetails);
+        var result = MatchResultsExtensions.Match(_fakes.ResultResponseError, r => _fakes.IResultSuccess, r => _fakes.IResultError);
+        var resultT = MatchResultsExtensions.Match<string>(_fakes.ResultResponseError, r => _fakes.IResultSuccess, r => _fakes.IResultError);
+        var resultProb = MatchResultsExtensions.Match(_fakes.ResultResponseError, r => _fakes.IResultSuccess, useProblemDetails);
+        var resultTProb = MatchResultsExtensions.Match<string>(_fakes.ResultResponseError, r => _fakes.IResultSuccess, useProblemDetails);
 
-        Assert.Equal(_errorResult, result);
-        Assert.Equal(_errorResult, resultProb);
-        
+        Assert.Equal(_fakes.IResultError, result);
+        Assert.Equal(_fakes.IResultError, resultT);
+        Assert.Equal(_fakes.IResultError, resultProb);
+        Assert.Equal(_fakes.IResultError, resultTProb);
+
         _matcherMock.Verify(m => m.Match<IResult, IResult>(
-            _resultResponseError,
+            _fakes.ResultResponseError,
             It.IsAny<Func<ResultResponse, IResult>>(),
             It.IsNotNull<Func<ResultResponse, IResult>>(),
-            null), Times.Once);
-        
+            null), Times.Exactly(2));
+
         _matcherMock.Verify(m => m.Match<IResult, IResult>(
-            _resultResponseError,
+            _fakes.ResultResponseError,
             It.IsAny<Func<ResultResponse, IResult>>(),
             null,
-            useProblemDetails), Times.Once);
+            useProblemDetails), Times.Exactly(2));
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    [InlineData(null)]
+    public async Task MatchAsync_ResultResponse_Failure_ShouldReturnError(bool? useProblemDetails)
+    {
+        _matcherMock
+            .Setup(m => m.MatchAsync(
+                It.Is<ResultResponse>(r => !r.IsSuccess),
+                It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+                It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+                It.IsAny<bool?>()))
+            .ReturnsAsync(_fakes.IResultError);
+
+        var result = await MatchResultsExtensions.MatchAsync(_fakes.ResultResponseError,
+            async r => _fakes.IResultSuccess, async r => _fakes.IResultError);
+        var resultT = await MatchResultsExtensions.MatchAsync<string>(_fakes.ResultResponseError,
+            async r => _fakes.IResultSuccess, async r => _fakes.IResultError);
+        var resultProb = await MatchResultsExtensions.MatchAsync(_fakes.ResultResponseError,
+            async r => _fakes.IResultSuccess, useProblemDetails);
+        var resultTProb = await MatchResultsExtensions.MatchAsync<string>(_fakes.ResultResponseError,
+            async r => _fakes.IResultSuccess, useProblemDetails);
+
+        Assert.Equal(_fakes.IResultError, result);
+        Assert.Equal(_fakes.IResultError, resultT);
+        Assert.Equal(_fakes.IResultError, resultProb);
+        Assert.Equal(_fakes.IResultError, resultTProb);
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultResponseError,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            It.IsNotNull<Func<ResultResponse, Task<IResult>>>(),
+            null), Times.Exactly(2));
+
+        _matcherMock.Verify(m => m.MatchAsync<IResult, IResult>(
+            _fakes.ResultResponseError,
+            It.IsAny<Func<ResultResponse, Task<IResult>>>(),
+            null,
+            useProblemDetails), Times.Exactly(2));
+    }
+
+    public void Dispose()
+        => ResultMatcherFactory.Reset();
 }
