@@ -16,7 +16,7 @@ public abstract record ResultBase
     public Error Error { get; private set; }
 
     protected ResultBase(Error error) => Error = error;
-    
+
     public abstract ResultResponse ToResponse();
 
     public void AddError(Error newError)
@@ -46,22 +46,22 @@ public record Result : ResultBase
         => IsSuccess ? ResultResponseSuccess.Create() : ResultResponseError.Create(Error.Details, Error.Type);
 }
 
-public record Result<T> : ResultBase
+public record Result<TData> : ResultBase
 {
-    private Result(T data) : base(Error.None)
+    private Result(TData data) : base(Error.None)
         => Data = data;
     private Result(Error error) : base(error) { }
 
-    public T? Data { get; }
+    public TData? Data { get; }
 
-    public static Result<T> Success(T item) => new(item);
-    public static Result<T> Failure(Error error) => new(error);
+    public static Result<TData> Success(TData item) => new(item);
+    public static Result<TData> Failure(Error error) => new(error);
 
-    public static implicit operator Result<T>(List<Error> errors) => Failure(errors);
+    public static implicit operator Result<TData>(List<Error> errors) => Failure(errors);
 
     public override ResultResponse ToResponse()
         => IsSuccess ? ResultResponseSuccess.Create(Data!) : ResultResponseError.Create(Error.Details, Error.Type);
-    
-    public static implicit operator Result<T>(T item) => Success(item);
-    public static implicit operator Result<T>(Error error) => Failure(error);
+
+    public static implicit operator Result<TData>(TData item) => Success(item);
+    public static implicit operator Result<TData>(Error error) => Failure(error);
 }

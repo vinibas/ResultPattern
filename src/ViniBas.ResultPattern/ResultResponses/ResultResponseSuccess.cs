@@ -13,15 +13,15 @@ public record ResultResponseSuccess : ResultResponse
         => IsSuccess = true;
 
     public static ResultResponseSuccess Create() => new();
-    public static ResultResponseSuccess<T> Create<T>(T data) => ResultResponseSuccess<T>.Create(data);
+    public static ResultResponseSuccess<TData> Create<TData>(TData data) => ResultResponseSuccess<TData>.Create(data);
 }
 
-public record ResultResponseSuccess<T> : ResultResponseSuccess
+public record ResultResponseSuccess<TData> : ResultResponseSuccess
 {
-    private ResultResponseSuccess(T data) : base()
+    private ResultResponseSuccess(TData data) : base()
         => Data = data;
 
-    public T Data { get; set; }
+    public TData Data { get; set; }
 
-    public static ResultResponseSuccess<T> Create(T data) => new(data);
+    public static ResultResponseSuccess<TData> Create(TData data) => new(data);
 }

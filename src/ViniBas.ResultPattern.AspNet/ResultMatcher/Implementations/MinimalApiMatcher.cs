@@ -14,48 +14,40 @@ namespace ViniBas.ResultPattern.AspNet.ResultMatcher.Implementations;
 
 internal sealed class MinimalApiMatcher : ISimpleResultMatcher<IResult>
 {
-    internal Func<ResultResponse, IResult> OnSuccessFallback { get; set; } 
+    internal Func<ResultResponse, IResult> OnSuccessFallback { get; set; }
         = FallbackMinimalMatchHelper.OnSuccessFallback;
-    internal Func<ResultResponse, bool?, IResult> OnFailureFallback { get; set; } 
+    internal Func<ResultResponse, bool?, IResult> OnFailureFallback { get; set; }
         = FallbackMinimalMatchHelper.OnFailureFallback;
 
-    public IResult Match<TSuccess, TFailure>(
+    public IResult Match(
         ResultBase resultBase,
-        Func<ResultResponse, TSuccess>? onSuccess,
-        Func<ResultResponse, TFailure>? onFailure,
+        Func<ResultResponse, IResult>? onSuccess,
+        Func<ResultResponse, IResult>? onFailure,
         bool? useProblemDetails)
-        where TSuccess : IResult
-        where TFailure : IResult
         => Match(resultBase.ToResponse(), onSuccess, onFailure, useProblemDetails);
 
-    public IResult Match<TSuccess, TFailure>(
+    public IResult Match(
         ResultResponse response,
-        Func<ResultResponse, TSuccess>? onSuccess,
-        Func<ResultResponse, TFailure>? onFailure,
+        Func<ResultResponse, IResult>? onSuccess,
+        Func<ResultResponse, IResult>? onFailure,
         bool? useProblemDetails)
-        where TSuccess : IResult
-        where TFailure : IResult
         => response.IsSuccess ?
             (onSuccess is not null ? onSuccess(response) : OnSuccessFallback(response)) :
             (onFailure is not null ? onFailure(response) : OnFailureFallback(response, useProblemDetails));
 
-    public async Task<IResult> MatchAsync<TSuccess, TFailure>(
+    public async Task<IResult> MatchAsync(
         ResultResponse response,
-        Func<ResultResponse, Task<TSuccess>>? onSuccess,
-        Func<ResultResponse, Task<TFailure>>? onFailure,
+        Func<ResultResponse, Task<IResult>>? onSuccess,
+        Func<ResultResponse, Task<IResult>>? onFailure,
         bool? useProblemDetails)
-        where TSuccess : IResult
-        where TFailure : IResult
         => response.IsSuccess
             ? (onSuccess is not null ? await onSuccess(response) : OnSuccessFallback(response))
             : (onFailure is not null ? await onFailure(response) : OnFailureFallback(response, useProblemDetails));
 
-    public Task<IResult> MatchAsync<TSuccess, TFailure>(
+    public Task<IResult> MatchAsync(
         ResultBase resultBase,
-        Func<ResultResponse, Task<TSuccess>>? onSuccess,
-        Func<ResultResponse, Task<TFailure>>? onFailure,
+        Func<ResultResponse, Task<IResult>>? onSuccess,
+        Func<ResultResponse, Task<IResult>>? onFailure,
         bool? useProblemDetails)
-        where TSuccess : IResult
-        where TFailure : IResult
         => MatchAsync(resultBase.ToResponse(), onSuccess, onFailure, useProblemDetails);
 }

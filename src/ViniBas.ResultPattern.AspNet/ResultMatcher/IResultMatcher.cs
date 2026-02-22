@@ -6,7 +6,7 @@
 */
 
 using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http.Metadata;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
@@ -14,74 +14,58 @@ namespace ViniBas.ResultPattern.AspNet;
 
 internal interface ISimpleResultMatcher<TResult>
 {
-    TResult Match<TSuccess, TFailure>(
+    TResult Match(
         ResultBase resultBase,
-        Func<ResultResponse, TSuccess>? onSuccess,
-        Func<ResultResponse, TFailure>? onFailure,
-        bool? useProblemDetails)
-        where TSuccess : TResult
-        where TFailure : TResult;
+        Func<ResultResponse, TResult>? onSuccess,
+        Func<ResultResponse, TResult>? onFailure,
+        bool? useProblemDetails);
 
-    TResult Match<TSuccess, TFailure>(
+    TResult Match(
         ResultResponse response,
-        Func<ResultResponse, TSuccess>? onSuccess,
-        Func<ResultResponse, TFailure>? onFailure,
-        bool? useProblemDetails)
-        where TSuccess : TResult
-        where TFailure : TResult;
+        Func<ResultResponse, TResult>? onSuccess,
+        Func<ResultResponse, TResult>? onFailure,
+        bool? useProblemDetails);
 
-    Task<TResult> MatchAsync<TSuccess, TFailure>(
+    Task<TResult> MatchAsync(
         ResultBase resultBase,
-        Func<ResultResponse, Task<TSuccess>>? onSuccess,
-        Func<ResultResponse, Task<TFailure>>? onFailure,
-        bool? useProblemDetails)
-        where TSuccess : TResult
-        where TFailure : TResult;
+        Func<ResultResponse, Task<TResult>>? onSuccess,
+        Func<ResultResponse, Task<TResult>>? onFailure,
+        bool? useProblemDetails);
 
-    Task<TResult> MatchAsync<TSuccess, TFailure>(
+    Task<TResult> MatchAsync(
         ResultResponse response,
-        Func<ResultResponse, Task<TSuccess>>? onSuccess,
-        Func<ResultResponse, Task<TFailure>>? onFailure,
-        bool? useProblemDetails)
-        where TSuccess : TResult
-        where TFailure : TResult;
+        Func<ResultResponse, Task<TResult>>? onSuccess,
+        Func<ResultResponse, Task<TResult>>? onFailure,
+        bool? useProblemDetails);
 }
 
 internal interface ITypedResultMatcher
 {
-    TResult Match<TResult, TSuccess, TFailure>(
+    TResult Match<TResult>(
         ResultBase resultBase,
-        Func<ResultResponse, TSuccess>? onSuccess,
-        Func<ResultResponse, TFailure>? onFailure,
+        Func<ResultResponse, TResult>? onSuccess,
+        Func<ResultResponse, TResult>? onFailure,
         bool? useProblemDetails)
-        where TResult : IResult
-        where TSuccess : IResult
-        where TFailure : IResult;
+        where TResult : IResult, IEndpointMetadataProvider;
 
-    TResult Match<TResult, TSuccess, TFailure>(
+    TResult Match<TResult>(
         ResultResponse response,
-        Func<ResultResponse, TSuccess>? onSuccess,
-        Func<ResultResponse, TFailure>? onFailure,
+        Func<ResultResponse, TResult>? onSuccess,
+        Func<ResultResponse, TResult>? onFailure,
         bool? useProblemDetails)
-        where TResult : IResult
-        where TSuccess : IResult
-        where TFailure : IResult;
+        where TResult : IResult, IEndpointMetadataProvider;
 
-    Task<TResult> MatchAsync<TResult, TSuccess, TFailure>(
+    Task<TResult> MatchAsync<TResult>(
         ResultBase resultBase,
-        Func<ResultResponse, Task<TSuccess>>? onSuccess,
-        Func<ResultResponse, Task<TFailure>>? onFailure,
+        Func<ResultResponse, Task<TResult>>? onSuccess,
+        Func<ResultResponse, Task<TResult>>? onFailure,
         bool? useProblemDetails)
-        where TResult : IResult
-        where TSuccess : IResult
-        where TFailure : IResult;
+        where TResult : IResult, IEndpointMetadataProvider;
 
-    Task<TResult> MatchAsync<TResult, TSuccess, TFailure>(
+    Task<TResult> MatchAsync<TResult>(
         ResultResponse response,
-        Func<ResultResponse, Task<TSuccess>>? onSuccess,
-        Func<ResultResponse, Task<TFailure>>? onFailure,
+        Func<ResultResponse, Task<TResult>>? onSuccess,
+        Func<ResultResponse, Task<TResult>>? onFailure,
         bool? useProblemDetails)
-        where TResult : IResult
-        where TSuccess : IResult
-        where TFailure : IResult;
+        where TResult : IResult, IEndpointMetadataProvider;
 }

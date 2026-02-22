@@ -9,96 +9,380 @@ using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
 using Microsoft.AspNetCore.Http;
 using ViniBas.ResultPattern.AspNet.ResultMatcher;
+using Microsoft.AspNetCore.Http.Metadata;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace ViniBas.ResultPattern.AspNet.ResultMinimalApi;
 
 public static class MatchTResultsExtensions
 {
-    /// <summary>
-    /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the function if successful.
-    /// </summary>
-    /// <typeparam name="T_Result">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>, 
-    /// but can be any type that implements <see cref="IResult"/>.</typeparam>
-    /// <typeparam name="T_Success">The type of the expected result on success. 
-    /// Typically something like <see cref="TypedResults.Ok()"/> or <see cref="TypedResults.Created()"/>, 
-    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
-    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
-    /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; 
-    /// if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by 
-    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
-    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
-    public static T_Result Match<T_Result, T_Success>(this ResultResponse resultResponse,
-        Func<ResultResponse, T_Success> onSuccess, bool? useProblemDetails = null)
-        where T_Result : IResult
-        where T_Success : IResult
-        => ResultMatcherFactory.GetTypedMatcher.Match<T_Result, T_Success, IResult>(
-            resultResponse, onSuccess, null, useProblemDetails);
+    private static ITypedResultMatcher Matcher => ResultMatcherFactory.GetTypedMatcher;
 
     /// <summary>
-    /// Checks whether a <see cref="ResultResponse"/> is a success or failure, and returns the result of the corresponding function
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure,
+    /// and returns the result of the function if successful.
     /// </summary>
-    /// <typeparam name="T_Result">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>, 
-    /// but can be any type that implements <see cref="IResult"/>.</typeparam>
-    /// <typeparam name="T_Success">The type of the expected result on success. 
-    /// Typically something like <see cref="TypedResults.Ok()"/> or <see cref="TypedResults.Created()"/>, 
-    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
-    /// <typeparam name="T_Failure">The type of the result expected on failure. 
-    /// Typically something like <see cref="TypedResults.BadRequest()"/> or <see cref="TypedResults.NotFound()"/>, 
-    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
     /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
-    /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <param name="onFailure">Function to be executed in case of failure</param>
-    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
-    public static T_Result Match<T_Result, T_Success, T_Failure>(this ResultResponse resultResponse,
-        Func<ResultResponse, T_Success> onSuccess, Func<ResultResponse, T_Failure> onFailure)
-        where T_Result : IResult
-        where T_Success : IResult
-        where T_Failure : IResult
-        => ResultMatcherFactory.GetTypedMatcher.Match<T_Result, T_Success, T_Failure>(
-            resultResponse, onSuccess, onFailure, null);
-    
-    /// <summary>
-    /// Checks whether a Result is a success or failure, and returns the result of the function if successful.
-    /// </summary>
-    /// <typeparam name="T_Result">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>, 
-    /// but can be any type that implements <see cref="IResult"/>.</typeparam>
-    /// <typeparam name="T_Success">The type of the expected result on success. 
-    /// Typically something like <see cref="TypedResults.Ok()"/> or <see cref="TypedResults.Created()"/>, 
-    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
-    /// <param name="result">The <see cref="ResultBase"/> to evaluate.</param>
-    /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure; 
-    /// if false, returns an error <see cref="IResult"/>; if null, the behavior is determined by 
-    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
-    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success, or an error result on failure.</returns>
-    public static T_Result Match<T_Result, T_Success>(this ResultBase result,
-        Func<ResultResponse, T_Success> onSuccess, bool? useProblemDetails = null)
-        where T_Result : IResult
-        where T_Success : IResult
-        => ResultMatcherFactory.GetTypedMatcher.Match<T_Result, T_Success, IResult>(
-            result, onSuccess, null, useProblemDetails);
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure;
+    /// if false, returns an error <typeparamref name="TResult"/>;
+    /// if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success,
+    /// or an error <typeparamref name="TResult"/> on failure.</returns>
+    public static TResult Match<TResult>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess, TResult> onSuccess, bool? useProblemDetails = null)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.Match(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            null,
+            useProblemDetails);
 
     /// <summary>
-    /// Checks whether a Result is a success or failure, and returns the result of the corresponding function
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure,
+    /// and returns the result of the corresponding function.
     /// </summary>
-    /// <typeparam name="T_Result">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>, 
-    /// but can be any type that implements <see cref="IResult"/>.</typeparam>
-    /// <typeparam name="T_Success">The type of the expected result on success. 
-    /// Typically something like <see cref="TypedResults.Ok()"/> or <see cref="TypedResults.Created()"/>, 
-    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
-    /// <typeparam name="T_Failure">The type of the result expected on failure. 
-    /// Typically something like <see cref="TypedResults.BadRequest()"/> or <see cref="TypedResults.NotFound()"/>, 
-    /// but can be anything that implements <see cref="IResult"/> and is compatible with <typeparamref name="T_Result"/>.</typeparam>
-    /// <param name="result">The <see cref="ResultBase"/> to evaluate.</param>
-    /// <param name="onSuccess">Function to be executed in case of success.</param>
-    /// <param name="onFailure">Function to be executed in case of failure</param>
-    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success, or of <paramref name="onFailure"/> in case of failure.</returns>
-    public static T_Result Match<T_Result, T_Success, T_Failure>(this ResultBase result,
-        Func<ResultResponse, T_Success> onSuccess, Func<ResultResponse, T_Failure> onFailure)
-        where T_Result : IResult
-        where T_Success : IResult
-        where T_Failure : IResult
-        => ResultMatcherFactory.GetTypedMatcher.Match<T_Result, T_Success, T_Failure>(
-            result, onSuccess, onFailure, null);
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure.
+    /// Receives a <see cref="ResultResponseError"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success,
+    /// or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static TResult Match<TResult>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess, TResult> onSuccess, Func<ResultResponseError, TResult> onFailure)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.Match(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure,
+    /// and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <typeparam name="TData">Type of the success data value.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess{TData}"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure;
+    /// if false, returns an error <typeparamref name="TResult"/>;
+    /// if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success,
+    /// or an error <typeparamref name="TResult"/> on failure.</returns>
+    public static TResult Match<TResult, TData>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess<TData>, TResult> onSuccess, bool? useProblemDetails = null)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.Match(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess<TData>)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Checks whether a <see cref="ResultResponse"/> is a success or failure,
+    /// and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <typeparam name="TData">Type of the success data value.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess{TData}"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure.
+    /// Receives a <see cref="ResultResponseError"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success,
+    /// or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static TResult Match<TResult, TData>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess<TData>, TResult> onSuccess, Func<ResultResponseError, TResult> onFailure)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.Match(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess<TData>)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Checks whether a <see cref="Result"/> is a success or failure,
+    /// and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <param name="result">The <see cref="Result"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure;
+    /// if false, returns an error <typeparamref name="TResult"/>; if null, the behavior is determined by
+    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success,
+    /// or an error <typeparamref name="TResult"/> on failure.</returns>
+    public static TResult Match<TResult>(this Result result,
+        Func<ResultResponseSuccess, TResult> onSuccess, bool? useProblemDetails = null)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.Match(
+            result,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Checks whether a <see cref="Result"/> is a success or failure,
+    /// and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <param name="result">The <see cref="Result"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure.
+    /// Receives a <see cref="ResultResponseError"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success,
+    /// or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static TResult Match<TResult>(this Result result,
+        Func<ResultResponseSuccess, TResult> onSuccess, Func<ResultResponseError, TResult> onFailure)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.Match(
+            result,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Checks whether a <see cref="Result{TData}"/> is a success or failure,
+    /// and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <typeparam name="TData">Type of the success data value.</typeparam>
+    /// <param name="result">The <see cref="Result{TData}"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess{TData}"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure;
+    /// if false, returns an error <typeparamref name="TResult"/>; if null, the behavior is determined by
+    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success,
+    /// or an error <typeparamref name="TResult"/> on failure.</returns>
+    public static TResult Match<TResult, TData>(this Result<TData> result,
+        Func<ResultResponseSuccess<TData>, TResult> onSuccess, bool? useProblemDetails = null)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.Match(
+            result,
+            rr => onSuccess((ResultResponseSuccess<TData>)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Checks whether a <see cref="Result{TData}"/> is a success or failure,
+    /// and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <typeparam name="TData">Type of the success data value.</typeparam>
+    /// <param name="result">The <see cref="Result{TData}"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess{TData}"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure.
+    /// Receives a <see cref="ResultResponseError"/> and returns a <typeparamref name="TResult"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success,
+    /// or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static TResult Match<TResult, TData>(this Result<TData> result,
+        Func<ResultResponseSuccess<TData>, TResult> onSuccess, Func<ResultResponseError, TResult> onFailure)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.Match(
+            result,
+            rr => onSuccess((ResultResponseSuccess<TData>)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure,
+    /// and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure;
+    /// if false, returns an error <typeparamref name="TResult"/>;
+    /// if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success,
+    /// or an error <typeparamref name="TResult"/> on failure.</returns>
+    public static Task<TResult> MatchAsync<TResult>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess, Task<TResult>> onSuccess, bool? useProblemDetails = null)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.MatchAsync(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure,
+    /// and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure.
+    /// Receives a <see cref="ResultResponseError"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success,
+    /// or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static Task<TResult> MatchAsync<TResult>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess, Task<TResult>> onSuccess, Func<ResultResponseError, Task<TResult>> onFailure)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.MatchAsync(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure,
+    /// and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <typeparam name="TData">Type of the success data value.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess{TData}"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure;
+    /// if false, returns an error <typeparamref name="TResult"/>;
+    /// if null, the behavior is determined by <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success,
+    /// or an error <typeparamref name="TResult"/> on failure.</returns>
+    public static Task<TResult> MatchAsync<TResult, TData>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess<TData>, Task<TResult>> onSuccess, bool? useProblemDetails = null)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.MatchAsync(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess<TData>)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure,
+    /// and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <typeparam name="TData">Type of the success data value.</typeparam>
+    /// <param name="resultResponse">The <see cref="ResultResponse"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess{TData}"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure.
+    /// Receives a <see cref="ResultResponseError"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success,
+    /// or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static Task<TResult> MatchAsync<TResult, TData>(this ResultResponse resultResponse,
+        Func<ResultResponseSuccess<TData>, Task<TResult>> onSuccess, Func<ResultResponseError, Task<TResult>> onFailure)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.MatchAsync(
+            resultResponse,
+            rr => onSuccess((ResultResponseSuccess<TData>)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="Result"/> is a success or failure,
+    /// and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <param name="result">The <see cref="Result"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure;
+    /// if false, returns an error <typeparamref name="TResult"/>; if null, the behavior is determined by
+    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success,
+    /// or an error <typeparamref name="TResult"/> on failure.</returns>
+    public static Task<TResult> MatchAsync<TResult>(this Result result,
+        Func<ResultResponseSuccess, Task<TResult>> onSuccess, bool? useProblemDetails = null)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.MatchAsync(
+            result,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="Result"/> is a success or failure,
+    /// and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <param name="result">The <see cref="Result"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure.
+    /// Receives a <see cref="ResultResponseError"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success,
+    /// or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static Task<TResult> MatchAsync<TResult>(this Result result,
+        Func<ResultResponseSuccess, Task<TResult>> onSuccess, Func<ResultResponseError, Task<TResult>> onFailure)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.MatchAsync(
+            result,
+            rr => onSuccess((ResultResponseSuccess)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="Result{TData}"/> is a success or failure,
+    /// and returns the result of the function if successful.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <typeparam name="TData">Type of the success data value.</typeparam>
+    /// <param name="result">The <see cref="Result{TData}"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess{TData}"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <param name="useProblemDetails">If true, returns a <see cref="ProblemDetails"/> on failure;
+    /// if false, returns an error <typeparamref name="TResult"/>; if null, the behavior is determined by
+    /// <see cref="GlobalConfiguration.UseProblemDetails"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function on success,
+    /// or an error <typeparamref name="TResult"/> on failure.</returns>
+    public static Task<TResult> MatchAsync<TResult, TData>(this Result<TData> result,
+        Func<ResultResponseSuccess<TData>, Task<TResult>> onSuccess, bool? useProblemDetails = null)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.MatchAsync(
+            result,
+            rr => onSuccess((ResultResponseSuccess<TData>)rr),
+            null,
+            useProblemDetails);
+
+    /// <summary>
+    /// Asynchronously checks whether a <see cref="Result{TData}"/> is a success or failure,
+    /// and returns the result of the corresponding function.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the expected result. Typically a <see cref="Results{T1, T2}"/>,
+    /// but can be any type that implements <see cref="IResult"/> and <see cref="IEndpointMetadataProvider"/>.</typeparam>
+    /// <typeparam name="TData">Type of the success data value.</typeparam>
+    /// <param name="result">The <see cref="Result{TData}"/> to evaluate.</param>
+    /// <param name="onSuccess">Function to be executed in case of success.
+    /// Receives a <see cref="ResultResponseSuccess{TData}"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <param name="onFailure">Function to be executed in case of failure.
+    /// Receives a <see cref="ResultResponseError"/> and returns a <see cref="Task{TResult}"/>.</param>
+    /// <returns>Returns the result of the <paramref name="onSuccess"/> function in case of success,
+    /// or of <paramref name="onFailure"/> in case of failure.</returns>
+    public static Task<TResult> MatchAsync<TResult, TData>(this Result<TData> result,
+        Func<ResultResponseSuccess<TData>, Task<TResult>> onSuccess, Func<ResultResponseError, Task<TResult>> onFailure)
+        where TResult : IResult, IEndpointMetadataProvider
+        => Matcher.MatchAsync(
+            result,
+            rr => onSuccess((ResultResponseSuccess<TData>)rr),
+            rr => onFailure((ResultResponseError)rr),
+            null);
 }
