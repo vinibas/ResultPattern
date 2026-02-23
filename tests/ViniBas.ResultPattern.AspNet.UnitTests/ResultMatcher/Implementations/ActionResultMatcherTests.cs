@@ -44,22 +44,22 @@ public class ActionResultMatcherTests
         var resultResponseSuccess = ResultResponseSuccess.Create();
 
         // Act
-        var matcherResult = _matcher.Match<IActionResult, IActionResult>(
+        var matcherResult = _matcher.Match(
             resultSuccess,
             onSuccess: r => okResult,
             onFailure: null,
             null);
-        var matcherResultAsync = await _matcher.MatchAsync<IActionResult, IActionResult>(
+        var matcherResultAsync = await _matcher.MatchAsync(
             resultSuccess,
             onSuccess: async r => okResult,
             onFailure: null,
             null);
-        var matcherResultResponse = _matcher.Match<IActionResult, IActionResult>(
+        var matcherResultResponse = _matcher.Match(
             resultResponseSuccess,
             onSuccess: r => okResult,
             onFailure: null,
             null);
-        var matcherResultResponseAsync = await _matcher.MatchAsync<IActionResult, IActionResult>(
+        var matcherResultResponseAsync = await _matcher.MatchAsync(
             resultResponseSuccess,
             onSuccess: async r => okResult,
             onFailure: null,
@@ -82,22 +82,22 @@ public class ActionResultMatcherTests
         var resultResponseSuccess = ResultResponseSuccess.Create();
 
         // Act
-        var matcherResult = _matcher.Match<IActionResult, IActionResult>(
+        var matcherResult = _matcher.Match(
             resultSuccess,
             onSuccess: null,
             onFailure: null,
             null);
-        var matcherResultAsync = await _matcher.MatchAsync<IActionResult, IActionResult>(
+        var matcherResultAsync = await _matcher.MatchAsync(
             resultSuccess,
             onSuccess: null,
             onFailure: null,
             null);
-        var matcherResultResponse = _matcher.Match<IActionResult, IActionResult>(
+        var matcherResultResponse = _matcher.Match(
             resultResponseSuccess,
             onSuccess: null,
             onFailure: null,
             null);
-        var matcherResultResponseAsync = await _matcher.MatchAsync<IActionResult, IActionResult>(
+        var matcherResultResponseAsync = await _matcher.MatchAsync(
             resultResponseSuccess,
             onSuccess: null,
             onFailure: null,
@@ -125,22 +125,22 @@ public class ActionResultMatcherTests
         var resultResponseError = ResultResponseError.Create(error.Details, error.Type);
 
         // Act
-        var matcherResult = _matcher.Match<IActionResult, IActionResult>(
+        var matcherResult = _matcher.Match(
             resultError,
             onSuccess: null,
             onFailure: r => badRequestResultValue,
             useProblemDetails);
-        var matcherResultAsync = await _matcher.MatchAsync<IActionResult, IActionResult>(
+        var matcherResultAsync = await _matcher.MatchAsync(
             resultError,
             onSuccess: null,
             onFailure: async r => badRequestResultValue,
             useProblemDetails);
-        var matcherResultResponse = _matcher.Match<IActionResult, IActionResult>(
+        var matcherResultResponse = _matcher.Match(
             resultResponseError,
             onSuccess: null,
             onFailure: r => badRequestResultValue,
             useProblemDetails);
-        var matcherResultResponseAsync = await _matcher.MatchAsync<IActionResult, IActionResult>(
+        var matcherResultResponseAsync = await _matcher.MatchAsync(
             resultResponseError,
             onSuccess: null,
             onFailure: async r => badRequestResultValue,
@@ -167,22 +167,22 @@ public class ActionResultMatcherTests
         var resultResponseError = ResultResponseError.Create(error.Details, error.Type);
 
         // Act
-        var matcherResult = _matcher.Match<IActionResult, IActionResult>(
+        var matcherResult = _matcher.Match(
             resultError,
             onSuccess: null,
             onFailure: null,
             useProblemDetails);
-        var matcherResultAsync = await _matcher.MatchAsync<IActionResult, IActionResult>(
+        var matcherResultAsync = await _matcher.MatchAsync(
             resultError,
             onSuccess: null,
             onFailure: null,
             useProblemDetails);
-        var matcherResultResponse = _matcher.Match<IActionResult, IActionResult>(
+        var matcherResultResponse = _matcher.Match(
             resultResponseError,
             onSuccess: null,
             onFailure: null,
             useProblemDetails);
-        var matcherResultResponseAsync = await _matcher.MatchAsync<IActionResult, IActionResult>(
+        var matcherResultResponseAsync = await _matcher.MatchAsync(
             resultResponseError,
             onSuccess: null,
             onFailure: null,
