@@ -4,12 +4,14 @@ var outputPath = args[0];
 Directory.CreateDirectory(outputPath);
 Console.WriteLine($"Generating code in: {outputPath}");
 
-var variationsGenerator = new VariationsGenerator();
+var classBuilder = MatchResultsClassBlueprintBuilder.Create();
 
-var mvcClass = variationsGenerator.GenerateMvcClass();
-var minimalApiClass = variationsGenerator.GenerateMinimalApiClass();
-var minimalApiClassTyped = variationsGenerator.GenerateMinimalApiTypedClass();
+var mvcClass = classBuilder.Build("mvc").Build();
+var minimalApiClass = classBuilder.Build("minimalApiAbstract").Build();
+var minimalApiTypedClass = classBuilder.Build("minimalApiTyped").Build();
+var minimalApiResultClass = classBuilder.Build("minimalApiResults").Build();
 
 File.WriteAllText(Path.Combine(outputPath, "MatchResultsExtensions_Mvc.g.cs"), mvcClass);
 File.WriteAllText(Path.Combine(outputPath, "MatchResultsExtensions_MinimalApi.g.cs"), minimalApiClass);
-File.WriteAllText(Path.Combine(outputPath, "MatchResultsExtensions_MinimalApi_Typed.g.cs"), minimalApiClassTyped);
+File.WriteAllText(Path.Combine(outputPath, "MatchResultsExtensions_MinimalApi_Typed.g.cs"), minimalApiTypedClass);
+File.WriteAllText(Path.Combine(outputPath, "MatchResultsExtensions_MinimalApi_Results.g.cs"), minimalApiResultClass);

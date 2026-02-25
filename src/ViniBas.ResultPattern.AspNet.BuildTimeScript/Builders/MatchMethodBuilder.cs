@@ -22,46 +22,102 @@ public sealed class MatchMethodBuilder
             Func<ResultResponseSuccess{SuccessDataType}, {ReturnType}>? onSuccess = null,
             Func<ResultResponseError, {ReturnType}>? onFailure = null)
             {GenericConstraints}
-            => Matcher.{MethodName}{MatcherGenericParameters}(
+            => Matcher.{MatcherName}{MatcherGenericParameters}(
                 result,
                 onSuccess is not null ? rr => onSuccess((ResultResponseSuccess{SuccessDataType})rr) : null,
                 onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null,
                 null);
     """;
 
-    private string _extendedType;
-    private bool _hasSuccessDataType;
-    private string _returnTypeName;
-    private bool _isReturnTypeGeneric;
-    private bool _isAsync;
-    private string? _genericConstraints;
+    public record MatchMethodBuilderParameters(
+        bool IsAsync,
+        string ReturnTypeName,
+        IEnumerable<string> ReturnTypeGenericParameters,
+        bool IsGenericReturnType,
+        string? MethodSufixName,
+        bool HasSuccessDataType,
+        string ExtendedType,
+        IEnumerable<(string GenericTypeName, IEnumerable<string> GenericConstraints)> GenericConstraints,
+        bool ShouldMatcherReceiveReturnGenericParameter);
 
-    private string MethodName => _isAsync ? $"{MethodBaseName}Async" : MethodBaseName;
-    private string FinalExtendedType => _extendedType.Contains("<") ?
-        $"{GetNameWithoutGenericArity(_extendedType)}<{DataTypeParameterName}>" :
-        _extendedType;
-    private string FinalReturnType => _isAsync ? $"Task<{_returnTypeName}>" : _returnTypeName;
-    private string FinalSuccessDataType => _hasSuccessDataType ? $"<{DataTypeParameterName}>" : string.Empty;
+    private MatchMethodBuilderParameters _params;
+
+    public MatchMethodBuilder(MatchMethodBuilderParameters matchMethodBuilderParameters)
+        => _params = matchMethodBuilderParameters;
+
+    private string ReturnType
+    {
+        get
+        {
+            var returnTypeName = _params.ReturnTypeName.Replace("<>", "")
+                + BuildGenericParamsTag(_params.ReturnTypeGenericParameters);
+            return _params.IsAsync ? $"Task<{returnTypeName}>" : returnTypeName;
+        }
+    }
+
+    private string MethodName
+    {
+        get
+        {
+            var methodName = $"{MethodBaseName}{_params.MethodSufixName}";
+            return _params.IsAsync ? $"{methodName}Async" : methodName;
+        }
+    }
+
     private string MethodGenericParameters
     {
         get
         {
             var genericParams = new List<string>();
 
-            if (_isReturnTypeGeneric)
-                genericParams.Add(_returnTypeName);
+            if (_params.IsGenericReturnType)
+                genericParams.Add(_params.ReturnTypeName);
 
-            if (_hasSuccessDataType)
+            if (_params.ReturnTypeGenericParameters.Any())
+                genericParams.AddRange(_params.ReturnTypeGenericParameters);
+
+            if (_params.HasSuccessDataType)
                 genericParams.Add(DataTypeParameterName);
 
-            if (genericParams.Count == 0)
-                return string.Empty;
-
-            return $"<{string.Join(", ", genericParams)}>";
+            return BuildGenericParamsTag(genericParams);
         }
     }
-    private string MatcherGenericParameters => _isReturnTypeGeneric ?
-        $"<{_returnTypeName}>" : string.Empty;
+
+    private string ExtendedType
+        => _params.ExtendedType.Contains("<") ?
+        $"{GetNameWithoutGenericArity(_params.ExtendedType)}<{DataTypeParameterName}>" :
+        _params.ExtendedType;
+
+    private string SuccessDataType => BuildGenericParamsTag(_params.HasSuccessDataType ? [ DataTypeParameterName ] : []);
+
+    private string GenericConstraints
+    {
+        get
+        {
+            var constraintLines = new List<string>();
+
+            foreach (var (genericTypeName, genericConstraints) in _params.GenericConstraints)
+                constraintLines.Add($"where {genericTypeName} : {string.Join(", ", genericConstraints)}");
+
+            var breakLineWithIndentation = '\n' + new string(' ', 8);
+            return string.Join(breakLineWithIndentation, constraintLines);
+        }
+    }
+
+    private string MatcherName => _params.IsAsync ? "MatchAsync" : "Match";
+
+    private string MatcherGenericParameters => _params.ShouldMatcherReceiveReturnGenericParameter ?
+        $"<{_params.ReturnTypeName.Replace("<>", "") + BuildGenericParamsTag(_params.ReturnTypeGenericParameters)}>" :
+        string.Empty;
+
+
+    private static string BuildGenericParamsTag(IEnumerable<string> genericParams)
+    {
+        if (!genericParams.Any())
+            return string.Empty;
+
+        return $"<{string.Join(", ", genericParams)}>";
+    }
 
     public static string GetNameWithoutGenericArity(string name)
     {
@@ -69,31 +125,16 @@ public sealed class MatchMethodBuilder
         return index == -1 ? name : name.Substring(0, index);
     }
 
-    public MatchMethodBuilder(
-        string extendedType,
-        string returnTypeName,
-        bool hasSuccessDataType,
-        bool isAsync,
-        bool isReturnTypeGeneric,
-        string? genericConstraints = null)
-    {
-        _extendedType = extendedType;
-        _returnTypeName = returnTypeName;
-        _hasSuccessDataType = hasSuccessDataType;
-        _isAsync = isAsync;
-        _isReturnTypeGeneric = isReturnTypeGeneric;
-        _genericConstraints = genericConstraints;
-    }
-
     public string Build()
     {
         var method = MethodTemplate
-            .Replace("{ReturnType}", FinalReturnType)
+            .Replace("{ReturnType}", ReturnType)
             .Replace("{MethodName}", MethodName)
             .Replace("{MethodGenericParameters}", MethodGenericParameters)
-            .Replace("{SuccessDataType}", FinalSuccessDataType)
-            .Replace("{ExtendedType}", FinalExtendedType)
-            .Replace("{GenericConstraints}", _genericConstraints ?? string.Empty)
+            .Replace("{ExtendedType}", ExtendedType)
+            .Replace("{SuccessDataType}", SuccessDataType)
+            .Replace("{GenericConstraints}", GenericConstraints)
+            .Replace("{MatcherName}", MatcherName)
             .Replace("{MatcherGenericParameters}", MatcherGenericParameters);
 
         return RemoveEmptyLines(method);
