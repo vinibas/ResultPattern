@@ -38,13 +38,6 @@
         <ProjectReference Include="..\ViniBas.ResultPattern\ViniBas.ResultPattern.csproj" Condition="'$(UseLocalReference)' == 'true'" />
         <PackageReference Include="ViniBas.ResultPattern" Version="1.0.0" Condition="'$(UseLocalReference)' != 'true'" PrivateAssets="all" />
     </ItemGroup>
-    <!--
-    <ItemGroup>
-        <ProjectReference Include="..\ViniBas.ResultPattern.AspNet.Generators\ViniBas.ResultPattern.AspNet.Generators.csproj">
-            <OutputItemType>Analyzer</OutputItemType>
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-        </ProjectReference>
-    </ItemGroup> -->
     <Target Name="CodeGen" BeforeTargets="BeforeCompile" Condition="'$(TargetFramework)' == 'net8.0'">
         <Exec Command="dotnet run --project ../ViniBas.ResultPattern.AspNet.BuildTimeScript/ViniBas.ResultPattern.AspNet.BuildTimeScript.csproj -- $(ProjectDir)Generated/" />
     </Target>
