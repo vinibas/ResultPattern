@@ -1,7 +1,6 @@
 <Solution>
     <Project Path="src/ViniBas.ResultPattern/ViniBas.ResultPattern.csproj" />
     <Project Path="src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj" />
-    <Project Path="src/ViniBas.ResultPattern.AspNet.Generators/ViniBas.ResultPattern.AspNet.Generators.csproj" />
     <Project Path="src/ViniBas.ResultPattern.AspNet.BuildTimeScript/ViniBas.ResultPattern.AspNet.BuildTimeScript.csproj" />
     <Project Path="tests/ViniBas.ResultPattern.UnitTests/ViniBas.ResultPattern.UnitTests.csproj" />
     <Project Path="tests/ViniBas.ResultPattern.AspNet.UnitTests/ViniBas.ResultPattern.AspNet.UnitTests.csproj" />

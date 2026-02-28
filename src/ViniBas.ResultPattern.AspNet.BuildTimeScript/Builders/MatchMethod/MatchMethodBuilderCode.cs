@@ -5,17 +5,14 @@
  * See the LICENSE file in the project root for full details.
 */
 
-using System.Text.RegularExpressions;
+namespace ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders.MatchMethod;
 
-namespace ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders;
-
-public sealed class MatchMethodBuilder
+internal sealed class MatchMethodBuilderCode : MatchMethodBuilderBase
 {
-    public readonly struct Nothing { }
+    public MatchMethodBuilderCode(MatchMethodBuilderParameters matchMethodBuilderParameters)
+        : base(matchMethodBuilderParameters) { }
 
-    private const string MethodBaseName = "Match";
-    private const string DataTypeParameterName = "TData";
-    private const string MethodTemplate =
+    protected override string Template =>
     """
         public static {ReturnType} {MethodName}{MethodGenericParameters}(
             this {ExtendedType} result,
@@ -28,32 +25,6 @@ public sealed class MatchMethodBuilder
                 onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null,
                 null);
     """;
-
-    public record MatchMethodBuilderParameters(
-        bool IsAsync,
-        string ReturnTypeName,
-        IEnumerable<string> ReturnTypeGenericParameters,
-        bool IsGenericReturnType,
-        string? MethodSufixName,
-        bool HasSuccessDataType,
-        string ExtendedType,
-        IEnumerable<(string GenericTypeName, IEnumerable<string> GenericConstraints)> GenericConstraints,
-        bool ShouldMatcherReceiveReturnGenericParameter);
-
-    private MatchMethodBuilderParameters _params;
-
-    public MatchMethodBuilder(MatchMethodBuilderParameters matchMethodBuilderParameters)
-        => _params = matchMethodBuilderParameters;
-
-    private string ReturnType
-    {
-        get
-        {
-            var returnTypeName = _params.ReturnTypeName.Replace("<>", "")
-                + BuildGenericParamsTag(_params.ReturnTypeGenericParameters);
-            return _params.IsAsync ? $"Task<{returnTypeName}>" : returnTypeName;
-        }
-    }
 
     private string MethodName
     {
@@ -83,11 +54,6 @@ public sealed class MatchMethodBuilder
         }
     }
 
-    private string ExtendedType
-        => _params.ExtendedType.Contains("<") ?
-        $"{GetNameWithoutGenericArity(_params.ExtendedType)}<{DataTypeParameterName}>" :
-        _params.ExtendedType;
-
     private string SuccessDataType => BuildGenericParamsTag(_params.HasSuccessDataType ? [ DataTypeParameterName ] : []);
 
     private string GenericConstraints
@@ -107,27 +73,12 @@ public sealed class MatchMethodBuilder
     private string MatcherName => _params.IsAsync ? "MatchAsync" : "Match";
 
     private string MatcherGenericParameters => _params.ShouldMatcherReceiveReturnGenericParameter ?
-        $"<{_params.ReturnTypeName.Replace("<>", "") + BuildGenericParamsTag(_params.ReturnTypeGenericParameters)}>" :
+        $"<{ReturnTypeWithGenericParameters}>" :
         string.Empty;
 
-
-    private static string BuildGenericParamsTag(IEnumerable<string> genericParams)
+    public override string Build()
     {
-        if (!genericParams.Any())
-            return string.Empty;
-
-        return $"<{string.Join(", ", genericParams)}>";
-    }
-
-    public static string GetNameWithoutGenericArity(string name)
-    {
-        int index = name.IndexOf('<');
-        return index == -1 ? name : name.Substring(0, index);
-    }
-
-    public string Build()
-    {
-        var method = MethodTemplate
+        var method = Template
             .Replace("{ReturnType}", ReturnType)
             .Replace("{MethodName}", MethodName)
             .Replace("{MethodGenericParameters}", MethodGenericParameters)
@@ -139,7 +90,4 @@ public sealed class MatchMethodBuilder
 
         return RemoveEmptyLines(method);
     }
-
-    private static string RemoveEmptyLines(string text)
-        => Regex.Replace(text, @"^\s+$[\r\n]*", string.Empty, RegexOptions.Multiline);
 }

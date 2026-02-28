@@ -6,11 +6,12 @@
 */
 
 using ViniBas.FluentBlueprintBuilder;
+using ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders.MatchMethod;
 using static ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders.MatchResultsClassBuilder;
 
 namespace ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders;
 
-public class MatchResultsClassBlueprintBuilder
+internal sealed class MatchResultsClassBlueprintBuilder
     : BlueprintBuilder<MatchResultsClassBlueprintBuilder, MatchResultsClassBuilderParameters, MatchResultsClassBuilder>
 {
     private IEnumerable<string> _commonNamespaces = [
@@ -105,7 +106,7 @@ public class MatchResultsClassBlueprintBuilder
                 .Select(r => (r, new [] {"IResult", "IEndpointMetadataProvider"}.AsEnumerable()))
                 .ToList();
 
-            var method = GenerateMethods("Results<>", genericResultTypes.ToList(), false, "MatchResults", constraints, true);
+            var method = GenerateMethods("Results<>", genericResultTypes.ToList(), false, "Results", constraints, true);
             methods.AddRange(method);
         }
 

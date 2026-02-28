@@ -5,9 +5,11 @@
  * See the LICENSE file in the project root for full details.
 */
 
+using ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders.MatchMethod;
+
 namespace ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders;
 
-public sealed class MatchResultsClassBuilder
+internal sealed class MatchResultsClassBuilder
 {
     private const string ClassTemplate =
     """

@@ -6,11 +6,12 @@
 */
 
 using ViniBas.FluentBlueprintBuilder;
-using static ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders.MatchMethodBuilder;
+using ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders.MatchMethod;
+using static ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders.MatchMethod.MatchMethodBuilderBase;
 
 namespace ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders;
 
-public class MatchMethodBlueprintBuilder : BlueprintBuilder<MatchMethodBlueprintBuilder, MatchMethodBuilderParameters, MatchMethodBuilder>
+internal sealed class MatchMethodBlueprintBuilder : BlueprintBuilder<MatchMethodBlueprintBuilder, MatchMethodBuilderParameters, MatchMethodBuilder>
 {
     protected override void ConfigureBlueprints(IDictionary<string, Func<MatchMethodBuilderParameters>> blueprints)
     {
