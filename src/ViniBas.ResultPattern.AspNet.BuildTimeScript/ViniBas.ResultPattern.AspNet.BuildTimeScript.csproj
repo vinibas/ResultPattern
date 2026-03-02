@@ -6,6 +6,15 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="ViniBas.FluentBlueprintBuilder" Version="1.1.0" />
+        <PackageReference Include="ViniBas.FluentBlueprintBuilder" Version="1.1.1" />
+    </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
+    </ItemGroup>
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Reflection.AssemblyMetadata">
+            <_Parameter1>GeneratedOutputDir</_Parameter1>
+            <_Parameter2>$(RepoRoot)src/ViniBas.ResultPattern.AspNet/Generated</_Parameter2>
+        </AssemblyAttribute>
     </ItemGroup>
 </Project>

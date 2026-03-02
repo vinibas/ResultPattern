@@ -11,7 +11,7 @@ using static ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders.MatchResultsC
 
 namespace ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders;
 
-internal sealed class MatchResultsClassBlueprintBuilder
+internal class MatchResultsClassBlueprintBuilder
     : BlueprintBuilder<MatchResultsClassBlueprintBuilder, MatchResultsClassBuilderParameters, MatchResultsClassBuilder>
 {
     private IEnumerable<string> _commonNamespaces = [

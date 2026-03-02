@@ -11,7 +11,7 @@ using static ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders.MatchMethod.M
 
 namespace ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders;
 
-internal sealed class MatchMethodBlueprintBuilder : BlueprintBuilder<MatchMethodBlueprintBuilder, MatchMethodBuilderParameters, MatchMethodBuilder>
+internal class MatchMethodBlueprintBuilder : BlueprintBuilder<MatchMethodBlueprintBuilder, MatchMethodBuilderParameters, MatchMethodBuilder>
 {
     protected override void ConfigureBlueprints(IDictionary<string, Func<MatchMethodBuilderParameters>> blueprints)
     {
