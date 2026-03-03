@@ -6,7 +6,7 @@
 */
 
 using Microsoft.AspNetCore.Http.HttpResults;
-using ViniBas.ResultPattern.AspNet.ResultMinimal;
+using ViniBas.ResultPattern.AspNet.MinimalApi;
 using ViniBas.ResultPattern.DemoWebApi.Services;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
@@ -39,6 +39,6 @@ public static class MinimalApiExtensions
             => success ?
             Result<string>.Success("Deleted successfully") :
             Result<string>.Failure(Error.Failure("Err1", "Value must be true")))
-            .WithResultsResultFilter();
+            .WithResponseMappingFilter();
     }
 }

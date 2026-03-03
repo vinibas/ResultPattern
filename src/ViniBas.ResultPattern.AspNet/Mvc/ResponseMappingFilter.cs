@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace ViniBas.ResultPattern.AspNet.Mvc;
 
-public sealed class ActionResultFilter : IActionFilter
+public sealed class ResponseMappingFilter : IActionFilter
 {
     internal IFilterMappings filterMappings = new FilterMappings();
 

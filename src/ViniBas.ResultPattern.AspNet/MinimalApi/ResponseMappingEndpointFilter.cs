@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace ViniBas.ResultPattern.AspNet.MinimalApi;
 
-public sealed class ResultsResultFilter : IEndpointFilter
+public sealed class ResponseMappingEndpointFilter : IEndpointFilter
 {
     internal IFilterMappings filterMappings = new FilterMappings();
 
@@ -21,8 +21,8 @@ public sealed class ResultsResultFilter : IEndpointFilter
     }
 }
 
-public static class ResultsResultFilterExtensions
+public static class ResponseMappingEndpointFilterExtensions
 {
-    public static RouteHandlerBuilder WithResultsResultFilter(this RouteHandlerBuilder builder)
-        => builder.AddEndpointFilter<ResultsResultFilter>();
+    public static RouteHandlerBuilder WithResponseMappingFilter(this RouteHandlerBuilder builder)
+        => builder.AddEndpointFilter<ResponseMappingEndpointFilter>();
 }

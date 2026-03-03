@@ -9,13 +9,13 @@ using ViniBas.ResultPattern.AspNet;
 using ViniBas.ResultPattern.DemoWebApi.Services;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.DemoWebApi.Endpoints;
-using ViniBas.ResultPattern.AspNet.ActionResultMvc;
+using ViniBas.ResultPattern.AspNet.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IMyService, MyService>();
 
-builder.Services.AddControllers(opt => opt.Filters.Add<ActionResultFilter>());
+builder.Services.AddControllers(opt => opt.Filters.Add<ResponseMappingFilter>());
 
 var app = builder.Build();
 

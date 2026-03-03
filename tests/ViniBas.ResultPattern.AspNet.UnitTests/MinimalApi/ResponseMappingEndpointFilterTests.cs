@@ -10,7 +10,7 @@ using ViniBas.ResultPattern.AspNet.MinimalApi;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.MinimalApi;
 
-public class ResultsResultFilterTests
+public class ResponseMappingEndpointFilterTests
 {
     private readonly Mock<IFilterMappings> _mockFilterMappings = new ();
 
@@ -32,7 +32,7 @@ public class ResultsResultFilterTests
 
     private async Task<object?> InvokeFilter(object endpointResult)
     {
-        var filter = new ResultsResultFilter();
+        var filter = new ResponseMappingEndpointFilter();
         filter.filterMappings = _mockFilterMappings.Object;
         var httpContext = new DefaultHttpContext();
         var context = new DefaultEndpointFilterInvocationContext(httpContext, Array.Empty<object>(), new Endpoint(null, null, null));
