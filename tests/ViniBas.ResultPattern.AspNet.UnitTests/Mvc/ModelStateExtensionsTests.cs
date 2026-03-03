@@ -7,9 +7,10 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using ViniBas.ResultPattern.AspNet.Mvc;
 using ViniBas.ResultPattern.ResultObjects;
 
-namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
+namespace ViniBas.ResultPattern.AspNet.UnitTests.Mvc;
 
 public class ModelStateExtensionsTests
 {
@@ -24,12 +25,12 @@ public class ModelStateExtensionsTests
         _modelStateInvalid.AddModelError("key1", "Error 1");
         _modelStateInvalid.AddModelError("key2", "Error 2");
     }
-    
+
     [Fact]
     public void ModelStateToError_WithErrors_ReturnError()
     {
         var error = _modelStateInvalid.ModelStateToError();
-        
+
         var errorDetails = error.Details.ToArray();
         Assert.False(_modelStateInvalid.IsValid);
         Assert.Equal(ErrorTypes.Validation, error.Type);
@@ -51,7 +52,7 @@ public class ModelStateExtensionsTests
     public void ToProblemDetailsActionResult_WithErrors_ReturnActionResultError()
     {
         var error = _modelStateInvalid.ToProblemDetailsActionResult();
-        
+
         var objectResult = Assert.IsType<ObjectResult>(error);
         var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
 

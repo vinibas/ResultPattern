@@ -5,14 +5,10 @@
  * See the LICENSE file in the project root for full details.
 */
 
-using System.Reflection;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Routing.Patterns;
-using ViniBas.ResultPattern.AspNet.ResultMinimalApi;
+using ViniBas.ResultPattern.AspNet.MinimalApi;
 
-namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMinimal;
+namespace ViniBas.ResultPattern.AspNet.UnitTests.MinimalApi;
 
 public class ResultsResultFilterTests
 {

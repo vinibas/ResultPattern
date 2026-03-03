@@ -19,10 +19,10 @@ public class GeneratedCodeSnapshotTests
     private readonly MatchResultsClassBlueprintBuilder _builder = MatchResultsClassBlueprintBuilder.Create();
 
     [Theory]
-    [InlineData("mvc", "MatchResultsExtensions_Mvc.g.cs")]
-    [InlineData("minimalApiAbstract", "MatchResultsExtensions_MinimalApi.g.cs")]
-    [InlineData("minimalApiTyped", "MatchResultsExtensions_MinimalApi_Typed.g.cs")]
-    [InlineData("minimalApiResults", "MatchResultsExtensions_MinimalApi_Results.g.cs")]
+    [InlineData(MatchResultsClassBlueprintBuilder.KeyMvc, MatchResultsClassBlueprintBuilder.ClassNameMvc + ".g.cs")]
+    [InlineData(MatchResultsClassBlueprintBuilder.KeyMinimalApiAbstract, MatchResultsClassBlueprintBuilder.ClassNameMinimalApiAbstract + ".g.cs")]
+    [InlineData(MatchResultsClassBlueprintBuilder.KeyMinimalApiTyped, MatchResultsClassBlueprintBuilder.ClassNameMinimalApiTyped + ".g.cs")]
+    [InlineData(MatchResultsClassBlueprintBuilder.KeyMinimalApiUnion, MatchResultsClassBlueprintBuilder.ClassNameMinimalApiUnion + ".g.cs")]
     public void GeneratedOutput_ShouldMatchCommittedFile(string blueprintKey, string fileName)
     {
         var generated = _builder.Build(blueprintKey).Build();

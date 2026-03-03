@@ -7,10 +7,9 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using ViniBas.ResultPattern.AspNet.ActionResultMvc;
 using ViniBas.ResultPattern.ResultObjects;
 
-namespace ViniBas.ResultPattern.AspNet;
+namespace ViniBas.ResultPattern.AspNet.Mvc;
 
 public static class ModelStateExtensions
 {
@@ -29,7 +28,7 @@ public static class ModelStateExtensions
             return kv.Value.Errors.Select(e => new ErrorDetails(kv.Key, e.ErrorMessage));
 
         }).ToList();
-        
+
         return new Error(modelStateErrors, ErrorTypes.Validation);
     }
 }

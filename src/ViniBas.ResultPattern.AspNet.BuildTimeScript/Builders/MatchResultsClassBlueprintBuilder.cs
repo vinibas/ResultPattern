@@ -14,6 +14,19 @@ namespace ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders;
 internal class MatchResultsClassBlueprintBuilder
     : BlueprintBuilder<MatchResultsClassBlueprintBuilder, MatchResultsClassBuilderParameters, MatchResultsClassBuilder>
 {
+    public const string KeyMvc = "mvc";
+    public const string KeyMinimalApiAbstract = "minimalApiAbstract";
+    public const string KeyMinimalApiTyped = "minimalApiTyped";
+    public const string KeyMinimalApiUnion = "minimalApiUnion";
+
+    public const string ClassNameMvc = "MvcMatchResultsExtensions";
+    public const string ClassNameMinimalApiAbstract = "MinimalApiMatchResultsExtensions";
+    public const string ClassNameMinimalApiTyped = "MinimalApiTypedMatchResultsExtensions";
+    public const string ClassNameMinimalApiUnion = "MinimalApiUnionTypesMatchResultsExtensions";
+
+    public const string MvcNamespace = "ViniBas.ResultPattern.AspNet.Mvc";
+    public const string MinimalApiNamespace = "ViniBas.ResultPattern.AspNet.MinimalApi";
+
     private IEnumerable<string> _commonNamespaces = [
         "ViniBas.ResultPattern.ResultResponses",
         "ViniBas.ResultPattern.ResultObjects",
@@ -22,31 +35,31 @@ internal class MatchResultsClassBlueprintBuilder
 
     protected override void ConfigureBlueprints(IDictionary<string, Func<MatchResultsClassBuilderParameters>> blueprints)
     {
-        blueprints["mvc"] = () => new MatchResultsClassBuilderParameters(
+        blueprints[KeyMvc] = () => new MatchResultsClassBuilderParameters(
             Imports:
             [
                 "Microsoft.AspNetCore.Mvc",
                 .._commonNamespaces,
             ],
-            Namespace: "ViniBas.ResultPattern.AspNet.SourceGenerator.ActionResultMvc",
-            ClassName: "MatchResultsExtensions",
+            Namespace: MvcNamespace,
+            ClassName: ClassNameMvc,
             Methods: GenerateMethods("IActionResult", null, false, null, null, false),
             MatcherProperty: "private static ISimpleResultMatcher<IActionResult> Matcher => ResultMatcherFactory.GetActionResultMatcher;"
         );
 
-        blueprints["minimalApiAbstract"] = () => new MatchResultsClassBuilderParameters(
+        blueprints[KeyMinimalApiAbstract] = () => new MatchResultsClassBuilderParameters(
             Imports:
             [
                 "Microsoft.AspNetCore.Http",
                 .._commonNamespaces,
             ],
-            Namespace: "ViniBas.ResultPattern.AspNet.SourceGenerator.ResultMinimalApi",
-            ClassName: "MatchResultsExtensions",
+            Namespace: MinimalApiNamespace,
+            ClassName: ClassNameMinimalApiAbstract,
             Methods: GenerateMethods("IResult", null, false, null, null, false),
             MatcherProperty: "private static ISimpleResultMatcher<IResult> Matcher => ResultMatcherFactory.GetMinimalApiMatcher;"
         );
 
-        blueprints["minimalApiTyped"] = () => new MatchResultsClassBuilderParameters(
+        blueprints[KeyMinimalApiTyped] = () => new MatchResultsClassBuilderParameters(
             Imports:
             [
                 "Microsoft.AspNetCore.Http",
@@ -54,13 +67,13 @@ internal class MatchResultsClassBlueprintBuilder
                 "Microsoft.AspNetCore.Http.HttpResults",
                 .._commonNamespaces,
             ],
-            Namespace: "ViniBas.ResultPattern.AspNet.SourceGenerator.ResultMinimalApi",
-            ClassName: "MatchTResultsExtensions",
+            Namespace: MinimalApiNamespace,
+            ClassName: ClassNameMinimalApiTyped,
             Methods: GenerateMethods("TResult", null, true, null, [("TResult", ["IResult", "IEndpointMetadataProvider"])], true),
             MatcherProperty: "private static ITypedResultMatcher Matcher => ResultMatcherFactory.GetTypedMatcher;"
         );
 
-        blueprints["minimalApiResults"] = () => new MatchResultsClassBuilderParameters(
+        blueprints[KeyMinimalApiUnion] = () => new MatchResultsClassBuilderParameters(
             Imports:
             [
                 "Microsoft.AspNetCore.Http",
@@ -68,8 +81,8 @@ internal class MatchResultsClassBlueprintBuilder
                 "Microsoft.AspNetCore.Http.HttpResults",
                 .._commonNamespaces,
             ],
-            Namespace: "ViniBas.ResultPattern.AspNet.SourceGenerator.ResultMinimalApi",
-            ClassName: "MatchResultsResultsExtensions",
+            Namespace: MinimalApiNamespace,
+            ClassName: ClassNameMinimalApiUnion,
             Methods: GenerateResultsMethods(),
             MatcherProperty: "private static ITypedResultMatcher Matcher => ResultMatcherFactory.GetTypedMatcher;"
         );

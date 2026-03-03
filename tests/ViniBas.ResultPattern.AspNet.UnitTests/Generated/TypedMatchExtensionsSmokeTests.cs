@@ -1,16 +1,16 @@
 /*
- * Copyright (c) Vinícius Bastos da Silva 2025
+ * Copyright (c) Vinícius Bastos da Silva 2026
  * This file is part of ResultPattern.
  * Licensed under the GNU Lesser General Public License v3 (LGPL v3).
  * See the LICENSE file in the project root for full details.
 */
 
 using ViniBas.ResultPattern.ResultResponses;
-using ViniBas.ResultPattern.AspNet.SourceGenerator.ResultMinimalApi;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using ViniBas.ResultPattern.AspNet.ResultMatcher;
 using ViniBas.ResultPattern.ResultObjects;
+using ViniBas.ResultPattern.AspNet.MinimalApi;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.Generated;
 
@@ -37,7 +37,7 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
                 It.IsAny<bool?>()))
             .Returns((ResultsOkAndBadRequest)_successResult);
 
-        var result = MatchTResultsExtensions.Match<ResultsOkAndBadRequest>(
+        var result = MinimalApiTypedMatchResultsExtensions.Match<ResultsOkAndBadRequest>(
             _resultSuccess,
             onSuccess: r => _successResult,
             onFailure: r => _errorResult);
@@ -62,7 +62,7 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
                 It.IsAny<bool?>()))
             .ReturnsAsync((ResultsOkAndBadRequest)_successResult);
 
-        var result = await MatchTResultsExtensions.MatchAsync<ResultsOkAndBadRequest>(
+        var result = await MinimalApiTypedMatchResultsExtensions.MatchAsync<ResultsOkAndBadRequest>(
             _resultSuccess,
             onSuccess: async r => _successResult,
             onFailure: async r => _errorResult);

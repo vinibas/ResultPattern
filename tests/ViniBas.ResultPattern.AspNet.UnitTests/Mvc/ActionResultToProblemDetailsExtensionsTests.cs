@@ -6,11 +6,11 @@
 */
 
 using Microsoft.AspNetCore.Mvc;
-using ViniBas.ResultPattern.AspNet.ActionResultMvc;
+using ViniBas.ResultPattern.AspNet.Mvc;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
-namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
+namespace ViniBas.ResultPattern.AspNet.UnitTests.Mvc;
 
 public class ActionResultToProblemDetailsExtensionsTests
 {

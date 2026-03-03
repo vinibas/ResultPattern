@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using ViniBas.ResultPattern.AspNet.ActionResultMvc;
+using ViniBas.ResultPattern.AspNet.Mvc;
 
-namespace ViniBas.ResultPattern.AspNet.UnitTests.ActionResultMvc;
+namespace ViniBas.ResultPattern.AspNet.UnitTests.Mvc;
 
 public class ActionResultFilterTests
 {
@@ -57,7 +57,7 @@ public class ActionResultFilterTests
         _context.Result = otherResult;
 
         _filter.OnActionExecuted(_context);
-        
+
         _mockFilterMappings.VerifyNoOtherCalls();
 
         var problemDetailsResult = new ObjectResult(new ProblemDetails
@@ -66,9 +66,9 @@ public class ActionResultFilterTests
             Status = 400
         });
         _context.Result = problemDetailsResult;
-        
+
         _filter.OnActionExecuted(_context);
-        
+
         _mockFilterMappings.VerifyNoOtherCalls();
     }
 

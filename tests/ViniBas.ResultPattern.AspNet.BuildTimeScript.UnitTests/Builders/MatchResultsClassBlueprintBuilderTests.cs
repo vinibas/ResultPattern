@@ -5,6 +5,7 @@
  * See the LICENSE file in the project root for full details.
 */
 
+using ViniBas.ResultPattern.AspNet.BuildTimeScript.Builders;
 using ViniBas.ResultPattern.AspNet.BuildTimeScript.UnitTests.Helpers;
 
 namespace ViniBas.ResultPattern.AspNet.BuildTimeScript.UnitTests.Builders;
@@ -18,7 +19,12 @@ public class MatchResultsClassBlueprintBuilderTests
     {
         Assert.Equal(4, _helper.RegisteredBlueprintKeys.Count);
         Assert.Equal(
-            ["mvc", "minimalApiAbstract", "minimalApiTyped", "minimalApiResults"],
+            [
+                MatchResultsClassBlueprintBuilder.KeyMvc,
+                MatchResultsClassBlueprintBuilder.KeyMinimalApiAbstract,
+                MatchResultsClassBlueprintBuilder.KeyMinimalApiTyped,
+                MatchResultsClassBlueprintBuilder.KeyMinimalApiUnion,
+            ],
             _helper.RegisteredBlueprintKeys);
     }
 
@@ -27,8 +33,8 @@ public class MatchResultsClassBlueprintBuilderTests
     {
         var blueprint = _helper.GetBlueprint("mvc");
 
-        Assert.Equal("ViniBas.ResultPattern.AspNet.SourceGenerator.ActionResultMvc", blueprint.Namespace);
-        Assert.Equal("MatchResultsExtensions", blueprint.ClassName);
+        Assert.Equal(MatchResultsClassBlueprintBuilder.MvcNamespace, blueprint.Namespace);
+        Assert.Equal(MatchResultsClassBlueprintBuilder.ClassNameMvc, blueprint.ClassName);
         Assert.Contains("Microsoft.AspNetCore.Mvc", blueprint.Imports);
         Assert.Contains("ISimpleResultMatcher<IActionResult>", blueprint.MatcherProperty);
         Assert.Equal(8, blueprint.Methods.Count());
@@ -39,8 +45,8 @@ public class MatchResultsClassBlueprintBuilderTests
     {
         var blueprint = _helper.GetBlueprint("minimalApiAbstract");
 
-        Assert.Equal("ViniBas.ResultPattern.AspNet.SourceGenerator.ResultMinimalApi", blueprint.Namespace);
-        Assert.Equal("MatchResultsExtensions", blueprint.ClassName);
+        Assert.Equal(MatchResultsClassBlueprintBuilder.MinimalApiNamespace, blueprint.Namespace);
+        Assert.Equal(MatchResultsClassBlueprintBuilder.ClassNameMinimalApiAbstract, blueprint.ClassName);
         Assert.Contains("Microsoft.AspNetCore.Http", blueprint.Imports);
         Assert.Contains("ISimpleResultMatcher<IResult>", blueprint.MatcherProperty);
         Assert.Equal(8, blueprint.Methods.Count());
@@ -51,19 +57,19 @@ public class MatchResultsClassBlueprintBuilderTests
     {
         var blueprint = _helper.GetBlueprint("minimalApiTyped");
 
-        Assert.Equal("ViniBas.ResultPattern.AspNet.SourceGenerator.ResultMinimalApi", blueprint.Namespace);
-        Assert.Equal("MatchTResultsExtensions", blueprint.ClassName);
+        Assert.Equal(MatchResultsClassBlueprintBuilder.MinimalApiNamespace, blueprint.Namespace);
+        Assert.Equal(MatchResultsClassBlueprintBuilder.ClassNameMinimalApiTyped, blueprint.ClassName);
         Assert.Contains("ITypedResultMatcher", blueprint.MatcherProperty);
         Assert.Equal(8, blueprint.Methods.Count());
     }
 
     [Fact]
-    public void MinimalApiResultsBlueprint_ShouldHave40Methods()
+    public void MinimalApiUnionBlueprint_ShouldHave40Methods()
     {
-        var blueprint = _helper.GetBlueprint("minimalApiResults");
+        var blueprint = _helper.GetBlueprint(MatchResultsClassBlueprintBuilder.KeyMinimalApiUnion);
 
-        Assert.Equal("ViniBas.ResultPattern.AspNet.SourceGenerator.ResultMinimalApi", blueprint.Namespace);
-        Assert.Equal("MatchResultsResultsExtensions", blueprint.ClassName);
+        Assert.Equal(MatchResultsClassBlueprintBuilder.MinimalApiNamespace, blueprint.Namespace);
+        Assert.Equal(MatchResultsClassBlueprintBuilder.ClassNameMinimalApiUnion, blueprint.ClassName);
         Assert.Contains("ITypedResultMatcher", blueprint.MatcherProperty);
         // 5 variants (TResult1-TResult2 through TResult1-TResult6) x 8 overloads = 40
         Assert.Equal(40, blueprint.Methods.Count());

@@ -8,7 +8,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace ViniBas.ResultPattern.AspNet.ActionResultMvc;
+namespace ViniBas.ResultPattern.AspNet.Mvc;
 
 public sealed class ActionResultFilter : IActionFilter
 {

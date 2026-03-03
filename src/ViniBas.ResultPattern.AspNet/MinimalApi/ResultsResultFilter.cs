@@ -8,7 +8,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace ViniBas.ResultPattern.AspNet.ResultMinimalApi;
+namespace ViniBas.ResultPattern.AspNet.MinimalApi;
 
 public sealed class ResultsResultFilter : IEndpointFilter
 {

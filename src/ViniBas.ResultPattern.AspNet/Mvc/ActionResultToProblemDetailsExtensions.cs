@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
-namespace ViniBas.ResultPattern.AspNet.ActionResultMvc;
+namespace ViniBas.ResultPattern.AspNet.Mvc;
 
 public static class ActionResultToProblemDetailsExtensions
 {

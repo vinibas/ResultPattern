@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
-namespace ViniBas.ResultPattern.AspNet.ResultMinimalApi;
+namespace ViniBas.ResultPattern.AspNet.MinimalApi;
 
 public static class ResultToProblemDetailsExtensions
 {

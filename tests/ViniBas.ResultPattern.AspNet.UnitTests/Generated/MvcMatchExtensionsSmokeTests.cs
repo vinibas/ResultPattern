@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Vinícius Bastos da Silva 2025
+ * Copyright (c) Vinícius Bastos da Silva 2026
  * This file is part of ResultPattern.
  * Licensed under the GNU Lesser General Public License v3 (LGPL v3).
  * See the LICENSE file in the project root for full details.
@@ -7,9 +7,9 @@
 
 using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.ResultResponses;
-using ViniBas.ResultPattern.AspNet.SourceGenerator.ActionResultMvc;
 using ViniBas.ResultPattern.AspNet.ResultMatcher;
 using ViniBas.ResultPattern.ResultObjects;
+using ViniBas.ResultPattern.AspNet.Mvc;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests.Generated;
 
@@ -32,7 +32,7 @@ public class MvcMatchExtensionsSmokeTests : IDisposable
                 It.IsAny<bool?>()))
             .Returns(_fakes.ActionResultSuccess);
 
-        var result = MatchResultsExtensions.Match(
+        var result = MvcMatchResultsExtensions.Match(
             _fakes.ResultSuccess,
             onSuccess: r => _fakes.ActionResultSuccess,
             onFailure: r => _fakes.ActionResultError);
@@ -57,7 +57,7 @@ public class MvcMatchExtensionsSmokeTests : IDisposable
                 It.IsAny<bool?>()))
             .ReturnsAsync(_fakes.ActionResultSuccess);
 
-        var result = await MatchResultsExtensions.MatchAsync(
+        var result = await MvcMatchResultsExtensions.MatchAsync(
             _fakes.ResultSuccess,
             onSuccess: async r => _fakes.ActionResultSuccess,
             onFailure: async r => _fakes.ActionResultError);

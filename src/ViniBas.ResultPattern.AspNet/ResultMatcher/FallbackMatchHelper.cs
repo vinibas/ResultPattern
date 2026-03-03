@@ -8,8 +8,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.AspNet;
-using ViniBas.ResultPattern.AspNet.ActionResultMvc;
-using ViniBas.ResultPattern.AspNet.ResultMinimalApi;
+using ViniBas.ResultPattern.AspNet.MinimalApi;
+using ViniBas.ResultPattern.AspNet.Mvc;
 using ViniBas.ResultPattern.ResultResponses;
 
 namespace ViniBas.ResultPattern.AspNet.ResultMatcher;
@@ -23,7 +23,7 @@ internal static class FallbackMvcMatchHelper
 
         throw new InvalidOperationException("Invalid success result response type.");
     }
-    
+
     internal static IActionResult OnFailureFallback(ResultResponse resultResponse, bool? useProblemDetails)
     {
         if (resultResponse.IsSuccess)
@@ -53,20 +53,20 @@ internal static class FallbackMinimalMatchHelper
 
         throw new InvalidOperationException("Invalid success result response type.");
     }
-    
+
     internal static IResult OnFailureFallback(ResultResponse resultResponse, bool? useProblemDetails)
     {
         if (resultResponse.IsSuccess)
             throw new InvalidOperationException("Invalid error result response type.");
-        
+
         useProblemDetails ??= GlobalConfiguration.UseProblemDetails;
         var resultResponseError = (ResultResponseError)resultResponse;
 
-        return useProblemDetails.Value ? 
-            resultResponseError.ToProblemDetailsResult() : 
+        return useProblemDetails.Value ?
+            resultResponseError.ToProblemDetailsResult() :
             resultResponseError.ToJsonTypedResult();
     }
-    
+
     private static IResult ToJsonTypedResult(this ResultResponseError resultResponseError)
     {
         var statusCode = GlobalConfiguration.GetStatusCode(resultResponseError.Type);
