@@ -7,7 +7,7 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ViniBas.ResultPattern.AspNet;
+using ViniBas.ResultPattern.AspNet.Configurations;
 using ViniBas.ResultPattern.AspNet.MinimalApi;
 using ViniBas.ResultPattern.AspNet.Mvc;
 using ViniBas.ResultPattern.ResultResponses;
@@ -24,15 +24,16 @@ internal static class FallbackMvcMatchHelper
         throw new InvalidOperationException("Invalid success result response type.");
     }
 
-    internal static IActionResult OnFailureFallback(ResultResponse resultResponse, bool? useProblemDetails)
+    internal static IActionResult OnFailureFallback(ResultResponse resultResponse)
     {
         if (resultResponse.IsSuccess)
             throw new InvalidOperationException("Invalid error result response type.");
 
-        useProblemDetails ??= GlobalConfiguration.UseProblemDetails;
+        var useProblemDetails = ScopedConfiguration.Current?.UseProblemDetails
+            ?? GlobalConfiguration.UseProblemDetails;
         var resultResponseError = (ResultResponseError)resultResponse;
 
-        return useProblemDetails.Value ?
+        return useProblemDetails ?
             resultResponseError.ToProblemDetailsActionResult() :
             resultResponseError.ToObjectResult();
     }
@@ -54,15 +55,16 @@ internal static class FallbackMinimalMatchHelper
         throw new InvalidOperationException("Invalid success result response type.");
     }
 
-    internal static IResult OnFailureFallback(ResultResponse resultResponse, bool? useProblemDetails)
+    internal static IResult OnFailureFallback(ResultResponse resultResponse)
     {
         if (resultResponse.IsSuccess)
             throw new InvalidOperationException("Invalid error result response type.");
 
-        useProblemDetails ??= GlobalConfiguration.UseProblemDetails;
+        var useProblemDetails = ScopedConfiguration.Current?.UseProblemDetails
+            ?? GlobalConfiguration.UseProblemDetails;
         var resultResponseError = (ResultResponseError)resultResponse;
 
-        return useProblemDetails.Value ?
+        return useProblemDetails ?
             resultResponseError.ToProblemDetailsResult() :
             resultResponseError.ToJsonTypedResult();
     }

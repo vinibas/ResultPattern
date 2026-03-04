@@ -9,7 +9,7 @@ using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
 using ViniBas.ResultPattern.ResultObjects;
 
-namespace ViniBas.ResultPattern.AspNet;
+namespace ViniBas.ResultPattern.AspNet.Configurations;
 
 public static class GlobalConfiguration
 {

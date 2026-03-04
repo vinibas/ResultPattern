@@ -17,7 +17,7 @@ public class TypedResultMatcherTests
 {
     private readonly TypedResultMatcher _matcher;
     private readonly Mock<Func<ResultResponse, IResult>> _onSuccessFallback;
-    private readonly Mock<Func<ResultResponse, bool?, IResult>> _onFailureFallback;
+    private readonly Mock<Func<ResultResponse, IResult>> _onFailureFallback;
     private readonly Ok<ResultResponseSuccess> _successFallbackResult;
     private readonly BadRequest<ResultResponseError> _failureFallbackResult;
     private readonly Result _resultSuccess = Result.Success();
@@ -27,21 +27,20 @@ public class TypedResultMatcherTests
             [new ErrorDetails("Code", "Error occurred.")],
             ErrorTypes.Validation);
 
-
     public TypedResultMatcherTests()
     {
         _matcher = new TypedResultMatcher();
 
         _onSuccessFallback = new Mock<Func<ResultResponse, IResult>>();
-        _onFailureFallback = new Mock<Func<ResultResponse, bool?, IResult>>();
+        _onFailureFallback = new Mock<Func<ResultResponse, IResult>>();
 
         _successFallbackResult = TypedResults.Ok(_resultResponseSuccess);
         _failureFallbackResult = TypedResults.BadRequest(_resultResponseError);
 
         _onSuccessFallback.Setup(f => f(It.IsAny<ResultResponse>()))
             .Returns(_successFallbackResult);
-        _onFailureFallback.Setup(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()))
-            .Returns((ResultResponse r, bool? u) => _failureFallbackResult);
+        _onFailureFallback.Setup(f => f(It.IsAny<ResultResponse>()))
+            .Returns(_failureFallbackResult);
 
         _matcher.OnSuccessFallback = _onSuccessFallback.Object;
         _matcher.OnFailureFallback = _onFailureFallback.Object;
@@ -54,23 +53,19 @@ public class TypedResultMatcherTests
         var matcherResult = _matcher.Match<Results<Ok<ResultResponse>, IResult>>(
             _resultSuccess,
             onSuccess: r => TypedResults.Ok(r),
-            onFailure: null,
-            null);
+            onFailure: null);
         var matcherResultAsync = await _matcher.MatchAsync<Results<Ok<ResultResponse>, IResult>>(
             _resultSuccess,
             onSuccess: async r => TypedResults.Ok(r),
-            onFailure: null,
-            null);
+            onFailure: null);
         var matcherResultResponse = _matcher.Match<Results<Ok<ResultResponse>, IResult>>(
             _resultResponseSuccess,
             onSuccess: r => TypedResults.Ok(r),
-            onFailure: null,
-            null);
+            onFailure: null);
         var matcherResultResponseAsync = await _matcher.MatchAsync<Results<Ok<ResultResponse>, IResult>>(
             _resultResponseSuccess,
             onSuccess: async r => TypedResults.Ok(r),
-            onFailure: null,
-            null);
+            onFailure: null);
 
         // Assert
         var okResult = Assert.IsType<Ok<ResultResponse>>(matcherResult.Result);
@@ -83,7 +78,7 @@ public class TypedResultMatcherTests
         Assert.Equal(_resultResponseSuccess, okResult.Value);
 
         _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
     }
 
     [Fact]
@@ -93,23 +88,19 @@ public class TypedResultMatcherTests
         var matcherResult = _matcher.Match<Results<Ok<ResultResponse>, IResult>>(
             _resultSuccess,
             onSuccess: null,
-            onFailure: null,
-            null);
+            onFailure: null);
         var matcherResultAsync = await _matcher.MatchAsync<Results<Ok<ResultResponse>, IResult>>(
             _resultSuccess,
             onSuccess: null,
-            onFailure: null,
-            null);
+            onFailure: null);
         var matcherResultResponse = _matcher.Match<Results<Ok<ResultResponse>, IResult>>(
             _resultResponseSuccess,
             onSuccess: null,
-            onFailure: null,
-            null);
+            onFailure: null);
         var matcherResultResponseAsync = await _matcher.MatchAsync<Results<Ok<ResultResponse>, IResult>>(
             _resultResponseSuccess,
             onSuccess: null,
-            onFailure: null,
-            null);
+            onFailure: null);
 
         // Assert
         var okResult = Assert.IsType<Ok<ResultResponseSuccess>>(matcherResult.Result);
@@ -122,36 +113,29 @@ public class TypedResultMatcherTests
         Assert.Equal(_resultResponseSuccess, okResult.Value);
 
         _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(4));
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task Match_PassingOnFailure_WhenError_ReturnsExpectedResult(bool? useProblemDetails)
+    [Fact]
+    public async Task Match_PassingOnFailure_WhenError_ReturnsExpectedResult()
     {
         // Act
         var matcherResult = _matcher.Match<Results<IResult, BadRequest>>(
             _resultError,
             onSuccess: null,
-            onFailure: r => TypedResults.BadRequest(),
-            useProblemDetails);
+            onFailure: r => TypedResults.BadRequest());
         var matcherResultAsync = await _matcher.MatchAsync<Results<IResult, BadRequest>>(
             _resultError,
             onSuccess: null,
-            onFailure: async r => TypedResults.BadRequest(),
-            useProblemDetails);
+            onFailure: async r => TypedResults.BadRequest());
         var matcherResultResponse = _matcher.Match<Results<IResult, BadRequest>>(
             _resultResponseError,
             onSuccess: null,
-            onFailure: r => TypedResults.BadRequest(),
-            useProblemDetails);
+            onFailure: r => TypedResults.BadRequest());
         var matcherResultResponseAsync = await _matcher.MatchAsync<Results<IResult, BadRequest>>(
             _resultResponseError,
             onSuccess: null,
-            onFailure: async r => TypedResults.BadRequest(),
-            useProblemDetails);
+            onFailure: async r => TypedResults.BadRequest());
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequest>(matcherResult.Result);
@@ -164,36 +148,29 @@ public class TypedResultMatcherTests
         Assert.Equal(badRequestResult, matcherResultResponse.Result);
 
         _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), It.IsAny<bool?>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task Match_DontPassingOnFailure_WhenError_ReturnsFallbackFailure(bool? useProblemDetails)
+    [Fact]
+    public async Task Match_DontPassingOnFailure_WhenError_ReturnsFallbackFailure()
     {
         // Act
         var matcherResult = _matcher.Match<Results<IResult, BadRequest>>(
             _resultError,
             onSuccess: null,
-            onFailure: null,
-            useProblemDetails);
+            onFailure: null);
         var matcherResultAsync = await _matcher.MatchAsync<Results<IResult, BadRequest>>(
             _resultError,
             onSuccess: null,
-            onFailure: null,
-            useProblemDetails);
+            onFailure: null);
         var matcherResultResponse = _matcher.Match<Results<IResult, BadRequest>>(
             _resultResponseError,
             onSuccess: null,
-            onFailure: null,
-            useProblemDetails);
+            onFailure: null);
         var matcherResultResponseAsync = await _matcher.MatchAsync<Results<IResult, BadRequest>>(
             _resultResponseError,
             onSuccess: null,
-            onFailure: null,
-            useProblemDetails);
+            onFailure: null);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequest<ResultResponseError>>(matcherResult.Result);
@@ -206,6 +183,6 @@ public class TypedResultMatcherTests
         Assert.Equal(_failureFallbackResult, matcherResultResponse.Result);
 
         _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>(), useProblemDetails), Times.Exactly(4));
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(4));
     }
 }

@@ -6,6 +6,7 @@
 */
 
 using Microsoft.AspNetCore.Mvc;
+using ViniBas.ResultPattern.AspNet.Configurations;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
@@ -22,7 +23,7 @@ public class FilterMappingsTests
 
         var successParam = Result.Success("Success");
         var errorParam = Error.NotFound("001", "Not Found Error");
-        
+
         foreach (var originalResult in new object?[]
         {
             successParam,
@@ -34,7 +35,7 @@ public class FilterMappingsTests
             var resultTyped = Assert.IsType<ResultResponseSuccess<string>>(result);
             Assert.Equal("Success", resultTyped.Data);
         }
-        
+
         foreach (var originalResult in new object?[]
         {
             errorParam,
@@ -58,7 +59,7 @@ public class FilterMappingsTests
 
         var successParam = Result.Success("Success");
         var errorParam = Error.NotFound("001", "Not Found Error");
-        
+
         foreach (var originalResult in new object?[]
         {
             successParam,
@@ -70,7 +71,7 @@ public class FilterMappingsTests
             var resultTyped = Assert.IsType<ResultResponseSuccess<string>>(result);
             Assert.Equal("Success", resultTyped.Data);
         }
-        
+
         foreach (var originalResult in new object?[]
         {
             errorParam,

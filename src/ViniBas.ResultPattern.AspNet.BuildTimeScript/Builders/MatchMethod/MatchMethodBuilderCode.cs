@@ -22,8 +22,7 @@ internal sealed class MatchMethodBuilderCode : MatchMethodBuilderBase
             => Matcher.{MatcherName}{MatcherGenericParameters}(
                 result,
                 onSuccess is not null ? rr => onSuccess((ResultResponseSuccess{SuccessDataType})rr) : null,
-                onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null,
-                null);
+                onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
     """;
 
     private string MethodName

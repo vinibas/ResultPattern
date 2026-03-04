@@ -7,6 +7,7 @@
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using ViniBas.ResultPattern.AspNet.Configurations;
 using ViniBas.ResultPattern.AspNet.ResultMatcher;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
@@ -16,11 +17,14 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMatcher;
 [Collection("No parallelism because of GlobalConfiguration.UseProblemDetails")]
 public class FallbackMatchHelperTests
 {
+    private readonly ResultResponseError _resultResponseError =
+        ResultResponseError.Create([new ErrorDetails("Code", "Test Error")], ErrorTypes.Validation);
+
     public FallbackMatchHelperTests()
     {
         GlobalConfiguration.UseProblemDetails = true;
     }
-    
+
     [Fact]
     public void OnSuccessFallback_WhenResultResponseTyped_ReturnsOkObjectResult()
     {
@@ -39,7 +43,7 @@ public class FallbackMatchHelperTests
         var okResultMinimal = Assert.IsType<Ok<ResultResponse>>(matcherResultMinimal);
         Assert.Equal(resultResponse, okResultMinimal.Value);
     }
-    
+
     [Fact]
     public void OnSuccessFallback_WhenResultResponseNotTyped_ReturnsOkResult()
     {
@@ -74,74 +78,121 @@ public class FallbackMatchHelperTests
         Assert.IsType<InvalidOperationException>(exceptionMinimal);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void OnFailureDefault_WhenDontUseProblemDetails_ReturnsErrorAsResultResponseError(bool useProblemDetailsGlobally)
+    [Fact]
+    public void OnFailureFallback_WhenGlobalConfigIsFalse_ReturnsResultResponseError()
     {
         // Arrange
-        var resultResponse = ResultResponseError.Create([new ErrorDetails("Code", "Test Error")], ErrorTypes.Validation);
-
-        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobally ? false : true;
-        var useProblemDetailsParam = useProblemDetailsGlobally ? (bool?)null : false;
+        GlobalConfiguration.UseProblemDetails = false;
 
         // Act
-        var matcherResultMvc = FallbackMvcMatchHelper.OnFailureFallback(resultResponse, useProblemDetailsParam);
-        var matcherResultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(resultResponse, useProblemDetailsParam);
+        var matcherResultMvc = FallbackMvcMatchHelper.OnFailureFallback(_resultResponseError);
+        var matcherResultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(_resultResponseError);
 
         // Assert
         var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
         var resultResponseValueMvc = Assert.IsType<ResultResponseError>(objectResultMvc.Value);
-        Assert.Equivalent(resultResponse.Errors, resultResponseValueMvc.Errors);
-        Assert.Equal(GlobalConfiguration.GetStatusCode(resultResponse.Type), objectResultMvc.StatusCode);
+        Assert.Equivalent(_resultResponseError.Errors, resultResponseValueMvc.Errors);
+        Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), objectResultMvc.StatusCode);
 
         var jsonResultMinimal = Assert.IsType<JsonHttpResult<ResultResponseError>>(matcherResultMinimal);
         var resultResponseValueMinimal = Assert.IsType<ResultResponseError>(jsonResultMinimal.Value);
-        Assert.Equivalent(resultResponse.Errors, resultResponseValueMinimal.Errors);
-        Assert.Equal(GlobalConfiguration.GetStatusCode(resultResponse.Type), jsonResultMinimal.StatusCode);
+        Assert.Equivalent(_resultResponseError.Errors, resultResponseValueMinimal.Errors);
+        Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), jsonResultMinimal.StatusCode);
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void OnFailureDefault_WhenUseProblemDetails_ReturnsErrorAsProblemDetails(bool useProblemDetailsGlobally)
+    [Fact]
+    public void OnFailureFallback_WhenGlobalConfigIsTrue_ReturnsProblemDetails()
     {
         // Arrange
-        var resultResponse = ResultResponseError.Create([new ErrorDetails("Code", "Test Error")], ErrorTypes.Validation);
-
-        GlobalConfiguration.UseProblemDetails = useProblemDetailsGlobally ? true : false;
-        var useProblemDetailsParam = useProblemDetailsGlobally ? (bool?)null : true;
+        GlobalConfiguration.UseProblemDetails = true;
 
         // Act
-        var matcherResultMvc = FallbackMvcMatchHelper.OnFailureFallback(resultResponse, useProblemDetailsParam);
-        var matcherResultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(resultResponse, useProblemDetailsParam);
+        var matcherResultMvc = FallbackMvcMatchHelper.OnFailureFallback(_resultResponseError);
+        var matcherResultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(_resultResponseError);
 
         // Assert
         var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
         var resultResponseValueMvc = Assert.IsType<ProblemDetails>(objectResultMvc.Value);
-        Assert.Equivalent(resultResponse.Errors, resultResponseValueMvc.Extensions["errors"]);
-        Assert.Equal(GlobalConfiguration.GetStatusCode(resultResponse.Type), objectResultMvc.StatusCode);
+        Assert.Equivalent(_resultResponseError.Errors, resultResponseValueMvc.Extensions["errors"]);
+        Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), objectResultMvc.StatusCode);
 
         var problemResultMinimal = Assert.IsType<ProblemHttpResult>(matcherResultMinimal);
         var resultResponseValueMinimal = Assert.IsType<ProblemDetails>(problemResultMinimal.ProblemDetails);
-        Assert.Equivalent(resultResponse.Errors, resultResponseValueMinimal.Extensions["errors"]);
-        Assert.Equal(GlobalConfiguration.GetStatusCode(resultResponse.Type), problemResultMinimal.StatusCode);
+        Assert.Equivalent(_resultResponseError.Errors, resultResponseValueMinimal.Extensions["errors"]);
+        Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), problemResultMinimal.StatusCode);
     }
-    
 
     [Fact]
-    public void OnFailureDefault_WhenResultResponseIsNotResultResponseError_ThrowsInvalidOperationException()
+    public void OnFailureFallback_WhenScopedConfigIsFalse_OverridesGlobalTrue()
+    {
+        // Arrange
+        GlobalConfiguration.UseProblemDetails = true;
+
+        using (ScopedConfiguration.Override(useProblemDetails: false))
+        {
+            // Act
+            var matcherResultMvc = FallbackMvcMatchHelper.OnFailureFallback(_resultResponseError);
+            var matcherResultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(_resultResponseError);
+
+            // Assert
+            var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
+            Assert.IsType<ResultResponseError>(objectResultMvc.Value);
+
+            Assert.IsType<JsonHttpResult<ResultResponseError>>(matcherResultMinimal);
+        }
+    }
+
+    [Fact]
+    public void OnFailureFallback_WhenScopedConfigIsTrue_OverridesGlobalFalse()
+    {
+        // Arrange
+        GlobalConfiguration.UseProblemDetails = false;
+
+        using (ScopedConfiguration.Override(useProblemDetails: true))
+        {
+            // Act
+            var matcherResultMvc = FallbackMvcMatchHelper.OnFailureFallback(_resultResponseError);
+            var matcherResultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(_resultResponseError);
+
+            // Assert
+            var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
+            Assert.IsType<ProblemDetails>(objectResultMvc.Value);
+
+            Assert.IsType<ProblemHttpResult>(matcherResultMinimal);
+        }
+    }
+
+    [Fact]
+    public void OnFailureFallback_WhenScopedConfigDisposed_FallsBackToGlobal()
+    {
+        // Arrange
+        GlobalConfiguration.UseProblemDetails = false;
+
+        using (ScopedConfiguration.Override(useProblemDetails: true)) { }
+
+        // Act — scope already disposed, should use global (false)
+        var matcherResultMvc = FallbackMvcMatchHelper.OnFailureFallback(_resultResponseError);
+        var matcherResultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(_resultResponseError);
+
+        // Assert
+        var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
+        Assert.IsType<ResultResponseError>(objectResultMvc.Value);
+
+        Assert.IsType<JsonHttpResult<ResultResponseError>>(matcherResultMinimal);
+    }
+
+    [Fact]
+    public void OnFailureFallback_WhenResultResponseIsNotResultResponseError_ThrowsInvalidOperationException()
     {
         // Arrange
         var resultResponse = ResultResponseSuccess.Create();
 
         // Act
-        var exceptionMvc = Record.Exception(() => FallbackMvcMatchHelper.OnFailureFallback(resultResponse, null));
-        var exceptionMinimal = Record.Exception(() => FallbackMinimalMatchHelper.OnFailureFallback(resultResponse, null));
+        var exceptionMvc = Record.Exception(() => FallbackMvcMatchHelper.OnFailureFallback(resultResponse));
+        var exceptionMinimal = Record.Exception(() => FallbackMinimalMatchHelper.OnFailureFallback(resultResponse));
 
         // Assert
         Assert.IsType<InvalidOperationException>(exceptionMvc);
         Assert.IsType<InvalidOperationException>(exceptionMinimal);
     }
-
 }

@@ -5,6 +5,7 @@
  * See the LICENSE file in the project root for full details.
 */
 
+using ViniBas.ResultPattern.AspNet.Configurations;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 

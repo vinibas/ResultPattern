@@ -33,8 +33,7 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
             .Setup(m => m.Match(
                 It.IsAny<ResultBase>(),
                 It.IsAny<Func<ResultResponse, ResultsOkAndBadRequest>>(),
-                It.IsAny<Func<ResultResponse, ResultsOkAndBadRequest>>(),
-                It.IsAny<bool?>()))
+                It.IsAny<Func<ResultResponse, ResultsOkAndBadRequest>>()))
             .Returns((ResultsOkAndBadRequest)_successResult);
 
         var result = MinimalApiTypedMatchResultsExtensions.Match<ResultsOkAndBadRequest>(
@@ -47,8 +46,8 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
         _matcherMock.Verify(m => m.Match(
             _resultSuccess,
             It.IsNotNull<Func<ResultResponse, ResultsOkAndBadRequest>>(),
-            It.IsNotNull<Func<ResultResponse, ResultsOkAndBadRequest>>(),
-            null), Times.Once);
+            It.IsNotNull<Func<ResultResponse, ResultsOkAndBadRequest>>()),
+            Times.Once);
     }
 
     [Fact]
@@ -58,8 +57,7 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
             .Setup(m => m.MatchAsync(
                 It.IsAny<ResultBase>(),
                 It.IsAny<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>(),
-                It.IsAny<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>(),
-                It.IsAny<bool?>()))
+                It.IsAny<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>()))
             .ReturnsAsync((ResultsOkAndBadRequest)_successResult);
 
         var result = await MinimalApiTypedMatchResultsExtensions.MatchAsync<ResultsOkAndBadRequest>(
@@ -72,8 +70,8 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
         _matcherMock.Verify(m => m.MatchAsync(
             _resultSuccess,
             It.IsNotNull<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>(),
-            It.IsNotNull<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>(),
-            null), Times.Once);
+            It.IsNotNull<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>()),
+            Times.Once);
     }
 
     public void Dispose()

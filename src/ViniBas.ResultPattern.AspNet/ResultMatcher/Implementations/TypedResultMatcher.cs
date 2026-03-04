@@ -16,7 +16,7 @@ internal sealed class TypedResultMatcher : ITypedResultMatcher
 {
     internal Func<ResultResponse, IResult> OnSuccessFallback { get; set; }
         = FallbackMinimalMatchHelper.OnSuccessFallback;
-    internal Func<ResultResponse, bool?, IResult> OnFailureFallback { get; set; }
+    internal Func<ResultResponse, IResult> OnFailureFallback { get; set; }
         = FallbackMinimalMatchHelper.OnFailureFallback;
     internal TypeCaster TypeCasterInstance { get; set; } = new TypeCaster();
 
@@ -24,21 +24,19 @@ internal sealed class TypedResultMatcher : ITypedResultMatcher
     public TResult Match<TResult>(
         ResultBase resultBase,
         Func<ResultResponse, TResult>? onSuccess,
-        Func<ResultResponse, TResult>? onFailure,
-        bool? useProblemDetails)
+        Func<ResultResponse, TResult>? onFailure)
         where TResult : IResult, IEndpointMetadataProvider
-        => Match(resultBase.ToResponse(), onSuccess, onFailure, useProblemDetails);
+        => Match(resultBase.ToResponse(), onSuccess, onFailure);
 
     public TResult Match<TResult>(
         ResultResponse response,
         Func<ResultResponse, TResult>? onSuccess,
-        Func<ResultResponse, TResult>? onFailure,
-        bool? useProblemDetails)
+        Func<ResultResponse, TResult>? onFailure)
         where TResult : IResult, IEndpointMetadataProvider
     {
         var result = response.IsSuccess ?
             (onSuccess is not null ? onSuccess(response) : OnSuccessFallback(response)) :
-            (onFailure is not null ? onFailure(response) : OnFailureFallback(response, useProblemDetails));
+            (onFailure is not null ? onFailure(response) : OnFailureFallback(response));
 
         return TypeCasterInstance.Cast<TResult>(result);
     }
@@ -46,21 +44,19 @@ internal sealed class TypedResultMatcher : ITypedResultMatcher
     public Task<TResult> MatchAsync<TResult>(
         ResultBase resultBase,
         Func<ResultResponse, Task<TResult>>? onSuccess,
-        Func<ResultResponse, Task<TResult>>? onFailure,
-        bool? useProblemDetails)
+        Func<ResultResponse, Task<TResult>>? onFailure)
         where TResult : IResult, IEndpointMetadataProvider
-        => MatchAsync(resultBase.ToResponse(), onSuccess, onFailure, useProblemDetails);
+        => MatchAsync(resultBase.ToResponse(), onSuccess, onFailure);
 
     public async Task<TResult> MatchAsync<TResult>(
         ResultResponse response,
         Func<ResultResponse, Task<TResult>>? onSuccess,
-        Func<ResultResponse, Task<TResult>>? onFailure,
-        bool? useProblemDetails)
+        Func<ResultResponse, Task<TResult>>? onFailure)
         where TResult : IResult, IEndpointMetadataProvider
     {
         var result = response.IsSuccess
             ? (onSuccess is not null ? await onSuccess(response) : OnSuccessFallback(response))
-            : (onFailure is not null ? await onFailure(response) : OnFailureFallback(response, useProblemDetails));
+            : (onFailure is not null ? await onFailure(response) : OnFailureFallback(response));
 
         return TypeCasterInstance.Cast<TResult>(result);
     }

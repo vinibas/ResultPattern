@@ -8,6 +8,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.ResultResponses;
 using ViniBas.ResultPattern.ResultObjects;
+using ViniBas.ResultPattern.AspNet.Configurations;
 
 namespace ViniBas.ResultPattern.AspNet.UnitTests;
 
@@ -19,7 +20,7 @@ public class ProblemDetailsExtensionsTests
         new ErrorDetails("Code 2", "Error 2")
     ];
     private readonly ResultResponseError _resultResponse;
-    
+
     public ProblemDetailsExtensionsTests()
         => _resultResponse = ResultResponseError.Create(errorDetails, ErrorTypes.Validation);
 
@@ -41,7 +42,7 @@ public class ProblemDetailsExtensionsTests
     {
         Error.ErrorTypes.AddTypes("NewType");
         GlobalConfiguration.ErrorTypeMaps.TryAdd("NewType", (304, "New Type"));
-        
+
         try
         {
             var resultResponse = ResultResponseError.Create(errorDetails, "NewType");
@@ -61,7 +62,7 @@ public class ProblemDetailsExtensionsTests
     public void ToProblemDetails_WithNewTypeNotMapped_ShouldReturnWithDefaultStatusCode()
     {
         Error.ErrorTypes.AddTypes("NewType");
-        
+
         var resultResponse = ResultResponseError.Create(errorDetails, "NewType");
         var problemDetails = resultResponse.ToProblemDetails();
 

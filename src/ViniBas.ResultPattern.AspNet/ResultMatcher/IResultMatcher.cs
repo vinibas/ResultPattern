@@ -17,26 +17,22 @@ internal interface ISimpleResultMatcher<TResult>
     TResult Match(
         ResultBase resultBase,
         Func<ResultResponse, TResult>? onSuccess,
-        Func<ResultResponse, TResult>? onFailure,
-        bool? useProblemDetails);
+        Func<ResultResponse, TResult>? onFailure);
 
     TResult Match(
         ResultResponse response,
         Func<ResultResponse, TResult>? onSuccess,
-        Func<ResultResponse, TResult>? onFailure,
-        bool? useProblemDetails);
+        Func<ResultResponse, TResult>? onFailure);
 
     Task<TResult> MatchAsync(
         ResultBase resultBase,
         Func<ResultResponse, Task<TResult>>? onSuccess,
-        Func<ResultResponse, Task<TResult>>? onFailure,
-        bool? useProblemDetails);
+        Func<ResultResponse, Task<TResult>>? onFailure);
 
     Task<TResult> MatchAsync(
         ResultResponse response,
         Func<ResultResponse, Task<TResult>>? onSuccess,
-        Func<ResultResponse, Task<TResult>>? onFailure,
-        bool? useProblemDetails);
+        Func<ResultResponse, Task<TResult>>? onFailure);
 }
 
 internal interface ITypedResultMatcher
@@ -44,28 +40,24 @@ internal interface ITypedResultMatcher
     TResult Match<TResult>(
         ResultBase resultBase,
         Func<ResultResponse, TResult>? onSuccess,
-        Func<ResultResponse, TResult>? onFailure,
-        bool? useProblemDetails)
+        Func<ResultResponse, TResult>? onFailure)
         where TResult : IResult, IEndpointMetadataProvider;
 
     TResult Match<TResult>(
         ResultResponse response,
         Func<ResultResponse, TResult>? onSuccess,
-        Func<ResultResponse, TResult>? onFailure,
-        bool? useProblemDetails)
+        Func<ResultResponse, TResult>? onFailure)
         where TResult : IResult, IEndpointMetadataProvider;
 
     Task<TResult> MatchAsync<TResult>(
         ResultBase resultBase,
         Func<ResultResponse, Task<TResult>>? onSuccess,
-        Func<ResultResponse, Task<TResult>>? onFailure,
-        bool? useProblemDetails)
+        Func<ResultResponse, Task<TResult>>? onFailure)
         where TResult : IResult, IEndpointMetadataProvider;
 
     Task<TResult> MatchAsync<TResult>(
         ResultResponse response,
         Func<ResultResponse, Task<TResult>>? onSuccess,
-        Func<ResultResponse, Task<TResult>>? onFailure,
-        bool? useProblemDetails)
+        Func<ResultResponse, Task<TResult>>? onFailure)
         where TResult : IResult, IEndpointMetadataProvider;
 }
