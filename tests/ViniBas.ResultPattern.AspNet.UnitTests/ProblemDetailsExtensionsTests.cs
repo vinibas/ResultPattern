@@ -35,6 +35,9 @@ public class ProblemDetailsExtensionsTests
         Assert.Equal(400, problemDetails.Status);
         Assert.Equal(false, problemDetails.Extensions["isSuccess"]);
         Assert.Equal(_resultResponse.Errors, problemDetails.Extensions["errors"]);
+        Assert.Equal(
+            _resultResponse.Errors.Select(d => d.Description),
+            problemDetails.Extensions["descriptions"]);
     }
 
     [Fact]
@@ -78,5 +81,28 @@ public class ProblemDetailsExtensionsTests
 
         var ex = Assert.Throws<InvalidOperationException>(() => resultResponse.ToProblemDetails());
         Assert.Equal("Unable to convert a valid ResultResponse to a ProblemDetails.", ex.Message);
+    }
+}
+
+[Collection("No parallelism because of GlobalConfiguration.UseProblemDetails")]
+public class ProblemDetailsExtensionsOverrideTests
+{
+    [Fact]
+    public void ToProblemDetails_WithProblemDetailsOverride_ShouldUseOverride()
+    {
+        var errorDetails = new[] { new ErrorDetails("Code 1", "Error 1") };
+        var resultResponse = ResultResponseError.Create(errorDetails, ErrorTypes.Validation);
+        var customProblemDetails = new ProblemDetails
+        {
+            Title = "Custom Title",
+            Status = 422,
+            Detail = "Custom detail",
+        };
+        GlobalConfiguration.ProblemDetailsOverride = _ => customProblemDetails;
+
+        var problemDetails = resultResponse.ToProblemDetails();
+
+        Assert.Same(customProblemDetails, problemDetails);
+        GlobalConfiguration.ProblemDetailsOverride = null;
     }
 }

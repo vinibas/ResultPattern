@@ -23,6 +23,9 @@ public static class ProblemDetailsExtensions
         if (resultResponse.IsSuccess || resultResponse is not ResultResponseError resultResponseError)
             throw new InvalidOperationException("Unable to convert a valid ResultResponse to a ProblemDetails.");
 
+        if (GlobalConfiguration.ProblemDetailsOverride is { } problemDetailsOverride)
+            return problemDetailsOverride(resultResponseError);
+
         return new ProblemDetails()
         {
             Title = GlobalConfiguration.GetTitle(resultResponseError.Type),
@@ -32,6 +35,7 @@ public static class ProblemDetailsExtensions
             {
                 ["isSuccess"] = false,
                 ["errors"] = resultResponseError.Errors,
+                ["descriptions"] = resultResponseError.Errors.Select(d => d.Description),
             },
         };
     }

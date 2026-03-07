@@ -7,7 +7,9 @@
 
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.ResultObjects;
+using ViniBas.ResultPattern.ResultResponses;
 
 namespace ViniBas.ResultPattern.AspNet.Configurations;
 
@@ -56,6 +58,14 @@ public static class GlobalConfiguration
     /// Configure <see cref="FallbackOverrides.Mvc"/> and/or <see cref="FallbackOverrides.MinimalApi"/> as needed.
     /// </summary>
     public static FallbackOverrides FallbackOverrides { get; } = new();
+
+    /// <summary>
+    /// Custom handler that replaces the built-in <see cref="ProblemDetails"/> generation from a <see cref="ResultResponseError"/>.
+    /// When set, the <see cref="ProblemDetailsExtensions.ToProblemDetails(ResultResponse)"/> method delegates to this function
+    /// instead of using the default implementation.
+    /// When <see langword="null"/>, the built-in default behavior is used.
+    /// </summary>
+    public static Func<ResultResponseError, ProblemDetails>? ProblemDetailsOverride { get; set; }
 
     internal static int GetStatusCode(string errorType)
         => ErrorTypeMaps.TryGetValue(errorType, out var map) ?
