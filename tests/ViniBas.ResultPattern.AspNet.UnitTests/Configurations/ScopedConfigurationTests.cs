@@ -99,4 +99,35 @@ public class ScopedConfigurationTests
             Assert.Null(ScopedConfiguration.Current!.UseProblemDetails);
         }
     }
+
+    [Fact]
+    public void Override_WithUnwrapSuccessData_SetsCurrent()
+    {
+        using (ScopedConfiguration.Override(unwrapSuccessData: true))
+        {
+            Assert.NotNull(ScopedConfiguration.Current);
+            Assert.Equal(true, ScopedConfiguration.Current!.UnwrapSuccessData);
+        }
+    }
+
+    [Fact]
+    public void Override_WithUnwrapSuccessDataNull_DefaultsToNull()
+    {
+        using (ScopedConfiguration.Override(useProblemDetails: false))
+        {
+            Assert.NotNull(ScopedConfiguration.Current);
+            Assert.Null(ScopedConfiguration.Current!.UnwrapSuccessData);
+        }
+    }
+
+    [Fact]
+    public void Override_WithBothParameters_SetsBoth()
+    {
+        using (ScopedConfiguration.Override(useProblemDetails: true, unwrapSuccessData: true))
+        {
+            Assert.NotNull(ScopedConfiguration.Current);
+            Assert.Equal(true, ScopedConfiguration.Current!.UseProblemDetails);
+            Assert.Equal(true, ScopedConfiguration.Current!.UnwrapSuccessData);
+        }
+    }
 }

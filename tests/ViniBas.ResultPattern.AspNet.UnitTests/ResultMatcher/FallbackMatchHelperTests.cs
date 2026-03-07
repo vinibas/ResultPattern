@@ -5,6 +5,7 @@
  * See the LICENSE file in the project root for full details.
 */
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.AspNet.Configurations;
@@ -23,6 +24,9 @@ public class FallbackMatchHelperTests
     public FallbackMatchHelperTests()
     {
         GlobalConfiguration.UseProblemDetails = true;
+        GlobalConfiguration.UnwrapSuccessData = false;
+        GlobalConfiguration.FallbackOverrides.Mvc = null;
+        GlobalConfiguration.FallbackOverrides.MinimalApi = null;
     }
 
     [Fact]
@@ -194,5 +198,202 @@ public class FallbackMatchHelperTests
         // Assert
         Assert.IsType<InvalidOperationException>(exceptionMvc);
         Assert.IsType<InvalidOperationException>(exceptionMinimal);
+    }
+
+    [Fact]
+    public void OnSuccessFallback_WhenFallbackOverrideIsSet_CallsOverrideWithContext()
+    {
+        // Arrange
+        var resultResponse = ResultResponseSuccess.Create("Test Value");
+        FallbackContext? capturedMvcContext = null;
+        FallbackContext? capturedMinimalContext = null;
+
+        var expectedMvcResult = new OkResult();
+        var expectedMinimalResult = TypedResults.NoContent();
+
+        GlobalConfiguration.FallbackOverrides.Mvc = (response, ctx) =>
+        {
+            capturedMvcContext = ctx;
+            return expectedMvcResult;
+        };
+        GlobalConfiguration.FallbackOverrides.MinimalApi = (response, ctx) =>
+        {
+            capturedMinimalContext = ctx;
+            return expectedMinimalResult;
+        };
+
+        // Act
+        var resultMvc = FallbackMvcMatchHelper.OnSuccessFallback(resultResponse);
+        var resultMinimal = FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse);
+
+        // Assert
+        Assert.Same(expectedMvcResult, resultMvc);
+        Assert.NotNull(capturedMvcContext);
+        Assert.False(capturedMvcContext.UnwrapSuccessData);
+        Assert.True(capturedMvcContext.UseProblemDetails);
+
+        Assert.Same(expectedMinimalResult, resultMinimal);
+        Assert.NotNull(capturedMinimalContext);
+        Assert.False(capturedMinimalContext.UnwrapSuccessData);
+        Assert.True(capturedMinimalContext.UseProblemDetails);
+    }
+
+    [Fact]
+    public void OnFailureFallback_WhenFallbackOverrideIsSet_CallsOverride()
+    {
+        // Arrange
+        var expectedMvcResult = new BadRequestResult();
+        var expectedMinimalResult = TypedResults.BadRequest();
+
+        GlobalConfiguration.FallbackOverrides.Mvc = (response, ctx) => expectedMvcResult;
+        GlobalConfiguration.FallbackOverrides.MinimalApi = (response, ctx) => expectedMinimalResult;
+
+        // Act
+        var resultMvc = FallbackMvcMatchHelper.OnFailureFallback(_resultResponseError);
+        var resultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(_resultResponseError);
+
+        // Assert
+        Assert.Same(expectedMvcResult, resultMvc);
+        Assert.Same(expectedMinimalResult, resultMinimal);
+    }
+
+    [Fact]
+    public void OnSuccessFallback_WhenFallbackOverrideIsSet_PassesUnwrapSuccessDataFromGlobal()
+    {
+        // Arrange
+        GlobalConfiguration.UnwrapSuccessData = true;
+        var resultResponse = ResultResponseSuccess.Create("Test");
+        FallbackContext? capturedMvcContext = null;
+        FallbackContext? capturedMinimalContext = null;
+
+        GlobalConfiguration.FallbackOverrides.Mvc = (response, ctx) =>
+        {
+            capturedMvcContext = ctx;
+            return new OkResult();
+        };
+        GlobalConfiguration.FallbackOverrides.MinimalApi = (response, ctx) =>
+        {
+            capturedMinimalContext = ctx;
+            return TypedResults.Ok(response);
+        };
+
+        // Act
+        FallbackMvcMatchHelper.OnSuccessFallback(resultResponse);
+        FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse);
+
+        // Assert
+        Assert.NotNull(capturedMvcContext);
+        Assert.True(capturedMvcContext.UnwrapSuccessData);
+        Assert.NotNull(capturedMinimalContext);
+        Assert.True(capturedMinimalContext.UnwrapSuccessData);
+    }
+
+    [Fact]
+    public void OnSuccessFallback_WhenFallbackOverrideIsSet_PassesUnwrapSuccessDataFromScoped()
+    {
+        // Arrange
+        GlobalConfiguration.UnwrapSuccessData = false;
+        var resultResponse = ResultResponseSuccess.Create("Test");
+        FallbackContext? capturedMvcContext = null;
+        FallbackContext? capturedMinimalContext = null;
+
+        GlobalConfiguration.FallbackOverrides.Mvc = (response, ctx) =>
+        {
+            capturedMvcContext = ctx;
+            return new OkResult();
+        };
+        GlobalConfiguration.FallbackOverrides.MinimalApi = (response, ctx) =>
+        {
+            capturedMinimalContext = ctx;
+            return TypedResults.Ok(response);
+        };
+
+        using (ScopedConfiguration.Override(unwrapSuccessData: true))
+        {
+            // Act
+            FallbackMvcMatchHelper.OnSuccessFallback(resultResponse);
+            FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse);
+        }
+
+        // Assert
+        Assert.NotNull(capturedMvcContext);
+        Assert.True(capturedMvcContext.UnwrapSuccessData);
+        Assert.NotNull(capturedMinimalContext);
+        Assert.True(capturedMinimalContext.UnwrapSuccessData);
+    }
+
+    [Fact]
+    public void OnSuccessFallback_WhenUnwrapSuccessDataIsFalse_ReturnsWrappedResultResponse()
+    {
+        // Arrange
+        var resultResponse = ResultResponseSuccess.Create("Test Value");
+
+        // Act
+        var resultMvc = FallbackMvcMatchHelper.OnSuccessFallback(resultResponse);
+        var resultMinimal = FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse);
+
+        // Assert
+        var okResultMvc = Assert.IsType<OkObjectResult>(resultMvc);
+        Assert.Equal(resultResponse, okResultMvc.Value);
+
+        var okResultMinimal = Assert.IsType<Ok<ResultResponse>>(resultMinimal);
+        Assert.Equal(resultResponse, okResultMinimal.Value);
+    }
+
+    [Fact]
+    public void OnSuccessFallback_WhenUnwrapSuccessDataIsTrueAndHasData_ReturnsDataDirectly()
+    {
+        // Arrange
+        GlobalConfiguration.UnwrapSuccessData = true;
+        var data = "Test Value";
+        var resultResponse = ResultResponseSuccess.Create(data);
+
+        // Act
+        var resultMvc = FallbackMvcMatchHelper.OnSuccessFallback(resultResponse);
+        var resultMinimal = FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse);
+
+        // Assert
+        var okResultMvc = Assert.IsType<OkObjectResult>(resultMvc);
+        Assert.Equal(data, okResultMvc.Value);
+
+        var okResultMinimal = Assert.IsType<Ok<object>>(resultMinimal);
+        Assert.Equal(data, okResultMinimal.Value);
+    }
+
+    [Fact]
+    public void OnSuccessFallback_WhenUnwrapSuccessDataIsTrueAndNoData_ReturnsOkEmpty()
+    {
+        // Arrange
+        GlobalConfiguration.UnwrapSuccessData = true;
+        var resultResponse = ResultResponseSuccess.Create();
+
+        // Act
+        var resultMvc = FallbackMvcMatchHelper.OnSuccessFallback(resultResponse);
+        var resultMinimal = FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse);
+
+        // Assert
+        Assert.IsType<OkResult>(resultMvc);
+        Assert.IsType<Ok>(resultMinimal);
+    }
+
+    [Fact]
+    public void OnFailureFallback_WhenUnwrapSuccessDataIsTrueAndNotProblemDetails_ReturnsErrorsCollection()
+    {
+        // Arrange
+        GlobalConfiguration.UseProblemDetails = false;
+        GlobalConfiguration.UnwrapSuccessData = true;
+
+        // Act
+        var resultMvc = FallbackMvcMatchHelper.OnFailureFallback(_resultResponseError);
+        var resultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(_resultResponseError);
+
+        // Assert
+        var objectResultMvc = Assert.IsType<ObjectResult>(resultMvc);
+        Assert.Equivalent(_resultResponseError.Errors, objectResultMvc.Value);
+        Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), objectResultMvc.StatusCode);
+
+        var jsonResultMinimal = Assert.IsType<JsonHttpResult<IEnumerable<ErrorDetails>>>(resultMinimal);
+        Assert.Equivalent(_resultResponseError.Errors, jsonResultMinimal.Value);
+        Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), jsonResultMinimal.StatusCode);
     }
 }
