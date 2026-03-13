@@ -1,6 +1,6 @@
-@ViniBas.ResultPattern.DemoWebApi_HostAddress = http://localhost:5285
+@ViniBas_ResultPattern_DemoWebApi_HostAddress = http://localhost:5285
 
-GET {{ViniBas.ResultPattern.DemoWebApi_HostAddress}}/My/5
+GET {{ViniBas_ResultPattern_DemoWebApi_HostAddress}}/health/true
 Accept: application/json
 
 ###

@@ -12,7 +12,7 @@ namespace ViniBas.ResultPattern.AspNet.Mvc;
 
 public sealed class ResponseMappingFilter : IActionFilter
 {
-    internal IFilterMappings filterMappings = new FilterMappings();
+    internal IFilterMappings filterMappings = new FilterMvcMappings();
 
     public void OnActionExecuting(ActionExecutingContext context) { }
 
@@ -25,8 +25,16 @@ public sealed class ResponseMappingFilter : IActionFilter
         if (contextResult is ObjectResult objectResult &&
             objectResult.Value is not ProblemDetails)
         {
-            objectResult.Value = filterMappings.MapToResultResponse(objectResult.Value);
-            objectResult.DeclaredType = null;
+            var mappedResponse = filterMappings.MapToResultResponse(objectResult.Value);
+
+            if (mappedResponse is ObjectResult mappedResult)
+                context.Result = mappedResult;
+            else
+            {
+                objectResult.Value = mappedResponse;
+                objectResult.DeclaredType = null;
+
+            }
         }
     }
 }

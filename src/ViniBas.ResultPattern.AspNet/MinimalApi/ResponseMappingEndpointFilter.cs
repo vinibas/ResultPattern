@@ -12,7 +12,7 @@ namespace ViniBas.ResultPattern.AspNet.MinimalApi;
 
 public sealed class ResponseMappingEndpointFilter : IEndpointFilter
 {
-    internal IFilterMappings filterMappings = new FilterMappings();
+    internal IFilterMappings filterMappings = new FilterMinimalApiMappings();
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {

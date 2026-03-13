@@ -6,7 +6,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <None Include="../../LICENSE.txt" Pack="true" PackagePath="" />
     <None Include="../../README.md" Pack="true" PackagePath="" />
@@ -14,7 +14,7 @@
 
   <PropertyGroup>
     <PackageId>ViniBas.ResultPattern</PackageId>
-    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionPrefix>3.0.0-preview4</VersionPrefix>
     <Authors>Vinícius Bastos da Silva</Authors>
     <Description>Library that implements the Result Pattern in .NET in a clean and flexible way.</Description>
     <Copyright>Copyright (c) Vinícius Bastos da Silva 2025</Copyright>

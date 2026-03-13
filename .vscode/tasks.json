@@ -2,35 +2,14 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build-local",
+            "label": "build",
             "type": "shell",
             "command": "dotnet",
-            "args": ["build", "-p:UseLocalReference=true"],
+            "args": ["build"],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build-nuget-local",
-            "type": "shell",
-            "command": "dotnet",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
-                "-p:UseLocalReference=false",
-                "--source",
-                "${workspaceFolder}/nupkgs",
-                "&&",
-                "dotnet",
-                "pack",
-                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
-                "-o",
-                "${workspaceFolder}/nupkgs"
-            ],
-            "dependsOn": ["pack-local-ResultPattern"],
-            "group": "build",
             "problemMatcher": "$msCompile"
         },
         {
@@ -40,47 +19,7 @@
             "args": [
                 "pack",
                 "${workspaceFolder}/src/ViniBas.ResultPattern/ViniBas.ResultPattern.csproj",
-                "-o",
-                "${workspaceFolder}/nupkgs"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build-nuget-release",
-            "type": "shell",
-            "command": "dotnet",
-            "args": [
-                "build",
-                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
-                "-c",
-                "Release",
-                "-p:UseLocalReference=false",
-                "--source",
-                "${workspaceFolder}/nupkgs",
-                "&&",
-                "dotnet",
-                "pack",
-                "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
-                "-c",
-                "Release",
-                "-o",
-                "${workspaceFolder}/nupkgs"
-            ],
-            "dependsOn": ["pack-release-ResultPattern"],
-            "group": "build",
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "pack-release-ResultPattern",
-            "type": "shell",
-            "command": "dotnet",
-            "args": [
-                "pack",
-                "${workspaceFolder}/src/ViniBas.ResultPattern/ViniBas.ResultPattern.csproj",
-                "-c",
-                "Release",
-                "-o",
-                "${workspaceFolder}/nupkgs"
+                "-o", "${workspaceFolder}/nupkgs"
             ],
             "problemMatcher": "$msCompile"
         },
@@ -91,8 +30,27 @@
             "args": [
                 "pack",
                 "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
-                "-o",
-                "${workspaceFolder}/nupkgs"
+                "-p:UsePackageReference=true",
+                "-o", "${workspaceFolder}/nupkgs"
+            ],
+            "dependsOn": ["pack-local-ResultPattern"],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack-local-all",
+            "dependsOn": ["pack-local-ResultPattern.AspNet"],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "pack-release-ResultPattern",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "pack",
+                "${workspaceFolder}/src/ViniBas.ResultPattern/ViniBas.ResultPattern.csproj",
+                "-c", "Release",
+                "-o", "${workspaceFolder}/nupkgs"
             ],
             "problemMatcher": "$msCompile"
         },
@@ -103,12 +61,18 @@
             "args": [
                 "pack",
                 "${workspaceFolder}/src/ViniBas.ResultPattern.AspNet/ViniBas.ResultPattern.AspNet.csproj",
-                "-c",
-                "Release",
-                "-o",
-                "${workspaceFolder}/nupkgs"
+                "-p:UsePackageReference=true",
+                "-c", "Release",
+                "-o", "${workspaceFolder}/nupkgs"
             ],
+            "dependsOn": ["pack-release-ResultPattern"],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack-release-all",
+            "dependsOn": ["pack-release-ResultPattern.AspNet"],
+            "group": "build",
+            "problemMatcher": []
         }
     ]
 }

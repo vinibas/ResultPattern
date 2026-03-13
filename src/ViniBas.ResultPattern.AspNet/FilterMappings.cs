@@ -6,6 +6,7 @@
 */
 
 using ViniBas.ResultPattern.AspNet.Configurations;
+using ViniBas.ResultPattern.AspNet.ResultMatcher;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.ResultResponses;
 
@@ -16,29 +17,34 @@ internal interface IFilterMappings
     object? MapToResultResponse(object? originalResult);
 }
 
-internal class FilterMappings : IFilterMappings
+internal abstract class FilterMappings : IFilterMappings
 {
     public object? MapToResultResponse(object? originalResult)
     {
         return originalResult switch
         {
-            Error error => ConvertToResultResponseOrProblemDetails(error),
-            IEnumerable<Error> errors => ConvertToResultResponseOrProblemDetails((Error)errors.ToList()),
-            ResultBase result => result.IsSuccess ?
-                result.ToResponse() :
-                ConvertToProblemDetailsIfConfigured(result.ToResponse()),
-            ResultResponseError resultResponseError => ConvertToProblemDetailsIfConfigured(resultResponseError),
+            Error error => CallFallbackMatcher(((Result)error).ToResponse()),
+            IEnumerable<Error> errors => CallFallbackMatcher(((Result)(Error)errors.ToList()).ToResponse()),
+            ResultBase result => CallFallbackMatcher(result.ToResponse()),
             _ => originalResult,
         };
     }
 
-    private static object? ConvertToResultResponseOrProblemDetails(Error error)
-        => GlobalConfiguration.UseProblemDetails ?
-            error.ToProblemDetails() :
-            ((Result)error).ToResponse();
+    protected abstract object? CallFallbackMatcher(ResultResponse resultResponse);
+}
 
-    private static object? ConvertToProblemDetailsIfConfigured(ResultResponse error)
-        => GlobalConfiguration.UseProblemDetails ?
-            error.ToProblemDetails() :
-            error;
+internal class FilterMvcMappings : FilterMappings
+{
+    protected override object? CallFallbackMatcher(ResultResponse resultResponse)
+        => resultResponse.IsSuccess ?
+        FallbackMvcMatchHelper.OnSuccessFallback(resultResponse) :
+        FallbackMvcMatchHelper.OnFailureFallback(resultResponse);
+}
+
+internal class FilterMinimalApiMappings : FilterMappings
+{
+    protected override object? CallFallbackMatcher(ResultResponse resultResponse)
+        => resultResponse.IsSuccess ?
+        FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse) :
+        FallbackMinimalMatchHelper.OnFailureFallback(resultResponse);
 }
