@@ -36,10 +36,7 @@ internal static class TypeCastHelper
         }
         catch (InvalidCastException)
         {
-            throw new InvalidOperationException(
-                $"The type provided for T_Result ({GetFriendlyName(typeof(TResult))}) is not compatible " +
-                $"with the result ({GetFriendlyName(iresult.GetType())}). " + Environment.NewLine +
-                "T_Result must be a type that can accept the result or a compatible interface.");
+            throw new TypedResultCastException(iresult, typeof(TResult), iresult.GetType());
         }
     }
 
@@ -69,16 +66,6 @@ internal static class TypeCastHelper
                 targetType.IsAssignableFrom(m.ReturnType) &&
                 m.GetParameters() is { Length: 1 } parameters &&
                 parameters[0].ParameterType == sourceType);
-    }
-
-    private static string GetFriendlyName(Type type)
-    {
-        if (!type.IsGenericType)
-            return type.Name;
-
-        var name = type.Name[..type.Name.IndexOf('`')];
-        var args = string.Join(", ", type.GetGenericArguments().Select(GetFriendlyName));
-        return $"{name}<{args}>";
     }
 
     private readonly record struct TypePair(Type Target, Type Source);

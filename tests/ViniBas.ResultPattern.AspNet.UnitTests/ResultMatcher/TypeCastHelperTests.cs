@@ -36,13 +36,14 @@ public class TypeCastHelperTests
     }
 
     [Fact]
-    public void TreatCast_WithIncompatibleTypes_ShouldThrow()
+    public void TreatCast_WithIncompatibleTypes_ShouldThrowTypedResultCastException()
     {
         IResult result = TypedResults.Ok("test");
-        
-        var ex = Assert.Throws<InvalidOperationException>(
+
+        var ex = Assert.Throws<TypedResultCastException>(
             () => TypeCastHelper.TreatCast<BadRequest<string>>(result));
 
         Assert.Contains("The type provided for T_Result (BadRequest<String>) is not compatible with the result (Ok<String>).", ex.Message);
+        Assert.Same(result, ex.OriginalResult);
     }
 }

@@ -10,6 +10,7 @@ using ViniBas.ResultPattern.DemoWebApi.Services;
 using ViniBas.ResultPattern.ResultObjects;
 using ViniBas.ResultPattern.DemoWebApi.Endpoints;
 using ViniBas.ResultPattern.AspNet.Mvc;
+using ViniBas.ResultPattern.AspNet.MinimalApi;
 using ViniBas.ResultPattern.AspNet.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,7 +28,7 @@ app.MapScalarApiReference();
 app.UseHttpsRedirection();
 
 app.RegisterUserGenericEndpoints();
-app.RegisterUserUnionEndpoints();
+app.RegisterUserUnionEndpoints(isProduction: app.Environment.IsProduction());
 
 app.MapControllers();
 
