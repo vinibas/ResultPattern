@@ -77,14 +77,11 @@ public static class MinimalApiExtensions
                 "filter will convert to a suitable IResult.");
     }
 
-    public static void RegisterUserUnionEndpoints(this IEndpointRouteBuilder routes, bool isProduction)
+    public static void RegisterUserUnionEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes
             .MapGroup("minimal-union")
             .WithTags("MinimalApiUnionTypes");
-
-        if (isProduction)
-            group.AddEndpointFilter<TypedResultCastFallbackFilter>();
 
         group
             .MapGet("health/{alive}", (bool alive) => _userService.Health(alive)

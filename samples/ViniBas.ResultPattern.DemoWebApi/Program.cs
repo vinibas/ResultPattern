@@ -19,16 +19,21 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddControllers(opt => opt.Filters.Add<ResponseMappingFilter>());
 builder.Services.AddOpenApi();
+builder.Services.AddExceptionHandler<TypedResultCastExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
 app.MapOpenApi();
 app.MapScalarApiReference();
 
+if (app.Environment.IsProduction())
+    app.UseExceptionHandler();
+
 app.UseHttpsRedirection();
 
 app.RegisterUserGenericEndpoints();
-app.RegisterUserUnionEndpoints(isProduction: app.Environment.IsProduction());
+app.RegisterUserUnionEndpoints();
 
 app.MapControllers();
 
