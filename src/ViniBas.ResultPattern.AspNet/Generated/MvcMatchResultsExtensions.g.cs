@@ -47,8 +47,8 @@ public static class MvcMatchResultsExtensions
         Func<ResultResponseError, IActionResult>? onFailure = null)
         => Matcher.Match(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Checks whether a <see cref="Result{TData}"/> is a success or failure,
@@ -78,10 +78,10 @@ public static class MvcMatchResultsExtensions
         this Result<TData> result,
         Func<ResultResponseSuccess<TData>, IActionResult>? onSuccess = null,
         Func<ResultResponseError, IActionResult>? onFailure = null)
-        => Matcher.Match(
+        => Matcher.Match<TData>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess<TData>)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Checks whether a <see cref="ResultResponse"/> is a success or failure,
@@ -110,8 +110,8 @@ public static class MvcMatchResultsExtensions
         Func<ResultResponseError, IActionResult>? onFailure = null)
         => Matcher.Match(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Checks whether a <see cref="ResultResponse"/> is a success or failure,
@@ -141,10 +141,10 @@ public static class MvcMatchResultsExtensions
         this ResultResponse result,
         Func<ResultResponseSuccess<TData>, IActionResult>? onSuccess = null,
         Func<ResultResponseError, IActionResult>? onFailure = null)
-        => Matcher.Match(
+        => Matcher.Match<TData>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess<TData>)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Asynchronously checks whether a <see cref="Result"/> is a success or failure,
@@ -173,8 +173,8 @@ public static class MvcMatchResultsExtensions
         Func<ResultResponseError, Task<IActionResult>>? onFailure = null)
         => Matcher.MatchAsync(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Asynchronously checks whether a <see cref="Result{TData}"/> is a success or failure,
@@ -204,10 +204,10 @@ public static class MvcMatchResultsExtensions
         this Result<TData> result,
         Func<ResultResponseSuccess<TData>, Task<IActionResult>>? onSuccess = null,
         Func<ResultResponseError, Task<IActionResult>>? onFailure = null)
-        => Matcher.MatchAsync(
+        => Matcher.MatchAsync<TData>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess<TData>)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure,
@@ -236,8 +236,8 @@ public static class MvcMatchResultsExtensions
         Func<ResultResponseError, Task<IActionResult>>? onFailure = null)
         => Matcher.MatchAsync(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure,
@@ -267,8 +267,8 @@ public static class MvcMatchResultsExtensions
         this ResultResponse result,
         Func<ResultResponseSuccess<TData>, Task<IActionResult>>? onSuccess = null,
         Func<ResultResponseError, Task<IActionResult>>? onFailure = null)
-        => Matcher.MatchAsync(
+        => Matcher.MatchAsync<TData>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess<TData>)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 }

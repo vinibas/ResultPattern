@@ -5,6 +5,7 @@
  * See the LICENSE file in the project root for full details.
 */
 
+using System.Net.Mime;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViniBas.ResultPattern.AspNet.Configurations;
@@ -16,35 +17,38 @@ namespace ViniBas.ResultPattern.AspNet.ResultMatcher;
 
 internal static class FallbackMvcMatchHelper
 {
-    internal static IActionResult OnSuccessFallback(ResultResponse resultResponse)
+    internal static IActionResult OnSuccessFallback(ResultResponseSuccess resultResponse)
     {
-        if (!resultResponse.IsSuccess)
-            throw new InvalidOperationException("Invalid success result response type.");
-
         var fallbackContext = FallbackMatchHelper.BuildFallbackContext();
 
         if (GlobalConfiguration.FallbackOverrides.Mvc is { } fallbackOverride)
             return fallbackOverride(resultResponse, fallbackContext);
 
         if (fallbackContext.UnwrapSuccessData)
-            return FallbackMatchHelper.IsAResultResponseSuccessWithGenericData(resultResponse, out var data) ?
-                new OkObjectResult(data) :
-                new OkResult();
+            return new OkResult();
 
         return new OkObjectResult(resultResponse);
     }
 
-    internal static IActionResult OnFailureFallback(ResultResponse resultResponse)
+    internal static IActionResult OnSuccessFallback<TData>(ResultResponseSuccess<TData> resultResponse)
     {
-        if (resultResponse.IsSuccess)
-            throw new InvalidOperationException("Invalid error result response type.");
-
         var fallbackContext = FallbackMatchHelper.BuildFallbackContext();
 
         if (GlobalConfiguration.FallbackOverrides.Mvc is { } fallbackOverride)
             return fallbackOverride(resultResponse, fallbackContext);
 
-        var resultResponseError = (ResultResponseError)resultResponse;
+        if (fallbackContext.UnwrapSuccessData)
+            return new OkObjectResult(resultResponse.Data);
+
+        return new OkObjectResult(resultResponse);
+    }
+
+    internal static IActionResult OnFailureFallback(ResultResponseError resultResponseError)
+    {
+        var fallbackContext = FallbackMatchHelper.BuildFallbackContext();
+
+        if (GlobalConfiguration.FallbackOverrides.Mvc is { } fallbackOverride)
+            return fallbackOverride(resultResponseError, fallbackContext);
 
         return fallbackContext.UseProblemDetails ?
             resultResponseError.ToProblemDetailsActionResult() :
@@ -63,47 +67,60 @@ internal static class FallbackMvcMatchHelper
 
 internal static class FallbackMinimalMatchHelper
 {
-    internal static IResult OnSuccessFallback(ResultResponse resultResponse)
+    internal static IResult OnSuccessFallback(ResultResponseSuccess resultResponse)
     {
-        if (!resultResponse.IsSuccess)
-            throw new InvalidOperationException("Invalid success result response type.");
-
         var fallbackContext = FallbackMatchHelper.BuildFallbackContext();
 
         if (GlobalConfiguration.FallbackOverrides.MinimalApi is { } fallbackOverride)
             return fallbackOverride(resultResponse, fallbackContext);
+
+        if (!GlobalConfiguration.TypedResultMaps.TryGetValue(StatusCodes.Status200OK, out var builder))
+            builder = TypedResultBuilders.Ok;
 
         if (fallbackContext.UnwrapSuccessData)
-            return FallbackMatchHelper.IsAResultResponseSuccessWithGenericData(resultResponse, out var data) ?
-                TypedResults.Ok(data) :
-                TypedResults.Ok();
+            return builder.Build();
 
-        return TypedResults.Ok(resultResponse);
+        return builder.Build(resultResponse);
     }
 
-    internal static IResult OnFailureFallback(ResultResponse resultResponse)
+    internal static IResult OnSuccessFallback<TData>(ResultResponseSuccess<TData> resultResponse)
     {
-        if (resultResponse.IsSuccess)
-            throw new InvalidOperationException("Invalid error result response type.");
-
         var fallbackContext = FallbackMatchHelper.BuildFallbackContext();
 
         if (GlobalConfiguration.FallbackOverrides.MinimalApi is { } fallbackOverride)
             return fallbackOverride(resultResponse, fallbackContext);
 
-        var resultResponseError = (ResultResponseError)resultResponse;
+        if (!GlobalConfiguration.TypedResultMaps.TryGetValue(StatusCodes.Status200OK, out var builder))
+            builder = TypedResultBuilders.Ok;
 
-        return fallbackContext.UseProblemDetails ?
-            resultResponseError.ToProblemDetailsResult() :
-            resultResponseError.ToJsonTypedResult(fallbackContext.UnwrapSuccessData);
+        if (fallbackContext.UnwrapSuccessData)
+            return builder.Build(resultResponse.Data);
+
+        return builder.Build(resultResponse);
     }
 
-    private static IResult ToJsonTypedResult(this ResultResponseError resultResponseError, bool unwrapSuccessData)
+    internal static IResult OnFailureFallback(ResultResponseError resultResponseError)
     {
+        var fallbackContext = FallbackMatchHelper.BuildFallbackContext();
+
+        if (GlobalConfiguration.FallbackOverrides.MinimalApi is { } fallbackOverride)
+            return fallbackOverride(resultResponseError, fallbackContext);
+
         var statusCode = GlobalConfiguration.GetStatusCode(resultResponseError.Type);
-        return unwrapSuccessData ?
-            TypedResults.Json(resultResponseError.Errors, statusCode: statusCode) :
-            TypedResults.Json(resultResponseError, statusCode: statusCode);
+
+        if (!GlobalConfiguration.TypedResultMaps.TryGetValue(statusCode, out var builder))
+            builder = !fallbackContext.UseProblemDetails ?
+                TypedResultBuilders.Json(statusCode) :
+                null;
+
+        if (fallbackContext.UseProblemDetails)
+            return builder is null ?
+                resultResponseError.ToProblemDetailsResult() :
+                builder.Build(resultResponseError.ToProblemDetails());
+
+        return fallbackContext.UnwrapSuccessData ?
+            builder!.Build(resultResponseError.Errors) :
+            builder!.Build(resultResponseError);
     }
 }
 
@@ -120,18 +137,4 @@ file class FallbackMatchHelper
     private static bool GetUseProblemDetailsCurrentValue()
         => ScopedConfiguration.Current?.UseProblemDetails
             ?? GlobalConfiguration.UseProblemDetails;
-
-    internal static bool IsAResultResponseSuccessWithGenericData(ResultResponse resultResponse, out object? data)
-    {
-        data = null;
-        var resultResponseType = resultResponse.GetType();
-
-        if (!resultResponseType.IsGenericType ||
-            resultResponseType.GetGenericTypeDefinition() != typeof(ResultResponseSuccess<>))
-            return false;
-
-        var dataProperty = resultResponseType.GetProperty(nameof(ResultResponseSuccess<object>.Data));
-        data = dataProperty?.GetValue(resultResponse);
-        return true;
-    }
 }

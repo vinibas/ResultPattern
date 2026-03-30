@@ -30,10 +30,10 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
     public void Match_ShouldDelegateToMatcher()
     {
         _matcherMock
-            .Setup(m => m.Match(
+            .Setup(m => m.Match<ResultsOkAndBadRequest>(
                 It.IsAny<ResultBase>(),
-                It.IsAny<Func<ResultResponse, ResultsOkAndBadRequest>>(),
-                It.IsAny<Func<ResultResponse, ResultsOkAndBadRequest>>()))
+                It.IsAny<Func<ResultResponseSuccess, ResultsOkAndBadRequest>>(),
+                It.IsAny<Func<ResultResponseError, ResultsOkAndBadRequest>>()))
             .Returns((ResultsOkAndBadRequest)_successResult);
 
         var result = MinimalApiTypedMatchResultsExtensions.Match<ResultsOkAndBadRequest>(
@@ -43,10 +43,10 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
 
         Assert.Equal(_successResult, result.Result);
 
-        _matcherMock.Verify(m => m.Match(
+        _matcherMock.Verify(m => m.Match<ResultsOkAndBadRequest>(
             _resultSuccess,
-            It.IsNotNull<Func<ResultResponse, ResultsOkAndBadRequest>>(),
-            It.IsNotNull<Func<ResultResponse, ResultsOkAndBadRequest>>()),
+            It.IsNotNull<Func<ResultResponseSuccess, ResultsOkAndBadRequest>>(),
+            It.IsNotNull<Func<ResultResponseError, ResultsOkAndBadRequest>>()),
             Times.Once);
     }
 
@@ -54,10 +54,10 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
     public async Task MatchAsync_ShouldDelegateToMatcher()
     {
         _matcherMock
-            .Setup(m => m.MatchAsync(
+            .Setup(m => m.MatchAsync<ResultsOkAndBadRequest>(
                 It.IsAny<ResultBase>(),
-                It.IsAny<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>(),
-                It.IsAny<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>()))
+                It.IsAny<Func<ResultResponseSuccess, Task<ResultsOkAndBadRequest>>>(),
+                It.IsAny<Func<ResultResponseError, Task<ResultsOkAndBadRequest>>>()))
             .ReturnsAsync((ResultsOkAndBadRequest)_successResult);
 
         var result = await MinimalApiTypedMatchResultsExtensions.MatchAsync<ResultsOkAndBadRequest>(
@@ -67,10 +67,10 @@ public class TypedMatchExtensionsSmokeTests : IDisposable
 
         Assert.Equal(_successResult, result.Result);
 
-        _matcherMock.Verify(m => m.MatchAsync(
+        _matcherMock.Verify(m => m.MatchAsync<ResultsOkAndBadRequest>(
             _resultSuccess,
-            It.IsNotNull<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>(),
-            It.IsNotNull<Func<ResultResponse, Task<ResultsOkAndBadRequest>>>()),
+            It.IsNotNull<Func<ResultResponseSuccess, Task<ResultsOkAndBadRequest>>>(),
+            It.IsNotNull<Func<ResultResponseError, Task<ResultsOkAndBadRequest>>>()),
             Times.Once);
     }
 

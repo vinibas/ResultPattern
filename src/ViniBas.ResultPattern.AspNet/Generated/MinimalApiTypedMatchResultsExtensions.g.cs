@@ -55,8 +55,8 @@ public static class MinimalApiTypedMatchResultsExtensions
         where TResult : IResult, IEndpointMetadataProvider
         => Matcher.Match<TResult>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Checks whether a <see cref="Result{TData}"/> is a success or failure,
@@ -92,10 +92,10 @@ public static class MinimalApiTypedMatchResultsExtensions
         Func<ResultResponseSuccess<TData>, TResult>? onSuccess = null,
         Func<ResultResponseError, TResult>? onFailure = null)
         where TResult : IResult, IEndpointMetadataProvider
-        => Matcher.Match<TResult>(
+        => Matcher.Match<TResult, TData>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess<TData>)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Checks whether a <see cref="ResultResponse"/> is a success or failure,
@@ -130,8 +130,8 @@ public static class MinimalApiTypedMatchResultsExtensions
         where TResult : IResult, IEndpointMetadataProvider
         => Matcher.Match<TResult>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Checks whether a <see cref="ResultResponse"/> is a success or failure,
@@ -167,10 +167,10 @@ public static class MinimalApiTypedMatchResultsExtensions
         Func<ResultResponseSuccess<TData>, TResult>? onSuccess = null,
         Func<ResultResponseError, TResult>? onFailure = null)
         where TResult : IResult, IEndpointMetadataProvider
-        => Matcher.Match<TResult>(
+        => Matcher.Match<TResult, TData>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess<TData>)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Asynchronously checks whether a <see cref="Result"/> is a success or failure,
@@ -205,8 +205,8 @@ public static class MinimalApiTypedMatchResultsExtensions
         where TResult : IResult, IEndpointMetadataProvider
         => Matcher.MatchAsync<TResult>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Asynchronously checks whether a <see cref="Result{TData}"/> is a success or failure,
@@ -242,10 +242,10 @@ public static class MinimalApiTypedMatchResultsExtensions
         Func<ResultResponseSuccess<TData>, Task<TResult>>? onSuccess = null,
         Func<ResultResponseError, Task<TResult>>? onFailure = null)
         where TResult : IResult, IEndpointMetadataProvider
-        => Matcher.MatchAsync<TResult>(
+        => Matcher.MatchAsync<TResult, TData>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess<TData>)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure,
@@ -280,8 +280,8 @@ public static class MinimalApiTypedMatchResultsExtensions
         where TResult : IResult, IEndpointMetadataProvider
         => Matcher.MatchAsync<TResult>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 
     /// <summary>
     /// Asynchronously checks whether a <see cref="ResultResponse"/> is a success or failure,
@@ -317,8 +317,8 @@ public static class MinimalApiTypedMatchResultsExtensions
         Func<ResultResponseSuccess<TData>, Task<TResult>>? onSuccess = null,
         Func<ResultResponseError, Task<TResult>>? onFailure = null)
         where TResult : IResult, IEndpointMetadataProvider
-        => Matcher.MatchAsync<TResult>(
+        => Matcher.MatchAsync<TResult, TData>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess<TData>)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 }

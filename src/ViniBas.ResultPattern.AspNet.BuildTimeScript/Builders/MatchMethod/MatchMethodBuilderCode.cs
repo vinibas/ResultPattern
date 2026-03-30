@@ -21,8 +21,8 @@ internal sealed class MatchMethodBuilderCode : MatchMethodBuilderBase
             {GenericConstraints}
             => Matcher.{MatcherName}{MatcherGenericParameters}(
                 result,
-                onSuccess is not null ? rr => onSuccess((ResultResponseSuccess{SuccessDataType})rr) : null,
-                onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+                onSuccess,
+                onFailure);
     """;
 
     private string MethodName
@@ -71,9 +71,21 @@ internal sealed class MatchMethodBuilderCode : MatchMethodBuilderBase
 
     private string MatcherName => _params.IsAsync ? "MatchAsync" : "Match";
 
-    private string MatcherGenericParameters => _params.ShouldMatcherReceiveReturnGenericParameter ?
-        $"<{ReturnTypeWithGenericParameters}>" :
-        string.Empty;
+    private string MatcherGenericParameters
+    {
+        get
+        {
+            var genericParams = new List<string>();
+
+            if (_params.ShouldMatcherReceiveReturnGenericParameter)
+                genericParams.Add(ReturnTypeWithGenericParameters);
+
+            if (_params.HasSuccessDataType)
+                genericParams.Add(DataTypeParameterName);
+
+            return BuildGenericParamsTag(genericParams);
+        }
+    }
 
     public override string Build()
     {

@@ -20,7 +20,7 @@ public class MvcController : ControllerBase
     private static readonly IUserService _userService = new UserService();
 
     /// <summary>
-    /// You can pass a function with the return for the success case and another for the failure case.
+    /// You can pass a function to handle the success case and another to handle the failure case.
     /// </summary>
     [HttpGet("health/{alive}")]
     public IActionResult Health(bool alive)
@@ -40,7 +40,13 @@ public class MvcController : ControllerBase
     /// </summary>
     [HttpPost]
     public IActionResult CreateNewUser(UserModel user)
-        => _userService.SaveNewUser(user).Match();
+    {
+        // Override UseProblemDetails locally to choose between returning ResultResponseError or ProblemDetails.
+        using (ScopedConfiguration.Override(useProblemDetails: false))
+        {
+            return _userService.SaveNewUser(user).Match();
+        }
+    }
 
     /// <summary>
     /// You can also locally override some of the global settings.

@@ -43,6 +43,6 @@ public class TypeCastHelperTests
         var ex = Assert.Throws<InvalidOperationException>(
             () => TypeCastHelper.TreatCast<BadRequest<string>>(result));
 
-        Assert.Contains("The type provided for T_Result (BadRequest`1) is not compatible with the result (Ok`1).", ex.Message);
+        Assert.Contains("The type provided for T_Result (BadRequest<String>) is not compatible with the result (Ok<String>).", ex.Message);
     }
 }

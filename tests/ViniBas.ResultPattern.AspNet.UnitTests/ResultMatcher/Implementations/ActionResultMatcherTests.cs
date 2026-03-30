@@ -15,20 +15,20 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMatcher.Implementations;
 public class ActionResultMatcherTests
 {
     private readonly ActionResultMatcher _matcher;
-    private readonly Mock<Func<ResultResponse, IActionResult>> _onSuccessFallback;
-    private readonly Mock<Func<ResultResponse, IActionResult>> _onFailureFallback;
+    private readonly Mock<Func<ResultResponseSuccess, IActionResult>> _onSuccessFallback;
+    private readonly Mock<Func<ResultResponseError, IActionResult>> _onFailureFallback;
     private readonly IActionResult _successFallbackResult = new OkResult();
     private readonly IActionResult _failureFallbackResult = new BadRequestResult();
 
     public ActionResultMatcherTests()
     {
         _matcher = new ActionResultMatcher();
-        _onSuccessFallback = new Mock<Func<ResultResponse, IActionResult>>();
-        _onFailureFallback = new Mock<Func<ResultResponse, IActionResult>>();
+        _onSuccessFallback = new Mock<Func<ResultResponseSuccess, IActionResult>>();
+        _onFailureFallback = new Mock<Func<ResultResponseError, IActionResult>>();
 
-        _onSuccessFallback.Setup(f => f(It.IsAny<ResultResponse>()))
+        _onSuccessFallback.Setup(f => f(It.IsAny<ResultResponseSuccess>()))
             .Returns(_successFallbackResult);
-        _onFailureFallback.Setup(f => f(It.IsAny<ResultResponse>()))
+        _onFailureFallback.Setup(f => f(It.IsAny<ResultResponseError>()))
             .Returns(_failureFallbackResult);
 
         _matcher.OnSuccessFallback = _onSuccessFallback.Object;
@@ -66,8 +66,8 @@ public class ActionResultMatcherTests
         Assert.Equal(matcherResultAsync, okResult);
         Assert.Equal(matcherResultResponse, okResult);
         Assert.Equal(matcherResultResponseAsync, okResult);
-        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponseSuccess>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponseError>()), Times.Never);
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public class ActionResultMatcherTests
         Assert.Equal(_successFallbackResult, matcherResultAsync);
         Assert.Equal(_successFallbackResult, matcherResultResponse);
         Assert.Equal(_successFallbackResult, matcherResultResponseAsync);
-        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(4));
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponseSuccess>()), Times.Exactly(4));
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponseError>()), Times.Never);
     }
 
     [Fact]
@@ -136,8 +136,8 @@ public class ActionResultMatcherTests
         Assert.Equal(badRequestResultValue, matcherResultAsync);
         Assert.Equal(badRequestResultValue, matcherResultResponse);
         Assert.Equal(badRequestResultValue, matcherResultResponseAsync);
-        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponseSuccess>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponseError>()), Times.Never);
     }
 
     [Fact]
@@ -171,7 +171,7 @@ public class ActionResultMatcherTests
         Assert.Equal(_failureFallbackResult, matcherResultAsync);
         Assert.Equal(_failureFallbackResult, matcherResultResponse);
         Assert.Equal(_failureFallbackResult, matcherResultResponseAsync);
-        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(4));
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponseSuccess>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponseError>()), Times.Exactly(4));
     }
 }

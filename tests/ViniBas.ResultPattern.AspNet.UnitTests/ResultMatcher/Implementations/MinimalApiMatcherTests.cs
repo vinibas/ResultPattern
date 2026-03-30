@@ -16,20 +16,20 @@ namespace ViniBas.ResultPattern.AspNet.UnitTests.ResultMatcher.Implementations;
 public class MinimalApiMatcherTests
 {
     private readonly MinimalApiMatcher _matcher;
-    private readonly Mock<Func<ResultResponse, IResult>> _onSuccessFallback;
-    private readonly Mock<Func<ResultResponse, IResult>> _onFailureFallback;
+    private readonly Mock<Func<ResultResponseSuccess, IResult>> _onSuccessFallback;
+    private readonly Mock<Func<ResultResponseError, IResult>> _onFailureFallback;
     private readonly IResult _successFallbackResult = Results.Ok();
     private readonly IResult _failureFallbackResult = Results.BadRequest();
 
     public MinimalApiMatcherTests()
     {
         _matcher = new MinimalApiMatcher();
-        _onSuccessFallback = new Mock<Func<ResultResponse, IResult>>();
-        _onFailureFallback = new Mock<Func<ResultResponse, IResult>>();
+        _onSuccessFallback = new Mock<Func<ResultResponseSuccess, IResult>>();
+        _onFailureFallback = new Mock<Func<ResultResponseError, IResult>>();
 
-        _onSuccessFallback.Setup(f => f(It.IsAny<ResultResponse>()))
+        _onSuccessFallback.Setup(f => f(It.IsAny<ResultResponseSuccess>()))
             .Returns(_successFallbackResult);
-        _onFailureFallback.Setup(f => f(It.IsAny<ResultResponse>()))
+        _onFailureFallback.Setup(f => f(It.IsAny<ResultResponseError>()))
             .Returns(_failureFallbackResult);
 
         _matcher.OnSuccessFallback = _onSuccessFallback.Object;
@@ -67,8 +67,8 @@ public class MinimalApiMatcherTests
         Assert.Equal(okResult, matcherResultAsync);
         Assert.Equal(okResult, matcherResultResponse);
         Assert.Equal(okResult, matcherResultResponseAsync);
-        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponseSuccess>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponseError>()), Times.Never);
     }
 
     [Fact]
@@ -101,8 +101,8 @@ public class MinimalApiMatcherTests
         Assert.IsType<Ok>(matcherResultAsync);
         Assert.IsType<Ok>(matcherResultResponse);
         Assert.IsType<Ok>(matcherResultResponseAsync);
-        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(4));
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponseSuccess>()), Times.Exactly(4));
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponseError>()), Times.Never);
     }
 
     [Fact]
@@ -137,8 +137,8 @@ public class MinimalApiMatcherTests
         Assert.Equal(badRequestResult, matcherResultAsync);
         Assert.Equal(badRequestResult, matcherResultResponse);
         Assert.Equal(badRequestResult, matcherResultResponseAsync);
-        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponseSuccess>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponseError>()), Times.Never);
     }
 
     [Fact]
@@ -172,7 +172,7 @@ public class MinimalApiMatcherTests
         Assert.Equal(_failureFallbackResult, matcherResultAsync);
         Assert.Equal(_failureFallbackResult, matcherResultResponse);
         Assert.Equal(_failureFallbackResult, matcherResultResponseAsync);
-        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Never);
-        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponse>()), Times.Exactly(4));
+        _onSuccessFallback.Verify(f => f(It.IsAny<ResultResponseSuccess>()), Times.Never);
+        _onFailureFallback.Verify(f => f(It.IsAny<ResultResponseError>()), Times.Exactly(4));
     }
 }

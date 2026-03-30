@@ -89,5 +89,5 @@ public class UserService : IUserService
     }
 
     public Result HardDeleteUser(string name)
-        => new Error("Err5", "The user cannot be deleted", "NotAcceptable");
+        => new Error("Err5", "The user cannot be deleted", CustomErrorHelper.NotAcceptableKey);
 }

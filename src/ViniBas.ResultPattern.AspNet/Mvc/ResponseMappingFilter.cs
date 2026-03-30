@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Vinícius Bastos da Silva 2025
+ * Copyright (c) Vinícius Bastos da Silva 2025-2026
  * This file is part of ResultPattern.
  * Licensed under the GNU Lesser General Public License v3 (LGPL v3).
  * See the LICENSE file in the project root for full details.
@@ -33,8 +33,13 @@ public sealed class ResponseMappingFilter : IActionFilter
             {
                 objectResult.Value = mappedResponse;
                 objectResult.DeclaredType = null;
-
             }
+        }
+
+        if (context.Result is ObjectResult { Value: ProblemDetails } pdResult)
+        {
+            pdResult.ContentTypes.Clear();
+            pdResult.ContentTypes.Add("application/problem+json");
         }
     }
 }

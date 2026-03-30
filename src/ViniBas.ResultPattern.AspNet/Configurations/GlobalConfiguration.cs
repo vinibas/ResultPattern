@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Vinícius Bastos da Silva 2025
+ * Copyright (c) Vinícius Bastos da Silva 2025-2026
  * This file is part of ResultPattern.
  * Licensed under the GNU Lesser General Public License v3 (LGPL v3).
  * See the LICENSE file in the project root for full details.
@@ -33,6 +33,28 @@ public static class GlobalConfiguration
             [ErrorTypes.Unauthorized] = (StatusCodes.Status401Unauthorized, "Unauthorized"),
             [ErrorTypes.Forbidden] = (StatusCodes.Status403Forbidden, "Forbidden"),
         };
+
+    /// <summary>
+    /// Maps HTTP status codes to <see cref="ITypedResultBuilder"/> instances that create
+    /// typed <see cref="IResult"/> responses for Minimal API union types (<c>Results&lt;...&gt;</c>).
+    /// Pre-populated with default entries for common status codes.
+    /// Add or overwrite entries to customize which <c>TypedResult</c> wrapper is produced for each status code.
+    /// </summary>
+    public static ConcurrentDictionary<int, ITypedResultBuilder> TypedResultMaps { get; } = new ()
+    {
+        [StatusCodes.Status200OK] = TypedResultBuilders.Ok,
+        [StatusCodes.Status201Created] = TypedResultBuilders.Created,
+        [StatusCodes.Status204NoContent] = TypedResultBuilders.NoContent,
+        [StatusCodes.Status400BadRequest] = TypedResultBuilders.BadRequest,
+        [StatusCodes.Status401Unauthorized] = TypedResultBuilders.Unauthorized,
+        [StatusCodes.Status403Forbidden] = TypedResultBuilders.Forbid,
+        [StatusCodes.Status404NotFound] = TypedResultBuilders.NotFound,
+        [StatusCodes.Status409Conflict] = TypedResultBuilders.Conflict,
+        [StatusCodes.Status422UnprocessableEntity] = TypedResultBuilders.UnprocessableEntity,
+        #if NET9_0_OR_GREATER
+        [StatusCodes.Status500InternalServerError] = TypedResultBuilders.Failure,
+        #endif
+    };
 
     /// <summary>
     /// When <see langword="true"/>, failure fallbacks return an RFC 7807 <see cref="Microsoft.AspNetCore.Mvc.ProblemDetails" /> response.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Vinícius Bastos da Silva 2025
+ * Copyright (c) Vinícius Bastos da Silva 2025-2026
  * This file is part of ResultPattern.
  * Licensed under the GNU Lesser General Public License v3 (LGPL v3).
  * See the LICENSE file in the project root for full details.
@@ -16,10 +16,10 @@ using ViniBas.ResultPattern.ResultResponses;
 namespace ViniBas.ResultPattern.DemoWebApi.Endpoints;
 
 using MultipleResultsOnMapPut = Results<
-    Results<Ok<ResultResponseSuccess<UserModel>>, JsonHttpResult<ResultResponseError>>,
-    Results<Ok<ResultResponseSuccess<UserModel>>, ProblemHttpResult>,
-    Results<Ok<UserModel>, JsonHttpResult<IEnumerable<ErrorDetails>>>,
-    Results<Ok<UserModel>, ProblemHttpResult>>;
+    Results<Ok<ResultResponseSuccess<UserModel>>, BadRequest<ResultResponseError>, NotFound<ResultResponseError>>,
+    Results<Ok<ResultResponseSuccess<UserModel>>, BadRequest<ProblemDetails>, NotFound<ProblemDetails>>,
+    Results<Ok<UserModel>, BadRequest<IEnumerable<ErrorDetails>>, NotFound<IEnumerable<ErrorDetails>>>,
+    Results<Ok<UserModel>, BadRequest<ProblemDetails>, NotFound<ProblemDetails>>>;
 
 public static class MinimalApiExtensions
 {
@@ -34,19 +34,26 @@ public static class MinimalApiExtensions
         group
             .MapGet("health/{alive}",
                 (bool alive) => _userService.Health(alive).Match(Results.Ok, Results.BadRequest))
-            .WithDescription("You can pass a function with the return for the success" +
-                "case and another for the failure case.");
+            .WithDescription("You can pass a function to handle the success " +
+                "case and another to handle the failure case.");
 
         group
             .MapGet("{name}",
                 (string name) => _userService.GetUserByName(name).Match(r => Results.Ok(r.Data)))
             .WithDescription("You can omit one of the parameters. For example, omit onFailure " +
-                "to let the library return an IActionResult based on the type of error returned.");
+                "to let the library return an IResult based on the type of error returned.");
 
         group
             .MapPost("",
-                (UserModel user) => _userService.SaveNewUser(user).Match())
-            .WithDescription("You can omit both parameters. You will receive an Ok200 status" +
+                (UserModel user) =>
+                {
+                    // Override UseProblemDetails locally to choose between returning ResultResponseError or ProblemDetails.
+                    using (ScopedConfiguration.Override(useProblemDetails: false))
+                    {
+                        return _userService.SaveNewUser(user).Match();
+                    }
+                })
+            .WithDescription("You can omit both parameters. You will receive an Ok200 status " +
                 "in case of success, or a status based on the error type in case of failure.");
 
         group
@@ -67,7 +74,7 @@ public static class MinimalApiExtensions
             .WithDescription("You can also return a custom error, simply by registering it in " +
                 "GlobalConfiguration.ErrorTypeMaps. In fact, if you have registered the " +
                 "ResponseMappingFilter filter, you can return the Result directly, which the " +
-                "filter will convert to a suitable IActionResult.");
+                "filter will convert to a suitable IResult.");
     }
 
     public static void RegisterUserUnionEndpoints(this IEndpointRouteBuilder routes)
@@ -80,26 +87,36 @@ public static class MinimalApiExtensions
             .MapGet("health/{alive}", (bool alive) => _userService.Health(alive)
                     .MatchResults<Ok<ResultResponseSuccess>, BadRequest<ResultResponseError>>
                         (r => TypedResults.Ok(r), r => TypedResults.BadRequest(r)))
-            .WithDescription("You can pass a function with the return for the success" +
-                "case and another for the failure case.");
+            .WithDescription("You can pass a function to handle the success " +
+                "case and another to handle the failure case.");
 
         group
             .MapGet("{name}",
                 (string name) => _userService.GetUserByName(name)
-                    .MatchResults<Ok<UserModel>, JsonHttpResult<ResultResponseError>, UserModel>
+                    .MatchResults<Ok<UserModel>, NotFound<ProblemDetails>, UserModel>
                     (r => TypedResults.Ok(r.Data)))
             .WithDescription("You can omit one of the parameters. For example, omit onFailure " +
-                "to let the library return an IActionResult based on the type of error returned.");
+                "to let the library return a typed result based on the type of error returned.");
 
         group
             .MapPost("",
-                (UserModel user) => _userService.SaveNewUser(user)
-                    .MatchResults<Ok<ResultResponseSuccess>, JsonHttpResult<ResultResponseError>>())
-            .WithDescription("You can omit both parameters. You will receive an Ok200 status" +
+                (UserModel user) =>
+                {
+                    // Override UseProblemDetails locally: this changes the typed return between
+                    // ResultResponseError (false) and ProblemDetails (true) in the error type parameters.
+                    using (ScopedConfiguration.Override(useProblemDetails: false))
+                    {
+                        return _userService.SaveNewUser(user)
+                        .MatchResults<
+                            Ok<ResultResponseSuccess>,
+                            BadRequest<ResultResponseError>,
+                            Conflict<ResultResponseError>>();
+                    }
+                }).WithDescription("You can omit both parameters. You will receive an Ok200 status " +
                 "in case of success, or a status based on the error type in case of failure.");
 
         group
-            .MapPut("", (UserModel user, [FromQuery] bool useProblemDetails, [FromQuery] bool unwrapSuccessData) =>
+            .MapPut("", (UserModel user, bool useProblemDetails, bool unwrapSuccessData) =>
             {
                 var updateResult = _userService.UpdateUser(user);
 
@@ -110,13 +127,13 @@ public static class MinimalApiExtensions
                     return (useProblemDetails, unwrapSuccessData) switch
                     {
                         (false, false) => (MultipleResultsOnMapPut)
-                            updateResult.MatchResults<Ok<ResultResponseSuccess<UserModel>>, JsonHttpResult<ResultResponseError>, UserModel>(),
+                            updateResult.MatchResults<Ok<ResultResponseSuccess<UserModel>>, BadRequest<ResultResponseError>, NotFound<ResultResponseError>, UserModel>(),
                         (true, false) => (MultipleResultsOnMapPut)
-                            updateResult.MatchResults<Ok<ResultResponseSuccess<UserModel>>, ProblemHttpResult, UserModel>(),
+                            updateResult.MatchResults<Ok<ResultResponseSuccess<UserModel>>, BadRequest<ProblemDetails>, NotFound<ProblemDetails>, UserModel>(),
                         (false, true) => (MultipleResultsOnMapPut)
-                            updateResult.MatchResults<Ok<UserModel>, JsonHttpResult<IEnumerable<ErrorDetails>>, UserModel>(),
+                            updateResult.MatchResults<Ok<UserModel>, BadRequest<IEnumerable<ErrorDetails>>, NotFound<IEnumerable<ErrorDetails>>, UserModel>(),
                         (true, true) => (MultipleResultsOnMapPut)
-                            updateResult.MatchResults<Ok<UserModel>, ProblemHttpResult, UserModel>(),
+                            updateResult.MatchResults<Ok<UserModel>, BadRequest<ProblemDetails>, NotFound<ProblemDetails>, UserModel>(),
                     };
                 }
             })
@@ -128,6 +145,6 @@ public static class MinimalApiExtensions
             .WithDescription("You can also return a custom error, simply by registering it in " +
                 "GlobalConfiguration.ErrorTypeMaps. In fact, if you have registered the " +
                 "ResponseMappingFilter filter, you can return the Result directly, which the " +
-                "filter will convert to a suitable IActionResult.");
+                "filter will convert to a suitable IResult.");
     }
 }

@@ -85,7 +85,37 @@ public class ResponseMappingFilterTests
 
         _filter.OnActionExecuted(_context);
 
-        Assert.Same(expectedResult, ((ObjectResult)_context.Result).Value);
+        Assert.Same(expectedResult, _context.Result);
         _mockFilterMappings.Verify(fm => fm.MapToResultResponse(It.IsAny<object>()), Times.Once);
+    }
+
+    [Fact]
+    public void OnActionExecuted_ShouldSetProblemJsonContentType_WhenResultHasProblemDetails()
+    {
+        var problemDetailsResult = new ObjectResult(new ProblemDetails { Title = "Error", Status = 400 });
+        _context.Result = problemDetailsResult;
+
+        _filter.OnActionExecuted(_context);
+
+        Assert.Contains("application/problem+json", problemDetailsResult.ContentTypes);
+        _mockFilterMappings.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void OnActionExecuted_ShouldSetProblemJsonContentType_WhenMappingResultsInProblemDetails()
+    {
+        var originalValue = new { Test = "Value" };
+        var problemDetails = new ProblemDetails { Title = "Error", Status = 400 };
+        var objectResult = new ObjectResult(originalValue);
+        var mappedResult = new ObjectResult(problemDetails) { StatusCode = 400 };
+
+        _context.Result = objectResult;
+        _mockFilterMappings
+            .Setup(fm => fm.MapToResultResponse(originalValue))
+            .Returns(mappedResult);
+
+        _filter.OnActionExecuted(_context);
+
+        Assert.Contains("application/problem+json", ((ObjectResult)_context.Result).ContentTypes);
     }
 }

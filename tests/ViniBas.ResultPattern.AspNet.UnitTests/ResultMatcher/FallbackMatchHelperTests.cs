@@ -44,7 +44,7 @@ public class FallbackMatchHelperTests
         Assert.Equal(resultResponse, okResultMvc.Value);
 
         // Assert Minimal Api
-        var okResultMinimal = Assert.IsType<Ok<ResultResponse>>(matcherResultMinimal);
+        var okResultMinimal = Assert.IsType<Ok<ResultResponseSuccess<string>>>(matcherResultMinimal);
         Assert.Equal(resultResponse, okResultMinimal.Value);
     }
 
@@ -63,23 +63,8 @@ public class FallbackMatchHelperTests
         Assert.Equal(resultResponse, okResultMvc.Value);
 
         // Assert Minimal Api
-        var okResultMinimal = Assert.IsType<Ok<ResultResponse>>(matcherResultMinimal);
+        var okResultMinimal = Assert.IsType<Ok<ResultResponseSuccess>>(matcherResultMinimal);
         Assert.Equal(resultResponse, okResultMinimal.Value);
-    }
-
-    [Fact]
-    public void OnSuccessFallback_WhenResultResponseIsNotSuccess_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var resultResponse = ResultResponseError.Create([new ErrorDetails("Code", "Test Error")], ErrorTypes.Validation);
-
-        // Act
-        var exceptionMvc = Record.Exception(() => FallbackMvcMatchHelper.OnSuccessFallback(resultResponse));
-        var exceptionMinimal = Record.Exception(() => FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse));
-
-        // Assert
-        Assert.IsType<InvalidOperationException>(exceptionMvc);
-        Assert.IsType<InvalidOperationException>(exceptionMinimal);
     }
 
     [Fact]
@@ -98,7 +83,7 @@ public class FallbackMatchHelperTests
         Assert.Equivalent(_resultResponseError.Errors, resultResponseValueMvc.Errors);
         Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), objectResultMvc.StatusCode);
 
-        var jsonResultMinimal = Assert.IsType<JsonHttpResult<ResultResponseError>>(matcherResultMinimal);
+        var jsonResultMinimal = Assert.IsType<BadRequest<ResultResponseError>>(matcherResultMinimal);
         var resultResponseValueMinimal = Assert.IsType<ResultResponseError>(jsonResultMinimal.Value);
         Assert.Equivalent(_resultResponseError.Errors, resultResponseValueMinimal.Errors);
         Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), jsonResultMinimal.StatusCode);
@@ -120,8 +105,8 @@ public class FallbackMatchHelperTests
         Assert.Equivalent(_resultResponseError.Errors, resultResponseValueMvc.Extensions["errors"]);
         Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), objectResultMvc.StatusCode);
 
-        var problemResultMinimal = Assert.IsType<ProblemHttpResult>(matcherResultMinimal);
-        var resultResponseValueMinimal = Assert.IsType<ProblemDetails>(problemResultMinimal.ProblemDetails);
+        var problemResultMinimal = Assert.IsType<BadRequest<ProblemDetails>>(matcherResultMinimal);
+        var resultResponseValueMinimal = Assert.IsType<ProblemDetails>(problemResultMinimal.Value);
         Assert.Equivalent(_resultResponseError.Errors, resultResponseValueMinimal.Extensions["errors"]);
         Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), problemResultMinimal.StatusCode);
     }
@@ -142,7 +127,7 @@ public class FallbackMatchHelperTests
             var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
             Assert.IsType<ResultResponseError>(objectResultMvc.Value);
 
-            Assert.IsType<JsonHttpResult<ResultResponseError>>(matcherResultMinimal);
+            Assert.IsType<BadRequest<ResultResponseError>>(matcherResultMinimal);
         }
     }
 
@@ -162,7 +147,7 @@ public class FallbackMatchHelperTests
             var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
             Assert.IsType<ProblemDetails>(objectResultMvc.Value);
 
-            Assert.IsType<ProblemHttpResult>(matcherResultMinimal);
+            Assert.IsType<BadRequest<ProblemDetails>>(matcherResultMinimal);
         }
     }
 
@@ -182,22 +167,7 @@ public class FallbackMatchHelperTests
         var objectResultMvc = Assert.IsType<ObjectResult>(matcherResultMvc);
         Assert.IsType<ResultResponseError>(objectResultMvc.Value);
 
-        Assert.IsType<JsonHttpResult<ResultResponseError>>(matcherResultMinimal);
-    }
-
-    [Fact]
-    public void OnFailureFallback_WhenResultResponseIsNotResultResponseError_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var resultResponse = ResultResponseSuccess.Create();
-
-        // Act
-        var exceptionMvc = Record.Exception(() => FallbackMvcMatchHelper.OnFailureFallback(resultResponse));
-        var exceptionMinimal = Record.Exception(() => FallbackMinimalMatchHelper.OnFailureFallback(resultResponse));
-
-        // Assert
-        Assert.IsType<InvalidOperationException>(exceptionMvc);
-        Assert.IsType<InvalidOperationException>(exceptionMinimal);
+        Assert.IsType<BadRequest<ResultResponseError>>(matcherResultMinimal);
     }
 
     [Fact]
@@ -336,7 +306,7 @@ public class FallbackMatchHelperTests
         var okResultMvc = Assert.IsType<OkObjectResult>(resultMvc);
         Assert.Equal(resultResponse, okResultMvc.Value);
 
-        var okResultMinimal = Assert.IsType<Ok<ResultResponse>>(resultMinimal);
+        var okResultMinimal = Assert.IsType<Ok<ResultResponseSuccess<string>>>(resultMinimal);
         Assert.Equal(resultResponse, okResultMinimal.Value);
     }
 
@@ -356,7 +326,7 @@ public class FallbackMatchHelperTests
         var okResultMvc = Assert.IsType<OkObjectResult>(resultMvc);
         Assert.Equal(data, okResultMvc.Value);
 
-        var okResultMinimal = Assert.IsType<Ok<object>>(resultMinimal);
+        var okResultMinimal = Assert.IsType<Ok<string>>(resultMinimal);
         Assert.Equal(data, okResultMinimal.Value);
     }
 
@@ -392,8 +362,54 @@ public class FallbackMatchHelperTests
         Assert.Equivalent(_resultResponseError.Errors, objectResultMvc.Value);
         Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), objectResultMvc.StatusCode);
 
-        var jsonResultMinimal = Assert.IsType<JsonHttpResult<IEnumerable<ErrorDetails>>>(resultMinimal);
+        var jsonResultMinimal = Assert.IsType<BadRequest<IEnumerable<ErrorDetails>>>(resultMinimal);
         Assert.Equivalent(_resultResponseError.Errors, jsonResultMinimal.Value);
         Assert.Equal(GlobalConfiguration.GetStatusCode(_resultResponseError.Type), jsonResultMinimal.StatusCode);
+    }
+
+    [Fact]
+    public void OnSuccessFallback_WhenStatus200NotInTypedResultMaps_FallsBackToOkBuilder()
+    {
+        // Arrange — remove 200 entry to exercise the fallback branch
+        GlobalConfiguration.TypedResultMaps.TryRemove(StatusCodes.Status200OK, out _);
+        var resultResponse = ResultResponseSuccess.Create("Test Value");
+
+        try
+        {
+            // Act
+            var resultMinimal = FallbackMinimalMatchHelper.OnSuccessFallback(resultResponse);
+
+            // Assert
+            var okResult = Assert.IsType<Ok<ResultResponseSuccess<string>>>(resultMinimal);
+            Assert.Equal(resultResponse, okResult.Value);
+        }
+        finally
+        {
+            GlobalConfiguration.TypedResultMaps[StatusCodes.Status200OK] = TypedResultBuilders.Ok;
+        }
+    }
+
+    [Fact]
+    public void OnFailureFallback_WhenStatusCodeNotInTypedResultMaps_FallsBackToJsonBuilder()
+    {
+        // Arrange — temporarily remove 400 to exercise the fallback branch
+        GlobalConfiguration.UseProblemDetails = false;
+        GlobalConfiguration.TypedResultMaps.TryRemove(StatusCodes.Status400BadRequest, out var removed);
+
+        try
+        {
+            // Act
+            var resultMinimal = FallbackMinimalMatchHelper.OnFailureFallback(_resultResponseError);
+
+            // Assert — fallback uses TypedResultBuilders.Json(400), producing JsonHttpResult
+            var jsonResult = Assert.IsType<JsonHttpResult<ResultResponseError>>(resultMinimal);
+            Assert.Equal(StatusCodes.Status400BadRequest, jsonResult.StatusCode);
+            Assert.Equivalent(_resultResponseError, jsonResult.Value);
+        }
+        finally
+        {
+            if (removed is not null)
+                GlobalConfiguration.TypedResultMaps[StatusCodes.Status400BadRequest] = removed;
+        }
     }
 }

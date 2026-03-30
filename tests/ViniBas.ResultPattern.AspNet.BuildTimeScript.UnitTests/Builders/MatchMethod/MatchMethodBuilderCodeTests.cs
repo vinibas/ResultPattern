@@ -27,8 +27,8 @@ public class MatchMethodBuilderCodeTests
         Func<ResultResponseError, IActionResult>? onFailure = null)
         => Matcher.Match(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 """;
         Assert.Equal(expected, result);
     }
@@ -47,8 +47,8 @@ public class MatchMethodBuilderCodeTests
         Func<ResultResponseError, Task<IActionResult>>? onFailure = null)
         => Matcher.MatchAsync(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 """;
         Assert.Equal(expected, result);
     }
@@ -68,10 +68,10 @@ public class MatchMethodBuilderCodeTests
         this Result<TData> result,
         Func<ResultResponseSuccess<TData>, IActionResult>? onSuccess = null,
         Func<ResultResponseError, IActionResult>? onFailure = null)
-        => Matcher.Match(
+        => Matcher.Match<TData>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess<TData>)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 """;
         Assert.Equal(expected, result);
     }
@@ -92,8 +92,8 @@ public class MatchMethodBuilderCodeTests
         Func<ResultResponseError, IActionResult>? onFailure = null)
         => Matcher.Match(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 """;
         Assert.Equal(expected, result);
     }
@@ -120,8 +120,8 @@ public class MatchMethodBuilderCodeTests
         where TResult : IResult, IEndpointMetadataProvider
         => Matcher.Match<TResult>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 """;
         Assert.Equal(expected, result);
     }
@@ -153,8 +153,8 @@ public class MatchMethodBuilderCodeTests
         where TResult2 : IResult, IEndpointMetadataProvider
         => Matcher.Match<Results<TResult1, TResult2>>(
             result,
-            onSuccess is not null ? rr => onSuccess((ResultResponseSuccess)rr) : null,
-            onFailure is not null ? rr => onFailure((ResultResponseError)rr) : null);
+            onSuccess,
+            onFailure);
 """;
         Assert.Equal(expected, result);
     }

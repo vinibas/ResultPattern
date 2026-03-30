@@ -27,8 +27,8 @@ public class MvcMatchExtensionsSmokeTests : IDisposable
         _matcherMock
             .Setup(m => m.Match(
                 It.IsAny<ResultBase>(),
-                It.IsAny<Func<ResultResponse, IActionResult>>(),
-                It.IsAny<Func<ResultResponse, IActionResult>>()))
+                It.IsAny<Func<ResultResponseSuccess, IActionResult>>(),
+                It.IsAny<Func<ResultResponseError, IActionResult>>()))
             .Returns(_fakes.ActionResultSuccess);
 
         var result = MvcMatchResultsExtensions.Match(
@@ -40,8 +40,8 @@ public class MvcMatchExtensionsSmokeTests : IDisposable
 
         _matcherMock.Verify(m => m.Match(
             _fakes.ResultSuccess,
-            It.IsNotNull<Func<ResultResponse, IActionResult>>(),
-            It.IsNotNull<Func<ResultResponse, IActionResult>>()),
+            It.IsNotNull<Func<ResultResponseSuccess, IActionResult>>(),
+            It.IsNotNull<Func<ResultResponseError, IActionResult>>()),
             Times.Once);
     }
 
@@ -51,8 +51,8 @@ public class MvcMatchExtensionsSmokeTests : IDisposable
         _matcherMock
             .Setup(m => m.MatchAsync(
                 It.IsAny<ResultBase>(),
-                It.IsAny<Func<ResultResponse, Task<IActionResult>>>(),
-                It.IsAny<Func<ResultResponse, Task<IActionResult>>>()))
+                It.IsAny<Func<ResultResponseSuccess, Task<IActionResult>>>(),
+                It.IsAny<Func<ResultResponseError, Task<IActionResult>>>()))
             .ReturnsAsync(_fakes.ActionResultSuccess);
 
         var result = await MvcMatchResultsExtensions.MatchAsync(
@@ -64,8 +64,8 @@ public class MvcMatchExtensionsSmokeTests : IDisposable
 
         _matcherMock.Verify(m => m.MatchAsync(
             _fakes.ResultSuccess,
-            It.IsNotNull<Func<ResultResponse, Task<IActionResult>>>(),
-            It.IsNotNull<Func<ResultResponse, Task<IActionResult>>>()),
+            It.IsNotNull<Func<ResultResponseSuccess, Task<IActionResult>>>(),
+            It.IsNotNull<Func<ResultResponseError, Task<IActionResult>>>()),
             Times.Once);
     }
 
