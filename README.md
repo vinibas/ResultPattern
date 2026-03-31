@@ -1,111 +1,381 @@
 # ViniBas.ResultPattern
 
-Copyright (c) Vinícius Bastos da Silva 2025
-Licensed under the GNU Lesser General Public License v3 (LGPL v3).
+Copyright (c) Vinícius Bastos da Silva 2025-2026  
+Licensed under the GNU Lesser General Public License v3 (LGPL v3).  
 See the LICENSE.txt file for details.
 
-# Introduction
+## What is the Result Pattern?
 
-This project consists of two .NET libraries, available for use via NuGet, aimed at implementing the Result Pattern in a simple, clean, and effective way.
+The Result Pattern is a functional approach to error handling where methods return a `Result` object instead of throwing exceptions. This object explicitly indicates success or failure, carrying either the expected value or error details. It leads to cleaner, more predictable code — no hidden control flows, no swallowed exceptions, no guessing what a method can return.
 
-Usage is free, and the code is open-source under the LGPL v3 license. Check the LICENSE.txt file in the project root for more information.
+## About this library
 
-The two libraries that make up this project are: ResultPattern, which is the core of the project, and ResultPattern.AspNet, which contains resources for use in ASP.NET projects. Below are instructions for each.
+**ViniBas.ResultPattern** brings the Result Pattern to .NET with two packages:
 
-## ViniBas.ResultPattern
+- **ViniBas.ResultPattern** — Core library with `Result`, `Result<T>`, `Error`, and `ResultResponse` types. No external dependencies, so it can be used in any layer (domain, application, infrastructure) and in any type of project — ASP.NET, Console, WPF, etc.
+- **ViniBas.ResultPattern.AspNet** — ASP.NET integration with `Match` extensions that automatically map results to HTTP responses (`IActionResult`, `IResult`, or typed `Results<>`), filters, ProblemDetails support, and more.
 
-The ResultPattern library is the main library of the project. It contains the `Result` and `ResultResponse` objects and is independent of the project type: ASP.NET, Console, Class Library, etc. Since it has no external dependencies, it can even be used in business logic layers without contaminating your domain with infrastructure details.
+The library is **free and open-source** (LGPL v3). The goal is to be **simple, clean, and effective**: reduce verbosity, eliminate manual status code mapping with the `Match` API, and handle edge cases like ProblemDetails formatting and error type registration out of the box.
 
-The ResultPattern package contains two main object types: `Result` and `ResultResponse`. Let's discuss the importance of each:
+## Installation
 
-### Result
+```bash
+dotnet add package ViniBas.ResultPattern --version 3.0.0
+dotnet add package ViniBas.ResultPattern.AspNet --version 3.0.0
+```
 
-The `Result` class is the most important class in the entire project. This is the class we actually use as the return type in our service methods, indicating success or failure. The `Result` class may or may not have an associated object. In this case, we use `Result<T>`, where `T` is the type of the return object, which will be available in the `Data` property in case of success.
+> **Important:** Starting from version 3.0.0, both packages follow the same versioning. When installing or updating, always use the same version for both packages, since `ViniBas.ResultPattern.AspNet` depends on `ViniBas.ResultPattern`.
 
-Some implementations of the Result Pattern force verbose and hard-to-read returns, requiring object construction and redundant type declarations. In this library, you have more flexibility, allowing you to return either an `Error` object (or a collection of them) or the expected value in case of success, as in the following example:
+---
+
+## ViniBas.ResultPattern (Core)
+
+### Result and Result\<TData\>
+
+`Result` and `Result<TData>` are the types you use as return values in your service methods. They indicate success or failure, and in the generic case, carry a `Data` property with the return value.
+
+You can return an `Error`, a `List<Error>`, or the value directly — no need for verbose construction:
 
 ```csharp
-public Result<string> Get()
+public Result<UserModel> GetUser(string name)
 {
-    if (somethingWrong)
-        return Error.Failure("ErrorCode", "Error message!");
+    var user = _users.FirstOrDefault(u => u.Name == name);
 
-    if (severalThingsWrong)
-        return new List<Error>()
-        {
-            Error.Validation("Error1", "Some validation 1"),
-            Error.Validation("Error2", "Some validation 2"),
-            Error.Validation("Error3", "Some validation 3"),
-        };
+    if (user == null)
+        return Error.NotFound("UserNotFound", "User not found");
 
-    return "Return value on success.";
+    return user; // Implicit conversion to Result<UserModel>
 }
 ```
 
-In the example above, we have a situation where we return a list with multiple errors. All of them will be combined into one; the only condition is that they must all have the same type, in this case, `Validation`.
-
-There are four predefined error types, which can be created using static constructors: `Failure`, `Validation`, `NotFound`, and `Conflict`. You can create your own custom types by registering them once using `Error.ErrorTypes.AddTypes("MyNewErrorType");`, and then creating the error using the default constructor: `new Error("code", "message", "MyNewErrorType");`.
-
-A method calling the example above could validate the result as follows:
+For methods that don't return a value, use `Result` (non-generic):
 
 ```csharp
-var result = Get();
+public Result SaveNewUser(UserModel user)
+{
+    if (string.IsNullOrWhiteSpace(user.Name))
+        return Error.Validation("Err1", "Name cannot be empty");
+
+    _users.Add(user);
+    return Result.Success();
+}
+```
+
+You can also accumulate multiple errors of the same type:
+
+```csharp
+public Result SaveNewUser(UserModel user)
+{
+    var validationErrors = new List<Error>();
+
+    if (string.IsNullOrWhiteSpace(user.Name))
+        validationErrors.Add(Error.Validation("Err1", "Name cannot be empty"));
+
+    if (user.Age < 18)
+        validationErrors.Add(Error.Validation("Err2", "Age must be at least 18"));
+
+    if (validationErrors.Any())
+        return validationErrors; // Implicit conversion — errors are merged
+
+    _users.Add(user);
+    return Result.Success();
+}
+```
+
+Checking the result:
+
+```csharp
+var result = GetUser("Alice");
 
 if (result.IsSuccess)
-    Console.WriteLine(result.Data);
+    Console.WriteLine(result.Data.Name);
 
 if (result.IsFailure)
     foreach (var description in result.Error.ListDescriptions())
         Console.WriteLine(description);
 ```
 
-If your method does not need to return any value besides the `Result` itself, you can use `Result` without `T`. In this case, since there is no value to return, you can simply return `Result.Success();`, which would also work with `T`: `return Result.Success("Return value on success.");`. Note that `Result` and `Result<T>` are different types, so you must return the type declared in your method signature.
+### Error
+
+The `Error` type encapsulates a list of `ErrorDetails` (code + description) and a `Type` string. Built-in error types and their factory methods:
+
+| Factory Method | Type | Default HTTP Status |
+|---|---|---|
+| `Error.Failure(code, description)` | `Failure` | 500 |
+| `Error.Validation(code, description)` | `Validation` | 400 |
+| `Error.NotFound(code, description)` | `NotFound` | 404 |
+| `Error.Conflict(code, description)` | `Conflict` | 409 |
+| `Error.Unauthorized(code, description)` | `Unauthorized` | 401 |
+| `Error.Forbidden(code, description)` | `Forbidden` | 403 |
+
+You can create custom error types by registering them and, optionally, mapping them to an HTTP status code:
+
+```csharp
+Error.ErrorTypes.AddTypes("NotAcceptable");
+GlobalConfiguration.ErrorTypeMaps.TryAdd("NotAcceptable", (StatusCodes.Status406NotAcceptable, "Not Acceptable"));
+```
+
+Then create instances using the constructor:
+
+```csharp
+var error = new Error("ErrCode", "Description", "NotAcceptable");
+```
 
 ### ResultResponse
 
-The `ResultResponse` classes exist to make responses cleaner and more explicit, particularly in cases of JSON serialization. While the `Result` class is more complete for internal handling, `ResultResponse` classes represent the final result that can be returned to the user without implementation details. They consist of three classes: `ResultResponseError`, `ResultResponseSuccess`, and `ResultResponseSuccess<T>`, and can be automatically generated from `Result.ToResponse()`.
+The `ResultResponse` family (`ResultResponseSuccess`, `ResultResponseSuccess<TData>`, `ResultResponseError`) are DTOs designed for HTTP transport. They are generated automatically from `result.ToResponse()` and contain a clean, serializable representation of the result — without implementation details.
 
-The structure of the `ResultResponse` classes always includes an `IsSuccess` property. In case of an error, there is a list of `Errors` (object with Code and Description string fields) and a `Type` (string) indicating the error type. In case of success, there may be a `Data` property containing the return value.
+- **Success**: `IsSuccess = true`, optionally with `Data`.
+- **Error**: `IsSuccess = false`, with `Errors` (list of `ErrorDetails`) and `Type`.
+
+---
 
 ## ViniBas.ResultPattern.AspNet
 
-The `ResultPattern.AspNet` library provides additional features for both ASP.NET Web API and Minimal API. The main feature is the `Match` method, which allows mapping API return functions for success (`onSuccess`) or failure (`onFailure`) cases. It is even possible to omit the failure method, which results in a `ProblemDetails` response with the appropriate status code for the error type in `Result`. This way, the developer does not need to manually map the status code for each error type in `Result`. For example, if `Result` contains `NotFound` errors, the returned status code will be `404`. For `Failure`, it will be `500`.
+### Match Extensions
 
-If the `OnFailure` parameter is omitted, the return may or may not be of the ProblemDetails type, depending on the configuration performed through `GlobalConfiguration.UseProblemDetails`, which can be done in your `program.cs`, with the value `true` by default. This configuration can be overridden when calling the Match method through the optional `useProblemDetails` parameter.
+The core feature of the ASP.NET package is the `Match` method, available as extension methods on `Result`, `Result<TData>`, and `ResultResponse`. It maps the result to the appropriate HTTP response by accepting two optional callbacks: `onSuccess` and `onFailure`. Both can be omitted — when they are, the library uses built-in fallback behavior (see [Fallback Behavior](#fallback-behavior)).
 
-For custom error types, just as we can create new error types with `Error.ErrorTypes.AddTypes("MyNewErrorType");`, we can also create new mappings by modifying the `Maps` dictionary, for example:  
-`GlobalConfiguration.ErrorTypeMaps.Add("MyNewErrorType", (StatusCodes.Status406NotAcceptable, "My New Error Type"));`, which can also be configured in `program.cs`.  
-This way, the new type will always return the mapped status code, and the corresponding title will be used. It is also possible to modify existing mappings. If an error type is not pre-mapped, the default status code returned is `500`.
-
-See an example of usage in an MVC action:
+#### MVC (IActionResult)
 
 ```csharp
-[HttpGet("{value}")]
-public IActionResult Get()
-    => _myService.GetResult().Match(Ok);
+using ViniBas.ResultPattern.AspNet.Mvc;
+
+[ApiController]
+[Route("[controller]")]
+public class UsersController : ControllerBase
+{
+    // Provide both onSuccess and onFailure
+    [HttpGet("health/{alive}")]
+    public IActionResult Health(bool alive)
+        => _userService.Health(alive).Match(Ok, BadRequest);
+
+    // Omit onFailure — the library returns the appropriate status automatically
+    [HttpGet("{name}")]
+    public IActionResult Get(string name)
+        => _userService.GetUserByName(name).Match(r => Ok(r.Data));
+
+    // Omit both — defaults to Ok on success, automatic error handling on failure
+    [HttpPost]
+    public IActionResult Create(UserModel user)
+        => _userService.SaveNewUser(user).Match();
+}
 ```
 
-In the example below, using Minimal API, we can return an `IResult` or `Results<>` for typed responses:
+#### Minimal API — Generic (IResult)
 
-```C#
-app.MapGet("IResult", ()
-    => myService.Get().Match(Results.Ok));
+```csharp
+using ViniBas.ResultPattern.AspNet.MinimalApi;
 
-app.MapGet("Results<>", ()
-    => myService.Get().Match<Results<Ok, ProblemHttpResult>, Ok>(TypedResults.Ok));
+app.MapGet("health/{alive}",
+    (bool alive) => _userService.Health(alive).Match(Results.Ok, Results.BadRequest));
+
+app.MapGet("{name}",
+    (string name) => _userService.GetUserByName(name).Match(r => Results.Ok(r.Data)));
+
+app.MapPost("",
+    (UserModel user) => _userService.SaveNewUser(user).Match());
 ```
 
-Again, the second parameter is optional, so it is omitted in the examples, and may or may not return a ProblemDetails depending on the global configuration and the `useProblemDetails` parameter.
+When using the generic `Match` in Minimal API, the return type is `IResult`. This means ASP.NET **does not infer the response metadata automatically** — you need to add it manually with `.Produces()` and `.ProducesProblem()` for OpenAPI documentation:
 
-The `Problem Details` standard is based on [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807), and the returned object is native to ASP.NET, as described in the [official documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.problemdetails).  
-The returned `ProblemDetails` object includes the following additional properties:
-- `isSuccess`: a fixed boolean with the value `false`;
-- `errors`: the list of error objects, with code and description fields.
+```csharp
+app.MapGet("{name}",
+    (string name) => _userService.GetUserByName(name).Match(r => Results.Ok(r.Data)))
+    .Produces<UserModel>(200)
+    .ProducesProblem(404);
+```
 
-Two filters are also included: `ActionResultFilter` for ASP.NET MVC and `ResultsResultFilter` for Minimal API. These filters ensure that if objects such as `Result`, `Error`, or `ResultResponse` are returned directly, they are properly converted, if necessary, into a `ResultResponseSuccess`, a `ResultResponseError`, or a `ProblemDetails`.
+#### Minimal API — Typed
 
-To facilitate validation in MVC applications, it is also possible to easily convert a `ModelState` into an `Error` object or an `IActionResult` with a `ProblemDetails` using the extension methods `ModelStateToError` and `ToProblemDetailsActionResult`.
+For endpoints where you want ASP.NET to **automatically infer response metadata** for OpenAPI, use the typed match extensions. The framework knows all possible response types at build time, so documentation is generated automatically.
 
-# Demo
+There are two variants:
 
-We have a demonstration ASP.NET project with some simple examples, which can be found in the `samples` folder of the repository at [https://github.com/vinibas/ResultPattern/](https://github.com/vinibas/ResultPattern/tree/master/samples).
+**`Match<TResult>`** — Returns a single typed result. Useful when you know only one response type will be returned (e.g., `Ok<UserModel>`):
+
+```csharp
+app.MapGet("{name}", (string name) =>
+    _userService.GetUserByName(name)
+        .Match<Ok<UserModel>, UserModel>(r => TypedResults.Ok(r.Data)));
+```
+
+**`MatchResults`** — Returns a `Results<T1, T2, ...>` union type, for endpoints with multiple possible response types:
+
+```csharp
+using ViniBas.ResultPattern.AspNet.MinimalApi;
+
+app.MapGet("health/{alive}", (bool alive) =>
+    _userService.Health(alive)
+        .MatchResults<Ok<ResultResponseSuccess>, BadRequest<ResultResponseError>>
+            (r => TypedResults.Ok(r), r => TypedResults.BadRequest(r)));
+
+app.MapGet("{name}", (string name) =>
+    _userService.GetUserByName(name)
+        .MatchResults<Ok<UserModel>, NotFound<ProblemDetails>, UserModel>
+            (r => TypedResults.Ok(r.Data)));
+
+// Omit both callbacks — the library maps the result to the appropriate typed response
+app.MapPost("", (UserModel user) =>
+    _userService.SaveNewUser(user)
+        .MatchResults<Ok<ResultResponseSuccess>, BadRequest<ResultResponseError>, Conflict<ResultResponseError>>());
+```
+
+**Trade-off:** With typed results, you lose compile-time validation of return types (since the library internally casts `IResult` to the declared `Results<>` type). In exchange, you get **runtime validation**: if a result doesn't match any of the declared types, a `TypedResultCastException` is thrown with a descriptive message showing the expected vs. actual types.
+
+To ensure this doesn't cause errors in production, register the `TypedResultCastExceptionHandler`. It's an `IExceptionHandler` that catches `TypedResultCastException`, logs the issue, and returns the original `IResult` instead of letting it propagate as a 500 error:
+
+```csharp
+// In Program.cs — register the handler and the exception handling middleware
+builder.Services.AddExceptionHandler<TypedResultCastExceptionHandler>();
+
+var app = builder.Build();
+
+if (app.Environment.IsProduction())
+    app.UseExceptionHandler();
+```
+
+All `Match` and `MatchResults` extensions also have async variants (`MatchAsync` / `MatchResultsAsync`).
+
+### Fallback Behavior
+
+When `onSuccess` or `onFailure` callbacks are omitted (or passed as `null`), the library uses built-in fallback logic:
+
+**Success fallback (`onSuccess` omitted):**
+
+- If `UnwrapSuccessData` is `false` (default): returns `200 OK` with the full `ResultResponseSuccess` wrapper.
+- If `UnwrapSuccessData` is `true`: returns `200 OK` with `Data` directly for `Result<TData>`, or an empty `200 OK` / `204 No Content` for `Result`.
+
+**Failure fallback (`onFailure` omitted):**
+
+- If `UseProblemDetails` is `true` (default): returns an RFC 7807 `ProblemDetails` response with the HTTP status code mapped from the error type.
+- If `UseProblemDetails` is `false`: returns the raw `ResultResponseError` (or just the `Errors` list when `UnwrapSuccessData` is `true`) with the mapped status code.
+
+For typed match extensions (`Match<TResult>` and `MatchResults`), the fallback uses `GlobalConfiguration.TypedResultMaps` to determine which typed result wrapper to produce for each HTTP status code. The default mappings cover common status codes (`Ok`, `Created`, `NoContent`, `BadRequest`, `NotFound`, `Conflict`, `UnprocessableEntity`, `Unauthorized`, `Forbid`, and `Failure` on .NET 9+). You can add or replace entries to customize the typed result for any status code:
+
+```csharp
+GlobalConfiguration.TypedResultMaps[StatusCodes.Status418ImATeapot] = TypedResultBuilders.Json(418);
+```
+
+If you need full control, you can replace the entire fallback logic per return type using `FallbackOverrides`:
+
+```csharp
+GlobalConfiguration.FallbackOverrides.Mvc = (resultResponse, context) =>
+{
+    // Custom fallback logic for MVC (IActionResult) endpoints
+    // context.UseProblemDetails and context.UnwrapSuccessData reflect the active configuration
+};
+
+GlobalConfiguration.FallbackOverrides.MinimalApi = (resultResponse, context) =>
+{
+    // Custom fallback logic for Minimal API (IResult) endpoints
+};
+```
+
+### Global Configuration
+
+Configure the library behavior globally in `Program.cs`:
+
+```csharp
+using ViniBas.ResultPattern.AspNet.Configurations;
+
+// Return ProblemDetails on failure (default: true)
+GlobalConfiguration.UseProblemDetails = true;
+
+// When true, success responses return Data directly instead of the ResultResponseSuccess wrapper (default: false)
+GlobalConfiguration.UnwrapSuccessData = false;
+```
+
+You can also provide a custom ProblemDetails factory:
+
+```csharp
+GlobalConfiguration.ProblemDetailsOverride = error => new ProblemDetails
+{
+    Title = "Custom title",
+    Status = 500,
+    Detail = string.Join(", ", error.Errors.Select(e => e.Description))
+};
+```
+
+### Scoped Configuration
+
+Override global settings for a specific scope using `ScopedConfiguration`:
+
+```csharp
+using ViniBas.ResultPattern.AspNet.Configurations;
+
+[HttpPost]
+public IActionResult Create(UserModel user)
+{
+    using (ScopedConfiguration.Override(useProblemDetails: false, unwrapSuccessData: true))
+    {
+        return _userService.SaveNewUser(user).Match();
+    }
+}
+```
+
+The override applies only within the `using` block and is automatically restored afterward. It works per async context, so concurrent requests are not affected.
+
+### ProblemDetails
+
+When `UseProblemDetails` is `true` (default), failure responses follow the [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) standard using ASP.NET's native [ProblemDetails](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.problemdetails). The response includes:
+
+- `title`: Mapped from `GlobalConfiguration.ErrorTypeMaps` (e.g., "Not Found")
+- `status`: HTTP status code mapped from the error type
+- `detail`: Error descriptions
+- `extensions.isSuccess`: `false`
+- `extensions.errors`: List of `ErrorDetails` (code + description)
+- `extensions.descriptions`: List of error description strings
+
+### Filters
+
+Two filters are included to automatically convert `Result`, `Error`, or `ResultResponse` objects returned directly from endpoints into proper HTTP responses:
+
+**MVC:**
+```csharp
+builder.Services.AddControllers(opt => opt.Filters.Add<ResponseMappingFilter>());
+```
+
+**Minimal API:**
+```csharp
+app.MapDelete("{name}", (string name) => _userService.Delete(name))
+    .WithResponseMappingFilter();
+
+// Or without the extension method:
+app.MapDelete("{name}", handler)
+    .AddEndpointFilter<ResponseMappingEndpointFilter>();
+```
+
+With the filter registered, you can return `Result` directly from your endpoint without calling `Match`:
+
+```csharp
+[HttpDelete("{userName}")]
+public Result Delete(string userName)
+    => _userService.HardDeleteUser(userName);
+```
+
+### ModelState Extensions (MVC)
+
+Convert `ModelStateDictionary` to `Error` or directly to an `IActionResult` with ProblemDetails:
+
+```csharp
+if (!ModelState.IsValid)
+    return ModelState.ToProblemDetailsActionResult();
+
+// Or get the Error object for further handling
+Error error = ModelState.ModelStateToError();
+```
+
+---
+
+## Demo
+
+A demonstration ASP.NET project with examples for MVC, Minimal API (generic), and Minimal API (typed) can be found in the [`samples`](https://github.com/vinibas/ResultPattern/tree/master/samples) folder of the repository.
+
+## Target Frameworks
+
+Both packages support: `net8.0`, `net9.0`, `net10.0`.
+
+## License
+
+LGPL v3 — see [LICENSE.txt](LICENSE.txt) for details.
