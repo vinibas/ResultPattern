@@ -43,9 +43,7 @@ public static class TypedResultBuilders
     public static ITypedResultBuilder UnprocessableEntity { get; } = new UnprocessableEntityBuilder();
     public static ITypedResultBuilder Unauthorized { get; } = new UnauthorizedBuilder();
     public static ITypedResultBuilder Forbid { get; } = new ForbidBuilder();
-    #if NET9_0_OR_GREATER
     public static ITypedResultBuilder Failure { get; } = new FailureBuilder();
-    #endif
 
     /// <summary>
     /// Creates a builder that wraps the body in a <c>JsonHttpResult</c> with the specified status code.
@@ -113,11 +111,14 @@ public static class TypedResultBuilders
         public IResult Build() => TypedResults.StatusCode(statusCode);
     }
 
-    #if NET9_0_OR_GREATER
-    private sealed class FailureBuilder() : ITypedResultBuilder
+    private sealed class FailureBuilder : ITypedResultBuilder
     {
+#if NET9_0_OR_GREATER
         public IResult Build<TBody>(TBody body) => TypedResults.InternalServerError(body);
         public IResult Build() => TypedResults.InternalServerError();
+#else
+        public IResult Build<TBody>(TBody body) => TypedResults.Json(body, statusCode: StatusCodes.Status500InternalServerError);
+        public IResult Build() => TypedResults.StatusCode(StatusCodes.Status500InternalServerError);
+#endif
     }
-    #endif
 }

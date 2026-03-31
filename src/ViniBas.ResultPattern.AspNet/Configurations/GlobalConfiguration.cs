@@ -51,9 +51,7 @@ public static class GlobalConfiguration
         [StatusCodes.Status404NotFound] = TypedResultBuilders.NotFound,
         [StatusCodes.Status409Conflict] = TypedResultBuilders.Conflict,
         [StatusCodes.Status422UnprocessableEntity] = TypedResultBuilders.UnprocessableEntity,
-        #if NET9_0_OR_GREATER
         [StatusCodes.Status500InternalServerError] = TypedResultBuilders.Failure,
-        #endif
     };
 
     /// <summary>
