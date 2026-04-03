@@ -13,17 +13,17 @@
     <PropertyGroup>
         <PackageId>ViniBas.ResultPattern.AspNet</PackageId>
         <VersionPrefix>3.0.0-preview4</VersionPrefix>
-        <VersionSuffix />
         <Authors>Vinícius Bastos da Silva</Authors>
-        <Description>Library that implements the Result Pattern in Asp.net in a clean and flexible way.</Description>
-        <Copyright>Copyright (c) Vinícius Bastos da Silva 2025</Copyright>
+        <Description>ASP.NET integration for ViniBas.ResultPattern — maps Result objects to HTTP responses via fluent Match extensions, with ProblemDetails support, typed Results&lt;&gt;, filters, and configurable fallback behavior.</Description>
+        <Copyright>Copyright (c) Vinícius Bastos da Silva 2025-2026</Copyright>
+        <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
         <PackageProjectUrl>https://github.com/vinibas/ResultPattern</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/vinibas/ResultPattern</RepositoryUrl>
         <PackageTags>ResultPattern;Result Pattern;Result;Notification;Notification Pattern;ViniBas</PackageTags>
         <PackageReleaseNotes>
-            Introduced GlobalConfiguration; moved ErrorTypeMaps into it; added support for returning ProblemDetails via global and per-call configuration.
+            v3.0.0: ScopedConfiguration; UnwrapSuccessData; ProblemDetailsOverride; FallbackOverrides; TypedResultBuilders and TypedResultMaps; typed Match extensions (Match&lt;TResult&gt; and MatchResults); TypedResultCastExceptionHandler; MatchAsync for all variants; filters renamed to ResponseMappingFilter and ResponseMappingEndpointFilter. Both packages now follow the same versioning.
         </PackageReleaseNotes>
     </PropertyGroup>
     <ItemGroup>
