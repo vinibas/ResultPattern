@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.0 - 2026-03-30
+## 3.0.0 - 2026-04-03
 
 Starting from this version, both packages (`ViniBas.ResultPattern` and `ViniBas.ResultPattern.AspNet`) follow the same versioning.
 

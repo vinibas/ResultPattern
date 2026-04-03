@@ -14,7 +14,6 @@
 
     <PropertyGroup>
         <PackageId>ViniBas.ResultPattern</PackageId>
-        <VersionPrefix>3.0.0-preview4</VersionPrefix>
         <Authors>Vinícius Bastos da Silva</Authors>
         <Description>Implements the Result Pattern for .NET — clean, flexible error handling without exceptions. Provides Result, Result&lt;T&gt;, Error, and ResultResponse types with no external dependencies.</Description>
         <Copyright>Copyright (c) Vinícius Bastos da Silva 2025-2026</Copyright>

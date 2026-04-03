@@ -12,7 +12,6 @@
     </ItemGroup>
     <PropertyGroup>
         <PackageId>ViniBas.ResultPattern.AspNet</PackageId>
-        <VersionPrefix>3.0.0-preview4</VersionPrefix>
         <Authors>Vinícius Bastos da Silva</Authors>
         <Description>ASP.NET integration for ViniBas.ResultPattern — maps Result objects to HTTP responses via fluent Match extensions, with ProblemDetails support, typed Results&lt;&gt;, filters, and configurable fallback behavior.</Description>
         <Copyright>Copyright (c) Vinícius Bastos da Silva 2025-2026</Copyright>
@@ -35,7 +34,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\ViniBas.ResultPattern\ViniBas.ResultPattern.csproj" Condition="'$(UsePackageReference)' != 'true'" />
-        <PackageReference Include="ViniBas.ResultPattern" Version="3.0.0-preview2" Condition="'$(UsePackageReference)' == 'true'" />
+        <PackageReference Include="ViniBas.ResultPattern" Version="$(VersionPrefix)" Condition="'$(UsePackageReference)' == 'true'" />
     </ItemGroup>
     <Target Name="CodeGen" BeforeTargets="BeforeCompile" Condition="'$(TargetFramework)' == 'net8.0'"> <!-- net8.0 to run only once.-->
         <Exec Command="dotnet run --project ../ViniBas.ResultPattern.AspNet.BuildTimeScript/ViniBas.ResultPattern.AspNet.BuildTimeScript.csproj -- $(ProjectDir)Generated/" />
